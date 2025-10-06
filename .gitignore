@@ -1,0 +1,9 @@
+node_modules
+uploads
+.env
+package-lock.json
+package.json
+vite.config.js
+tsconfig.json
+tsconfig.app.json
+eslint.config.js
