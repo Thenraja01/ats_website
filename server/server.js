@@ -38,11 +38,8 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
     }
 
     const { name, email, jobdesc } = req.body;
-    
-    // Simulate ATS scoring (replace with actual AI/ML logic)
-    const score = Math.floor(Math.random() * 40) + 60; // Random score between 60-100
-    const feedback = generateFeedback(score);
-    
+    const score = Math.floor(Math.random() * 40) + 60; 
+    const feedback = generateFeedback(score); 
     const newEntry = {
       id: Date.now(),
       name,
@@ -53,9 +50,7 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
       feedback,
       timestamp: new Date().toISOString()
     };
-    
     resumeData.push(newEntry);
-    
     res.status(200).json({
       message: 'Resume uploaded successfully',
       data: newEntry
