@@ -15,11 +15,11 @@ export default function Result() {
     try {
       setLoading(true);
       setError(null);
-      
-      const res = await axios.get("http://localhost:8000/api/data");
-      
+      const res = await axios.get("http://127.0.0.1:8000/api/results/");
       if (res.data.success) {
         setData(res.data.data);
+        console.log(res.data);
+        
       } else {
         setError("Failed to fetch data");
       }
@@ -65,7 +65,7 @@ export default function Result() {
   };
 
   return (
-    <div className="p-8 flex flex-col items-center bg-gray-50 min-h-screen">
+    <div className="p-8 flex flex-col items-center bg-gray-50 min-h-screen" id="results">
       <h1 className="text-3xl font-bold mb-8 text-gray-800">Resume Analysis Results</h1>
       
       {/* Pass latest score to Mark component */}

@@ -49,7 +49,6 @@ export default function Uploader({ onUploadSuccess }) {
       setError("Please select a resume file");
       return;
     }
-
     if (!formData.name.trim()) {
       setError("Please enter your name");
       return;
@@ -76,7 +75,7 @@ export default function Uploader({ onUploadSuccess }) {
 
     try {
       const res = await axios.post(
-        "http://localhost:8000/api/upload",
+        "http://127.0.0.1:8000/api/upload/",
         data,
         {
           headers: { 
@@ -84,6 +83,8 @@ export default function Uploader({ onUploadSuccess }) {
           },
         }
       );
+      console.log(res.data);
+      
 
       // Success handling
       alert("Resume uploaded successfully! Score: " + res.data.data.score);

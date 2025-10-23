@@ -16,8 +16,14 @@ export default function Nav() {
           Resume-Mania
         </h1>
       </div>
+      
 
-      <nav className="hidden md:flex space-x-4">
+      <nav className="hidden  md:flex space-x-4" id="nav">
+          <div className="md:flex items-center space-x-2 hidden">
+        <span className="text-white text-sm hidden lg:block">
+          Check your ATS score now!
+        </span>
+      </div>
         <Button
           onClick={() => scrollToSection('upload')}
           className="bg-white text-amber-800 hover:bg-amber-100 font-semibold transition"
@@ -38,14 +44,14 @@ export default function Nav() {
         </Button>
       </nav>
 
-      <div className="flex items-center space-x-2">
-        <span className="text-white text-sm hidden lg:block">
-          Check your ATS score now!
-        </span>
-        <Button className="bg-green-500 hover:bg-green-600 text-white font-bold transition">
+    
+      
+        <div className="lg:hidden  flex space-x-4">
+
+        <Button className="bg-green-500 hover:bg-green-600 lg:hidden text-white font-bold transition" onClick={() => {document.getElementById('upload').scrollIntoView({ behavior: 'smooth', block: 'start' });}}>
           Get Started
         </Button>
-      </div>
+        </div>
     </div>
   );
 }
