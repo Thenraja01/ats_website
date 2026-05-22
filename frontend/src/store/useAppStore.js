@@ -1,8 +1,10 @@
 import { create } from 'zustand';
 
+const token = localStorage.getItem('token');
+
 const useAppStore = create((set) => ({
-  user: null,
-  isAuthenticated: false,
+  user: token ? { token } : null,
+  isAuthenticated: !!token,
   resumeData: null,
   isProcessing: false,
   

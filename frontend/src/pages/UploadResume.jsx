@@ -1,21 +1,32 @@
 import { useState } from 'react';
 import { Upload, File, CheckCircle2, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useUploadResume, useAnalyzeResume } from '../hooks/useResume';
 
 export default function UploadResume() {
   const [file, setFile] = useState(null);
   const [jd, setJd] = useState('');
-  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const handleUpload = () => {
+  const { mutateAsync: uploadResume, isPending: isUploading } = useUploadResume();
+  const { mutateAsync: analyzeResume, isPending: isAnalyzing } = useAnalyzeResume();
+
+  const isProcessing = isUploading || isAnalyzing;
+
+  const handleUpload = async () => {
     if (!file || !jd) return;
-    setIsUploading(true);
-    // Simulate API upload
-    setTimeout(() => {
-      setIsUploading(false);
-      navigate('/result/123');
-    }, 3000);
+    setError(null);
+    try {
+      const uploadRes = await uploadResume(file);
+      const resumeText = uploadRes.extracted_text;
+      
+      const analysisResult = await analyzeResume({ resumeText, jdText: jd });
+      
+      navigate('/result/123', { state: { result: analysisResult } });
+    } catch (err) {
+      setError(err.response?.data?.detail || err.message || 'An error occurred.');
+    }
   };
 
   return (
@@ -65,16 +76,22 @@ export default function UploadResume() {
         </div>
       </div>
 
+      {error && (
+        <div className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+          {error}
+        </div>
+      )}
+
       <div className="mt-8 flex justify-end">
         <button 
           onClick={handleUpload}
-          disabled={!file || !jd || isUploading}
+          disabled={!file || !jd || isProcessing}
           className="flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-500/25 text-white font-semibold text-lg"
         >
-          {isUploading ? (
+          {isProcessing ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              Analyzing...
+              {isUploading ? 'Extracting text...' : 'AI is analyzing...'}
             </>
           ) : (
             'Generate ATS Report'

@@ -2,21 +2,29 @@ import { useState } from 'react';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import { CheckCircle, XCircle, ChevronRight, FileCheck, Briefcase, GraduationCap, Code } from 'lucide-react';
+import { useLocation, Navigate } from 'react-router-dom';
 
 export default function AtsResult() {
   const [activeTab, setActiveTab] = useState('overview');
-  
-  // Mock data based on the skill.md requirements
-  const score = 82;
-  const isEligible = score >= 75;
-  
-  const skillMatch = 45; // out of 50
-  const expMatch = 20; // out of 25
-  const projMatch = 10; // out of 15
-  const eduMatch = 7; // out of 10
+  const location = useLocation();
+  const result = location.state?.result;
 
-  const missingSkills = ['GraphQL', 'Redis', 'Docker'];
-  const matchedSkills = ['React', 'Node.js', 'MongoDB', 'Python', 'FastAPI'];
+  if (!result) {
+    return <Navigate to="/upload" replace />;
+  }
+  
+  const score = result.ats_score || 0;
+  const isEligible = result.eligible;
+  
+  const skillMatch = Math.round((score / 100) * 50); 
+  const expMatch = Math.round((score / 100) * 25); 
+  const projMatch = Math.round((score / 100) * 15); 
+  const eduMatch = Math.round((score / 100) * 10); 
+
+  const missingSkills = result.missing_skills || [];
+  const matchedSkills = result.extracted_skills || [];
+  const suggestions = result.suggestions || [];
+  const interviewQuestions = result.interview_questions || [];
   
   return (
     <div className="max-w-6xl mx-auto">
@@ -113,11 +121,11 @@ export default function AtsResult() {
                   <CheckCircle className="w-5 h-5 text-emerald-400" /> Matched Skills
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {matchedSkills.map(skill => (
+                  {matchedSkills.length > 0 ? matchedSkills.map(skill => (
                     <span key={skill} className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
                       {skill}
                     </span>
-                  ))}
+                  )) : <p className="text-slate-400 text-sm">No specific skills extracted.</p>}
                 </div>
               </div>
               <div>
@@ -125,11 +133,11 @@ export default function AtsResult() {
                   <XCircle className="w-5 h-5 text-rose-400" /> Missing Skills
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {missingSkills.map(skill => (
+                  {missingSkills.length > 0 ? missingSkills.map(skill => (
                     <span key={skill} className="px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm">
                       {skill}
                     </span>
-                  ))}
+                  )) : <p className="text-slate-400 text-sm">No missing skills detected! Great match.</p>}
                 </div>
               </div>
             </div>
@@ -137,34 +145,30 @@ export default function AtsResult() {
 
           {activeTab === 'suggestions' && (
             <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700 flex gap-4">
-                <div className="mt-1"><ChevronRight className="w-5 h-5 text-indigo-400" /></div>
-                <div>
-                  <h4 className="font-medium text-white">Add quantifiable metrics to your recent role</h4>
-                  <p className="text-slate-400 text-sm mt-1">Instead of "Improved performance", use "Improved database query performance by 40% using Redis caching".</p>
+              {suggestions.length > 0 ? suggestions.map((suggestion, index) => (
+                <div key={index} className="p-4 rounded-xl bg-slate-800/50 border border-slate-700 flex gap-4">
+                  <div className="mt-1"><ChevronRight className="w-5 h-5 text-indigo-400" /></div>
+                  <div>
+                    <h4 className="font-medium text-white">{suggestion}</h4>
+                  </div>
                 </div>
-              </div>
-              <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700 flex gap-4">
-                <div className="mt-1"><ChevronRight className="w-5 h-5 text-indigo-400" /></div>
-                <div>
-                  <h4 className="font-medium text-white">Highlight Docker experience</h4>
-                  <p className="text-slate-400 text-sm mt-1">The JD heavily emphasizes containerization. If you have Docker experience, make it more prominent in the skills section.</p>
-                </div>
-              </div>
+              )) : (
+                <p className="text-slate-400">No suggestions needed, your resume looks solid.</p>
+              )}
             </div>
           )}
 
           {activeTab === 'interview' && (
             <div className="space-y-4">
               <p className="text-slate-400 mb-6">AI generated these questions based on the gaps and matches between your resume and the JD.</p>
-              <div className="p-5 rounded-xl bg-slate-800 border border-slate-700">
-                <h4 className="font-medium text-indigo-300 mb-2">Q1: How do you handle state management in large React applications?</h4>
-                <p className="text-slate-400 text-sm">Reason: You listed React, but the JD specifically mentions complex state. Be prepared to discuss Redux vs Context vs Zustand.</p>
-              </div>
-              <div className="p-5 rounded-xl bg-slate-800 border border-slate-700">
-                <h4 className="font-medium text-indigo-300 mb-2">Q2: Can you explain a scenario where you would choose MongoDB over a SQL database?</h4>
-                <p className="text-slate-400 text-sm">Reason: You have strong MongoDB experience matching the JD, so expect deep-dive architectural questions on NoSQL.</p>
-              </div>
+              {interviewQuestions.length > 0 ? interviewQuestions.map((q, index) => (
+                <div key={index} className="p-5 rounded-xl bg-slate-800 border border-slate-700">
+                  <h4 className="font-medium text-indigo-300 mb-2">Q{index + 1}:</h4>
+                  <p className="text-slate-300 text-sm">{q}</p>
+                </div>
+              )) : (
+                <p className="text-slate-400">No specific interview questions generated.</p>
+              )}
             </div>
           )}
         </div>

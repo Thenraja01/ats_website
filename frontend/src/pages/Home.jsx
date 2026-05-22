@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, FileText, BarChart, Users } from 'lucide-react';
-
+import logo from "../assets/icons/logo1.png"
 export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
@@ -12,7 +12,8 @@ export default function Home() {
       <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6">
         Get Hired Faster with <br />
         <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
-          HireMind AI
+          <img src={logo} className=' w-20 h-20 mx-2 inline-block '/>
+          HireMind AI 
         </span>
       </h1>
       

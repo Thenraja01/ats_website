@@ -5,6 +5,8 @@ import UploadResume from './pages/UploadResume';
 import AtsResult from './pages/AtsResult';
 import CandidateDashboard from './pages/CandidateDashboard';
 import RecruiterDashboard from './pages/RecruiterDashboard';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
 
 function App() {
   return (
@@ -14,6 +16,8 @@ function App() {
         <main className="container mx-auto px-4 py-8">
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
             <Route path="/upload" element={<UploadResume />} />
             <Route path="/result/:id" element={<AtsResult />} />
             <Route path="/candidate-dashboard" element={<CandidateDashboard />} />
