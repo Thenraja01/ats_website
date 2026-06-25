@@ -1,39 +1,44 @@
-from datetime import datetime, timedelta
+"""Security utilities — password hashing and JWT token management."""
+
+from datetime import datetime, timedelta, timezone
 from jose import jwt
 import bcrypt
+from app.core.config import settings
 
-SECRET_KEY = "SECRET_KEY"
-ALGORITHM = "HS256"
 
 def hash_password(password: str) -> str:
-    pwd_bytes = password.encode('utf-8')
+    """Hash a password using bcrypt."""
+    pwd_bytes = password.encode("utf-8")
     if len(pwd_bytes) > 72:
         pwd_bytes = pwd_bytes[:72]
-    
+
     salt = bcrypt.gensalt()
     hashed_password = bcrypt.hashpw(pwd_bytes, salt)
-    return hashed_password.decode('utf-8')
+    return hashed_password.decode("utf-8")
+
 
 def verify_password(plain: str, hashed: str) -> bool:
-    pwd_bytes = plain.encode('utf-8')
+    """Verify a plain password against a bcrypt hash."""
+    pwd_bytes = plain.encode("utf-8")
     if len(pwd_bytes) > 72:
         pwd_bytes = pwd_bytes[:72]
-    
+
     try:
-        return bcrypt.checkpw(pwd_bytes, hashed.encode('utf-8'))
+        return bcrypt.checkpw(pwd_bytes, hashed.encode("utf-8"))
     except ValueError:
         return False
 
-def create_access_token(data: dict):
 
+def create_access_token(data: dict) -> str:
+    """Create a JWT access token with configurable expiry."""
     payload = data.copy()
-
-    payload["exp"] = (
-        datetime.utcnow() + timedelta(days=1)
+    expire = datetime.now(timezone.utc) + timedelta(
+        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
     )
+    payload["exp"] = expire
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
-    return jwt.encode(
-        payload,
-        SECRET_KEY,
-        algorithm=ALGORITHM
-    )
+
+def decode_token(token: str) -> dict:
+    """Decode and validate a JWT token."""
+    return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])

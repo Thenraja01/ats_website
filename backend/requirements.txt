@@ -1,24 +1,32 @@
-fastapi[all]
-pydantic
-pydantic-settings
-uvicorn
-langchain-community
-langchain-core
-langchain-groq
-chromadb
-langchain-chroma
-langchain-google-genai
-pypdf
-pdfplumber
-python-docx
-python-multipart
-python-dotenv
-pandas
-motor
-pymongo
-python-socketio
-redis
-celery
-beanie
-passlib[bcrypt] 
-python-jose[email]
+# Web Framework
+fastapi>=0.110.0
+uvicorn[standard]>=0.23.0
+python-multipart>=0.0.6
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+email-validator>=2.0.0
+python-dotenv>=1.0.0
+
+# Database
+motor>=3.0.0
+pymongo>=4.0.0
+beanie>=1.20.0
+
+# Security & Auth
+python-jose[cryptography]>=3.3.0
+bcrypt>=4.0.0
+passlib[bcrypt]>=1.7.4
+
+# Document Parsing
+pdfplumber>=0.10.0
+python-docx>=0.8.11
+aiofiles>=23.1.0
+
+# LangChain / AI (LLM ATS Pipeline)
+langchain>=0.1.0
+langchain-community>=0.0.10
+langchain-core>=0.1.0
+langchain-groq>=0.0.1
+langchain-google-genai>=0.0.1
+langchain-chroma>=0.1.0
+chromadb>=0.4.0

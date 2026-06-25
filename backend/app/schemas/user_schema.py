@@ -1,17 +1,10 @@
+"""User schema — response model only (auth schemas in auth_schema.py)."""
+
 from pydantic import BaseModel, EmailStr
-from typing import Optional
 
-class SignupSchema(BaseModel):
-    name: str
-    email: EmailStr
-    password: str
-    role: str|bool = False
-
-class LoginSchema(BaseModel):
-    email: EmailStr
-    password: str
 
 class UserResponse(BaseModel):
+    """User data returned in API responses."""
     id: str
     name: str
     email: EmailStr

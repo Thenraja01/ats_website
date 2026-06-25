@@ -1,39 +1,61 @@
+"""HireMind AI Backend — FastAPI application factory."""
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .api import routers
-from .api.auth_router import auth_router
-from .api.candidate_routes import candidate_router
-from .api.recruiter_routes import recruiter_router
-from .api.user_router import user_router
 from contextlib import asynccontextmanager
+
+from app.core.config import settings
 from app.core.database import init_db
+from app.api.auth_router import auth_router
+from app.api.user_router import user_router
+from app.api.resume_router import resume_router
+from app.api.rag_router import rag_router
+from app.schemas.response_schema import HealthResponse
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Application startup/shutdown lifecycle."""
     await init_db()
     yield
 
+
 app = FastAPI(
-    title="FastAPI Skeleton",
-    description="A simple FastAPI application skeleton",
-    version="1.0.0",
-    lifespan=lifespan
+    title=settings.PROJECT_NAME,
+    description="HireMind AI — Intelligent Applicant Tracking System with LLM-powered resume analysis",
+    version=settings.VERSION,
+    lifespan=lifespan,
 )
 
-# Set up CORS
+# ── CORS ─────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173"],  
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(auth_router, prefix="/api/v1")
-app.include_router(candidate_router, prefix="/api/v1")
-app.include_router(recruiter_router, prefix="/api/v1")
-app.include_router(user_router, prefix="/api/v1")
-app.include_router(routers.api_router, prefix="/api/v1")
 
+# ── Routers ──────────────────────────────────────
+app.include_router(auth_router, prefix=settings.API_V1_STR)
+app.include_router(user_router, prefix=settings.API_V1_STR)
+app.include_router(resume_router, prefix=settings.API_V1_STR)
+app.include_router(rag_router, prefix=settings.API_V1_STR)
+
+
+# ── Root & Health ────────────────────────────────
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the HireMind AI application"}
+    """Root welcome endpoint."""
+    return {"message": f"Welcome to {settings.PROJECT_NAME}"}
+
+
+@app.get("/api/v1/health", response_model=HealthResponse)
+def health_check():
+    """Health check endpoint."""
+    return HealthResponse(version=settings.VERSION)
