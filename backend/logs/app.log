@@ -1,0 +1,8 @@
+2026-07-30 21:43:59,953 - hiremind.app.services.email_service - WARNING - SMTP not configured — email not sent
+2026-07-30 21:43:59,953 - hiremind.app.api.otp_router - WARNING - Email sending failed for mthenraja@gmail.com, but OTP stored
+2026-07-30 21:56:52,027 - hiremind.app.services.email_service - INFO - Email sent to mthenraja@gmail.com: Verify your HireMind AI account
+2026-07-30 21:56:56,463 - hiremind.app.services.email_service - INFO - Email sent to mthenraja@gmail.com: Verify your HireMind AI account
+2026-07-30 21:57:02,766 - hiremind.app.services.email_service - INFO - Email sent to mthenraja@gmail.com: Verify your HireMind AI account
+2026-07-30 21:57:07,142 - hiremind.app.services.email_service - INFO - Email sent to mthenraja@gmail.com: Verify your HireMind AI account
+2026-07-30 21:58:46,611 - hiremind.app.services.email_service - INFO - Email sent to mthenraja@gmail.com: Verify your HireMind AI account
+2026-07-30 21:59:46,403 - hiremind.app.services.email_service - INFO - Email sent to test@example.com: Verify your HireMind AI account

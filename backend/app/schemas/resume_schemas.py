@@ -1,7 +1,7 @@
 """Resume schemas — request/response models for resume endpoints."""
 
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 
 class AnalyzeRequest(BaseModel):
@@ -12,6 +12,7 @@ class AnalyzeRequest(BaseModel):
 
 class ATSResult(BaseModel):
     """Response from the LLM ATS pipeline."""
+    id: Optional[str] = None
     ats_score: int
     eligible: bool
     missing_skills: List[str]

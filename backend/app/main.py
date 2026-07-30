@@ -7,9 +7,15 @@ from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.core.database import init_db
 from app.api.auth_router import auth_router
+from app.api.otp_router import otp_router
 from app.api.user_router import user_router
 from app.api.resume_router import resume_router
 from app.api.rag_router import rag_router
+from app.api.candidate_routes import candidate_router
+from app.api.recruiter_routes import recruiter_router
+from app.api.admin_router import admin_router
+from app.api.public_router import public_router
+from app.api.ws_router import ws_router
 from app.schemas.response_schema import HealthResponse
 
 
@@ -43,9 +49,15 @@ app.add_middleware(
 
 # ── Routers ──────────────────────────────────────
 app.include_router(auth_router, prefix=settings.API_V1_STR)
+app.include_router(otp_router, prefix=settings.API_V1_STR)
 app.include_router(user_router, prefix=settings.API_V1_STR)
 app.include_router(resume_router, prefix=settings.API_V1_STR)
 app.include_router(rag_router, prefix=settings.API_V1_STR)
+app.include_router(candidate_router, prefix=settings.API_V1_STR)
+app.include_router(recruiter_router, prefix=settings.API_V1_STR)
+app.include_router(admin_router, prefix=settings.API_V1_STR)
+app.include_router(public_router, prefix=settings.API_V1_STR)
+app.include_router(ws_router)
 
 
 # ── Root & Health ────────────────────────────────

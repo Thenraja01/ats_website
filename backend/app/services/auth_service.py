@@ -4,12 +4,20 @@ from app.core.security import (
     verify_password,
     create_access_token
 )
+from app.utils.validators import validate_password
+from fastapi import HTTPException
 
 async def register_user(data):
     existing_user = await UserCRUD.get_by_email(data.email)
 
     if existing_user:
         return None
+
+    if not validate_password(data.password):
+        raise HTTPException(
+            status_code=400,
+            detail="Password must be at least 8 characters with uppercase, lowercase, and a digit"
+        )
 
     user = await UserCRUD.create(data)
 
