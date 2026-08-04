@@ -8,6 +8,8 @@ from app.models.user_model import User
 from app.models.resume_model import Resume
 from app.models.application_model import Application
 from app.parsers.resume_parser import extract_text_from_pdf, extract_text_from_docx
+from app.core.config import settings
+from app.utils.validators import sanitize_filename, validate_mime_type
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -50,6 +52,18 @@ async def upload_resume(
 ):
     contents = await file.read()
     filename = file.filename or ""
+
+    if len(contents) > settings.MAX_UPLOAD_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File too large. Max size: {settings.MAX_UPLOAD_SIZE // (1024*1024)}MB",
+        )
+
+    filename = sanitize_filename(filename)
+
+    allowed_mimes = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain"]
+    if not validate_mime_type(contents, allowed_mimes):
+        raise HTTPException(status_code=400, detail="Unsupported file content")
 
     if filename.endswith(".pdf"):
         text = extract_text_from_pdf(contents)

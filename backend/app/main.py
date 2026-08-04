@@ -2,6 +2,8 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from contextlib import asynccontextmanager
 
 from app.core.config import settings
@@ -19,6 +21,27 @@ from app.api.ws_router import ws_router
 from app.schemas.response_schema import HealthResponse
 
 
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Add HTTP security headers to every response."""
+
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self'; "
+            "style-src 'self'; "
+            "img-src 'self' data:; "
+            "font-src 'self'; "
+            "connect-src 'self'; "
+            "frame-ancestors 'none'"
+        )
+        return response
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application startup/shutdown lifecycle."""
@@ -33,6 +56,15 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# ── Security Headers ──────────────────────────────────────────────
+app.add_middleware(SecurityHeadersMiddleware)
+
+# ── Trusted Host ──────────────────────────────────────────────────
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["localhost", "127.0.0.1", "*.hiremind.ai"],
+)
+
 # ── CORS ─────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
@@ -43,8 +75,13 @@ app.add_middleware(
         "http://127.0.0.1:5173",
     ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type",
+        "Accept",
+        "X-Requested-With",
+    ],
 )
 
 # ── Routers ──────────────────────────────────────

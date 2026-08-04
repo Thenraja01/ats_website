@@ -120,6 +120,10 @@ async def update_organization(
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
 
+    # Only the org owner may update
+    if org.admin_id != str(user.id):
+        raise HTTPException(status_code=403, detail="Access denied")
+
     for field in ["name", "description", "website"]:
         if field in data:
             setattr(org, field, data[field])
@@ -136,6 +140,11 @@ async def delete_organization(
     org = await Organization.get(org_id)
     if not org:
         raise HTTPException(status_code=404, detail="Organization not found")
+
+    # Only the org owner may delete
+    if org.admin_id != str(user.id):
+        raise HTTPException(status_code=403, detail="Access denied")
+
     await org.delete()
     return {"message": "Organization deleted"}
 

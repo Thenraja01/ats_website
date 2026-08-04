@@ -13,6 +13,7 @@ from app.models.analysis_model import AnalysisResult
 from app.crud.analysis_crud import AnalysisCRUD
 from app.dependencies.auth_dependency import get_optional_current_user, get_current_user
 from app.models.user_model import User
+from app.utils.validators import sanitize_filename, validate_mime_type
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -72,11 +73,22 @@ async def upload_resume(
         contents = await file.read()
         filename = file.filename or ""
 
+        # Sanitize filename to prevent path traversal
+        filename = sanitize_filename(filename)
+
         # Validate file size
         if len(contents) > settings.MAX_UPLOAD_SIZE:
             raise HTTPException(
                 status_code=413,
                 detail=f"File too large. Max size: {settings.MAX_UPLOAD_SIZE // (1024*1024)}MB",
+            )
+
+        # Validate file content type via magic bytes
+        allowed_mimes = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain"]
+        if not validate_mime_type(contents, allowed_mimes):
+            raise HTTPException(
+                status_code=400,
+                detail="Unsupported file content. Use a valid PDF, DOCX, or TXT file.",
             )
 
         if filename.endswith(".pdf"):
@@ -101,7 +113,7 @@ async def upload_resume(
         raise
     except Exception as e:
         logger.error(f"Upload error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
 @resume_router.post("/analyze", response_model=ATSResult)
@@ -141,15 +153,35 @@ async def analyze_resume(
 
     except Exception as e:
         logger.error(f"Analysis error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An internal error occurred")
 
 
 @resume_router.get("/result/{analysis_id}", response_model=ATSResult)
-async def get_analysis_result(analysis_id: str):
-    """Get a specific analysis result by ID (public access for result sharing)."""
+async def get_analysis_result(
+    analysis_id: str,
+    current_user: User = Depends(get_current_user),
+):
+    """Get a specific analysis result by ID.
+
+    Requires authentication.  A user may only view their own analysis
+    results.  Recruiters may view results tied to applications on jobs
+    they own.
+    """
     analysis = await AnalysisCRUD.get_by_id(analysis_id)
     if not analysis:
         raise HTTPException(status_code=404, detail="Analysis not found")
+
+    # Owner can always view
+    if analysis.user_id == str(current_user.id):
+        pass
+    # Recruiters / admins may view via application linkage
+    elif current_user.role in ("recruiter", "organization_admin"):
+        from app.models.application_model import Application
+        app = await Application.find_one(Application.analysis_id == str(analysis.id))
+        if not app:
+            raise HTTPException(status_code=403, detail="Access denied")
+    else:
+        raise HTTPException(status_code=403, detail="Access denied")
 
     return {
         "id": str(analysis.id),
@@ -174,6 +206,7 @@ async def get_analysis_history(
             status_code=403, detail="Only candidates can access their history"
         )
 
+    limit = min(limit, 100)
     analyses = await AnalysisCRUD.get_by_user(str(current_user.id), skip, limit)
     return [
         {

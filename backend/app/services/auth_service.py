@@ -8,6 +8,8 @@ from app.utils.validators import validate_password
 from fastapi import HTTPException
 
 async def register_user(data):
+    """Register a new user. Role is always 'candidate' — admins are
+    provisioned through a separate, protected workflow."""
     existing_user = await UserCRUD.get_by_email(data.email)
 
     if existing_user:

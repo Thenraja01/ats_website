@@ -20,6 +20,7 @@ import Marketing from './pages/Marketing';
 import Features from './pages/Features';
 import Pricing from './pages/Pricing';
 import Contact from './pages/Contact';
+import Unauthorized from './pages/Unauthorized';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -39,6 +40,7 @@ function AnimatedRoutes() {
           <Route path="/features" element={<Features />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/upload" element={<UploadResume />} />

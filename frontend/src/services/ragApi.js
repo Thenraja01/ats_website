@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://api.hiremind.ai' : 'http://localhost:8000/api/v1');
 
 export const ragApi = {
   ingestData: async (filePath = '../data/jobs.csv') => {

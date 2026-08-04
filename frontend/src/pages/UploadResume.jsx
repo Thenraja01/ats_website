@@ -24,11 +24,9 @@ export default function UploadResume() {
       const uploadRes = await uploadResume(file);
       const resumeText = uploadRes.extracted_text;
       const analysisResult = await analyzeResume({ resumeText, jdText: jd });
-      if (analysisResult.id) {
-        navigate(`/result/${analysisResult.id}`);
-      } else {
-        navigate('/result/latest', { state: { result: analysisResult } });
-      }
+      navigate(`/result/${analysisResult.id}`, {
+        state: { result: analysisResult },
+      });
     } catch (err) {
       setError(err.response?.data?.detail || err.message || 'An error occurred.');
     }

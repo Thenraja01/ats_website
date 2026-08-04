@@ -6,3 +6,21 @@
 2026-07-30 21:57:07,142 - hiremind.app.services.email_service - INFO - Email sent to mthenraja@gmail.com: Verify your HireMind AI account
 2026-07-30 21:58:46,611 - hiremind.app.services.email_service - INFO - Email sent to mthenraja@gmail.com: Verify your HireMind AI account
 2026-07-30 21:59:46,403 - hiremind.app.services.email_service - INFO - Email sent to test@example.com: Verify your HireMind AI account
+2026-07-31 16:26:26,735 - hiremind.app.services.ats_service - INFO - Starting ATS pipeline
+2026-07-31 16:26:27,615 - hiremind.app.services.ats_service - INFO - Starting ATS pipeline
+2026-07-31 16:26:27,701 - hiremind.app.services.ats_service - INFO - Starting ATS pipeline
+2026-07-31 16:26:27,818 - hiremind.app.services.ats_service - INFO - Starting ATS pipeline
+2026-07-31 16:26:28,018 - hiremind.app.services.ats_service - INFO - Starting ATS pipeline
+2026-07-31 16:26:28,115 - hiremind.app.services.ats_service - INFO - Starting ATS pipeline
+2026-07-31 16:26:28,210 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-07-31 16:26:28,212 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-07-31 16:26:28,218 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-07-31 16:26:28,221 - hiremind.app.parsers.keyword_extractor - DEBUG - Extracted skills: {'languages': ['Python'], 'frameworks': ['React']}
+2026-07-31 16:29:05,136 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-07-31 16:29:05,138 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-07-31 16:29:05,142 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-07-31 16:29:05,144 - hiremind.app.parsers.keyword_extractor - DEBUG - Extracted skills: {'languages': ['Python'], 'frameworks': ['React']}
+2026-07-31 16:30:37,926 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-07-31 16:30:37,928 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-07-31 16:30:37,930 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-07-31 16:30:37,931 - hiremind.app.parsers.keyword_extractor - DEBUG - Extracted skills: {'languages': ['Python'], 'frameworks': ['React']}

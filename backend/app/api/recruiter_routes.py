@@ -209,16 +209,21 @@ async def update_application_status(
     data: dict,
     user: User = Depends(require_roles(["recruiter", "organization_admin"])),
 ):
-    app = await Application.get(app_id)
-    if not app:
+    application = await Application.get(app_id)
+    if not application:
         raise HTTPException(status_code=404, detail="Application not found")
+
+    # Verify the application belongs to a job owned by the current user
+    job = await JobDescription.get(application.job_id)
+    if not job or job.user_id != str(user.id):
+        raise HTTPException(status_code=403, detail="Access denied")
 
     new_status = data.get("status")
     if new_status not in ["pending", "shortlisted", "rejected", "hired"]:
         raise HTTPException(status_code=400, detail="Invalid status")
 
-    app.status = new_status
-    await app.save()
+    application.status = new_status
+    await application.save()
     return {"message": f"Application status updated to {new_status}"}
 
 

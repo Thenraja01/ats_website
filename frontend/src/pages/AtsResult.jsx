@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, ChevronRight, FileCheck, Briefcase, GraduationCap, Code, Loader2, ArrowLeft, RefreshCw } from 'lucide-react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { resumeAPI } from '../services/api';
 import RevealOnScroll from '../components/animations/RevealOnScroll';
 import ScoreRing from '../components/animations/ScoreRing';
@@ -13,9 +13,18 @@ export default function AtsResult() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
+    // If result was passed via router state (e.g. from UploadResume), use it directly
+    if (location.state?.result) {
+      setResult(location.state.result);
+      setLoading(false);
+      return;
+    }
+
+    // Otherwise, fetch from API (requires authentication)
     const fetchResult = async () => {
       setLoading(true);
       setError(null);

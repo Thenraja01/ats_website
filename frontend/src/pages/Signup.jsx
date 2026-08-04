@@ -4,14 +4,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { register } from '../store/slices/authSlice';
 import { authAPI } from '../services/api';
 import { motion } from 'framer-motion';
-import { Loader2, Mail, ArrowLeft } from 'lucide-react';
+import { Loader2, Mail, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import logo from '@/assets/icons/logo1.png';
 
 export default function Signup() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('candidate');
+  const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState('form');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [otpSent, setOtpSent] = useState(false);
@@ -23,6 +23,30 @@ export default function Signup() {
   const handleSendOtp = async (e) => {
     e.preventDefault();
     setLocalError('');
+
+    if (!name.trim() || name.trim().length < 2) {
+      setLocalError('Please enter a valid name (at least 2 characters)');
+      return;
+    }
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setLocalError('Please enter a valid email address');
+      return;
+    }
+
+    if (!password || password.length < 8) {
+      setLocalError('Password must be at least 8 characters long');
+      return;
+    }
+
+    const hasUpper = /[A-Z]/.test(password);
+    const hasLower = /[a-z]/.test(password);
+    const hasDigit = /\d/.test(password);
+    if (!hasUpper || !hasLower || !hasDigit) {
+      setLocalError('Password must include uppercase, lowercase, and a digit');
+      return;
+    }
+
     try {
       await authAPI.sendOtp(email, 'signup');
       setOtpSent(true);
@@ -42,7 +66,7 @@ export default function Signup() {
     }
     try {
       await authAPI.verifyOtp(email, otpCode, 'signup');
-      const result = await dispatch(register({ name, email, password, role }));
+      const result = await dispatch(register({ name, email, password, otp_code: otpCode }));
       if (result.meta.requestStatus === 'fulfilled') {
         navigate('/login');
       } else {
@@ -120,34 +144,21 @@ export default function Signup() {
                 </div>
                 <div>
                   <label className="block text-sm text-slate-400 mb-1.5">Password</label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    placeholder="Min 8 characters"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
-                    required
-                    minLength={8}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-slate-400 mb-1.5">I am a</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {['candidate', 'recruiter'].map(r => (
-                      <button
-                        key={r}
-                        type="button"
-                        onClick={() => setRole(r)}
-                        className={`py-3 rounded-xl text-sm font-medium capitalize transition-all ${
-                          role === r
-                            ? 'bg-primary/20 border border-primary/30 text-primary'
-                            : 'bg-white/5 border border-white/10 text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        {r}
-                      </button>
-                    ))}
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      placeholder="Min 8 characters"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all pr-10"
+                      required
+                      minLength={8}
+                    />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
+                  <p className="text-xs text-slate-500 mt-1">Must include uppercase, lowercase, and a digit</p>
                 </div>
                 <button
                   type="submit"

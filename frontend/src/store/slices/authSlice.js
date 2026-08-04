@@ -1,7 +1,18 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { authAPI } from '../../services/api';
+import api, { authAPI } from '../../services/api';
 
 const token = localStorage.getItem('token');
+
+function isTokenExpired(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const exp = payload.exp;
+    if (!exp) return false;
+    return Date.now() >= exp * 1000;
+  } catch {
+    return true;
+  }
+}
 
 function decodeToken(token) {
   try {
@@ -12,7 +23,14 @@ function decodeToken(token) {
   }
 }
 
-const initialUser = token ? decodeToken(token) : null;
+// Clear auth state if token is expired
+let initialToken = token;
+if (initialToken && isTokenExpired(initialToken)) {
+  localStorage.removeItem('token');
+  initialToken = null;
+}
+
+const initialUser = initialToken ? decodeToken(initialToken) : null;
 
 export const login = createAsyncThunk('auth/login', async (credentials, { rejectWithValue }) => {
   try {
@@ -28,8 +46,9 @@ export const login = createAsyncThunk('auth/login', async (credentials, { reject
 
 export const register = createAsyncThunk('auth/register', async (data, { rejectWithValue }) => {
   try {
-    await authAPI.register(data);
-    return { message: 'Account created' };
+    const { otp_code, ...signupData } = data;
+    const response = await api.post('/auth/signup?otp_code=' + encodeURIComponent(otp_code), signupData);
+    return response.data;
   } catch (err) {
     return rejectWithValue(err.response?.data?.detail || 'Registration failed');
   }
@@ -39,8 +58,8 @@ const authSlice = createSlice({
   name: 'auth',
   initialState: {
     user: initialUser,
-    token: token || null,
-    isAuthenticated: !!token,
+    token: initialToken || null,
+    isAuthenticated: !!initialToken,
     loading: false,
     error: null,
   },

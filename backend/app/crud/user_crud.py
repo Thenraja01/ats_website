@@ -1,5 +1,6 @@
 from app.models.user_model import User
 from app.schemas.auth_schema import SignupSchema
+from app.core.roles import UserRole
 from app.core.security import hash_password
 from typing import List, Optional
 from bson import ObjectId
@@ -19,7 +20,7 @@ class UserCRUD:
             name=data.name,
             email=data.email,
             password=hash_password(data.password),
-            role=data.role
+            role=UserRole.CANDIDATE,
         )
         await user.insert()
         return user

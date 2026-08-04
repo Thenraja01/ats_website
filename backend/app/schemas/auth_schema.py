@@ -1,11 +1,9 @@
-from pydantic import BaseModel, EmailStr
-from app.core.roles import UserRole
+from pydantic import BaseModel, EmailStr, Field
 
 class SignupSchema(BaseModel):
-    name: str
+    name: str = Field(..., min_length=2, max_length=100)
     email: EmailStr
-    password: str
-    role: UserRole
+    password: str = Field(..., min_length=8, max_length=128)
 
 class LoginSchema(BaseModel):
     email: EmailStr

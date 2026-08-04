@@ -2,7 +2,8 @@
 
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import JWTError
+from jose import JWTError, ExpiredSignatureError
+from bson.objectid import InvalidId
 
 from app.models.user_model import User
 from app.core.config import settings
@@ -25,12 +26,21 @@ async def get_current_user(
         )
         user_id = payload.get("id")
 
-        user = await User.get(user_id)
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token payload")
+
+        try:
+            user = await User.get(user_id)
+        except InvalidId:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
 
         return user
 
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
@@ -50,7 +60,13 @@ async def get_optional_current_user(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
         user_id = payload.get("id")
-        user = await User.get(user_id)
+        if not user_id:
+            return None
+
+        try:
+            user = await User.get(user_id)
+        except InvalidId:
+            return None
         return user
-    except JWTError:
+    except (JWTError, ExpiredSignatureError):
         return None

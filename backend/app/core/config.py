@@ -36,5 +36,13 @@ class Settings(BaseSettings):
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
+    @model_validator(mode="after")
+    def check_security(self):
+        """Warn about insecure configuration at startup."""
+        if not self.GROQ_API_KEY:
+            import warnings
+            warnings.warn("GROQ_API_KEY is not set — ATS analysis will fail.", stacklevel=2)
+        return self
+
 
 settings = Settings()

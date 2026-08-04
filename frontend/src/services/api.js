@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://api.hiremind.ai' : 'http://localhost:8000');
 const API_URL = `${API_BASE}/api/v1`;
 
 const api = axios.create({
@@ -18,9 +18,20 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Clear auth state on 401 responses
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
-  register: (data) => api.post('/auth/signup', data),
+  register: (data, otp_code) => api.post(`/auth/signup?otp_code=${encodeURIComponent(otp_code)}`, { name: data.name, email: data.email, password: data.password }),
   sendOtp: (email, purpose = 'signup') => api.post('/auth/send-otp', { email, purpose }),
   verifyOtp: (email, code, purpose = 'signup') => api.post('/auth/verify-otp', { email, code, purpose }),
 };

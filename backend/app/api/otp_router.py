@@ -1,9 +1,11 @@
 """OTP router — email-based one-time password authentication."""
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends, Request
 from datetime import datetime, timedelta, timezone
-import random
+from typing import Dict
+import secrets
 import string
+from collections import defaultdict
 
 from app.models.otp_model import OTPCode
 from app.models.user_model import User
@@ -16,13 +18,47 @@ logger = get_logger(__name__)
 
 otp_router = APIRouter(prefix="/auth", tags=["Auth"])
 
+# In-memory rate-limiting store (per-IP).  In production, use Redis.
+MAX_OTP_REQUESTS = 5
+OTP_WINDOW_SECONDS = 300  # 5-minute sliding window
+
+_rate_limit_store: Dict[str, list] = defaultdict(list)
+
+
+def _get_client_ip(request: Request) -> str:
+    """Best-effort client IP extraction."""
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+def _check_rate_limit(client_ip: str):
+    """Raise HTTPException if the client has exceeded the OTP request limit."""
+    now = datetime.now(timezone.utc)
+    window_start = now - timedelta(seconds=OTP_WINDOW_SECONDS)
+    # Prune old entries
+    _rate_limit_store[client_ip] = [
+        ts for ts in _rate_limit_store[client_ip] if ts > window_start
+    ]
+    if len(_rate_limit_store[client_ip]) >= MAX_OTP_REQUESTS:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many OTP requests. Please try again later.",
+        )
+    _rate_limit_store[client_ip].append(now)
+
 
 def generate_otp(length: int = 6) -> str:
-    return "".join(random.choices(string.digits, k=length))
+    """Generate a cryptographically secure OTP."""
+    return "".join(secrets.choice(string.digits) for _ in range(length))
 
 
 @otp_router.post("/send-otp")
-async def send_otp(data: dict):
+async def send_otp(request: Request, data: dict):
+    client_ip = _get_client_ip(request)
+    _check_rate_limit(client_ip)
+
     email = data.get("email", "").strip().lower()
     purpose = data.get("purpose", "signup")
 
@@ -60,7 +96,6 @@ async def send_otp(data: dict):
     sent = await send_otp_email(email, code, purpose)
     if not sent:
         logger.warning(f"Email sending failed for {email}, but OTP stored")
-        logger.info(f"[DEV] OTP for {email}: {code}")
 
     return {
         "message": "OTP sent to email",
@@ -69,7 +104,10 @@ async def send_otp(data: dict):
 
 
 @otp_router.post("/verify-otp")
-async def verify_otp(data: dict):
+async def verify_otp(request: Request, data: dict):
+    client_ip = _get_client_ip(request)
+    _check_rate_limit(client_ip)
+
     email = data.get("email", "").strip().lower()
     code = data.get("code", "").strip()
     purpose = data.get("purpose", "signup")
