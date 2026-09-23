@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, File, CheckCircle2, Loader2, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useUploadResume, useAnalyzeResume } from '../hooks/useResume';
+import { getApiErrorMessage } from '../utils';
 import RevealOnScroll from '../components/animations/RevealOnScroll';
 import GradientText from '../components/animations/GradientText';
 
@@ -28,7 +29,7 @@ export default function UploadResume() {
         state: { result: analysisResult },
       });
     } catch (err) {
-      setError(err.response?.data?.detail || err.message || 'An error occurred.');
+      setError(getApiErrorMessage(err, 'An error occurred.'));
     }
   };
 

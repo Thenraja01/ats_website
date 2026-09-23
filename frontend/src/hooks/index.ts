@@ -38,7 +38,7 @@ export function useMousePosition() {
 
 export function useCountUp(end: number, duration = 2000, start = 0) {
   const [count, setCount] = useState(start);
-  const frameRef = useRef<number>();
+  const frameRef = useRef<number | null>(null);
 
   useEffect(() => {
     const startTime = performance.now();

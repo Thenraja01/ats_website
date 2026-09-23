@@ -42,7 +42,6 @@ const trustedLogos = [
 
 export default function Home() {
   const heroRef = useRef(null);
-  const headingRef = useRef(null);
   const particlesRef = useRef(null);
   const { displayText } = useTypewriter(['analyze resumes', 'match candidates', 'optimize hiring', 'screen faster'], {});
 
@@ -59,28 +58,6 @@ export default function Home() {
     mouseY.set((e.clientY - rect.top) / rect.height - 0.5);
   };
 
-  // GSAP hero stagger
-  useEffect(() => {
-    const heading = headingRef.current;
-    if (!heading) return;
-
-    const words = heading.querySelectorAll('.hero-word');
-    gsap.fromTo(words, 
-      { opacity: 0, y: 40, rotateX: -20 },
-      {
-        opacity: 1, y: 0, rotateX: 0,
-        duration: 0.8,
-        stagger: 0.08,
-        ease: 'cubic-bezier(0.16, 1, 0.3, 1)',
-        scrollTrigger: {
-          trigger: heading,
-          start: 'top 80%',
-          toggleActions: 'play none none none',
-        },
-      }
-    );
-  }, []);
-
   // Particles
   useEffect(() => {
     const canvas = particlesRef.current;
@@ -91,7 +68,7 @@ export default function Home() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-      const particles = [];
+    const particles = [];
     for (let i = 0; i < 60; i++) {
       particles.push({
         x: Math.random() * canvas.width,
@@ -146,7 +123,7 @@ export default function Home() {
       <section
         ref={heroRef}
         onMouseMove={handleMouse}
-        className="relative z-10 text-center py-28 md:py-36 overflow-hidden"
+        className="relative z-10 text-center py-20 md:py-28 overflow-hidden"
       >
         {/* Aurora blobs */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -159,26 +136,31 @@ export default function Home() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{ duration: 0.4 }}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6"
           >
             <Sparkles className="w-4 h-4" />
             AI-Powered Applicant Tracking System
           </motion.div>
 
-          <h1 ref={headingRef} className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 max-w-5xl mx-auto leading-tight font-heading">
-            <span className="hero-word inline-block">Hire</span>{' '}
-            <span className="hero-word inline-block">Smarter.</span>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 max-w-5xl mx-auto leading-tight font-heading"
+          >
+            <span className="inline-block">Hire</span>{' '}
+            <span className="inline-block">Smarter.</span>
             <br />
-            <span className="hero-word inline-block">
+            <span className="inline-block">
               <GradientText>Candidates Win Faster.</GradientText>
             </span>
-          </h1>
+          </motion.h1>
 
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
             className="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto mb-6 leading-relaxed"
           >
             Leverage Llama 3 AI to <span className="text-white font-medium">{displayText}</span>
@@ -188,16 +170,16 @@ export default function Home() {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
             className="text-slate-500 text-sm mb-10 max-w-2xl mx-auto"
           >
             Whether you&apos;re a job seeker optimizing your resume or a recruiter screening hundreds of applicants.
           </motion.p>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 1 }}
+            transition={{ duration: 0.5, delay: 0.35 }}
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
             <Link

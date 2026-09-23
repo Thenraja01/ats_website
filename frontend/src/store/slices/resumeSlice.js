@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { resumeAPI } from '../../services/api';
+import { getApiErrorMessage } from '../../utils';
 
 export const uploadResume = createAsyncThunk('resume/upload', async (file, { rejectWithValue }) => {
   try {
@@ -8,7 +9,7 @@ export const uploadResume = createAsyncThunk('resume/upload', async (file, { rej
     const res = await resumeAPI.upload(formData);
     return res.data;
   } catch (err) {
-    return rejectWithValue(err.response?.data?.detail || 'Upload failed');
+    return rejectWithValue(getApiErrorMessage(err, 'Upload failed'));
   }
 });
 
@@ -17,7 +18,7 @@ export const analyzeResume = createAsyncThunk('resume/analyze', async ({ resumeT
     const res = await resumeAPI.analyze({ resume_text: resumeText, jd_text: jdText });
     return res.data;
   } catch (err) {
-    return rejectWithValue(err.response?.data?.detail || 'Analysis failed');
+    return rejectWithValue(getApiErrorMessage(err, 'Analysis failed'));
   }
 });
 
@@ -26,7 +27,7 @@ export const fetchHistory = createAsyncThunk('resume/fetchHistory', async (_, { 
     const res = await resumeAPI.getHistory();
     return res.data;
   } catch (err) {
-    return rejectWithValue(err.response?.data?.detail || 'Failed to fetch history');
+    return rejectWithValue(getApiErrorMessage(err, 'Failed to fetch history'));
   }
 });
 
@@ -35,7 +36,7 @@ export const fetchStats = createAsyncThunk('resume/fetchStats', async (_, { reje
     const res = await resumeAPI.getHistoryStats();
     return res.data;
   } catch (err) {
-    return rejectWithValue(err.response?.data?.detail || 'Failed to fetch stats');
+    return rejectWithValue(getApiErrorMessage(err, 'Failed to fetch stats'));
   }
 });
 

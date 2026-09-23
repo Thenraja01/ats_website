@@ -5,12 +5,23 @@ Unit tests (test_security, test_ats_service, test_parsers) do not require MongoD
 """
 
 import pytest
+import pytest_asyncio
+from httpx import AsyncClient, ASGITransport
+from app.main import app
 from app.core.config import settings
 
 
 @pytest.fixture
 def test_settings():
     return settings
+
+
+@pytest_asyncio.fixture
+async def async_client():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        yield client
+
 
 
 @pytest.fixture

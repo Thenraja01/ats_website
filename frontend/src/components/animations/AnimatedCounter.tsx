@@ -11,13 +11,13 @@ interface AnimatedCounterProps {
 
 export default function AnimatedCounter({ from = 0, to, duration = 2, className = '', prefix = '', suffix = '' }: AnimatedCounterProps) {
   const [count, setCount] = useState(from);
-  const frameRef = useRef<number>();
-  const startRef = useRef<number>();
+  const frameRef = useRef<number | null>(null);
+  const startRef = useRef<number | null>(null);
 
   useEffect(() => {
-    startRef.current = undefined;
+    startRef.current = null;
     const animate = (time: number) => {
-      if (startRef.current === undefined) startRef.current = time;
+      if (startRef.current === null) startRef.current = time;
       const elapsed = (time - startRef.current) / 1000;
       const progress = Math.min(elapsed / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);

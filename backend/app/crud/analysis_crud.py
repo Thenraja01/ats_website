@@ -44,27 +44,23 @@ class AnalysisCRUD:
 
     @staticmethod
     async def get_user_stats(user_id: str) -> Dict[str, Any]:
-        pipeline = [
-            {"$match": {"user_id": user_id}},
-            {
-                "$group": {
-                    "_id": None,
-                    "total_analyses": {"$sum": 1},
-                    "avg_score": {"$avg": "$ats_score"},
-                    "max_score": {"$max": "$ats_score"},
-                    "eligible_count": {"$sum": {"$cond": ["$eligible", 1, 0]}},
-                    "last_activity": {"$max": "$created_at"},
-                }
-            },
-        ]
-        result = await AnalysisResult.aggregate(pipeline).to_list()
-        if result:
-            r = result[0]
-            r["avg_score"] = round(r["avg_score"], 1)
-            r["eligible_percentage"] = round(
-                (r["eligible_count"] / r["total_analyses"]) * 100, 1
-            )
-            return r
+        results = await AnalysisResult.find(AnalysisResult.user_id == user_id).to_list()
+        if results:
+            total = len(results)
+            scores = [r.ats_score for r in results if r.ats_score is not None]
+            avg_score = round(sum(scores) / len(scores), 1) if scores else 0.0
+            max_score = max(scores) if scores else 0
+            eligible_count = sum(1 for r in results if r.eligible)
+            eligible_percentage = round((eligible_count / total) * 100, 1) if total > 0 else 0.0
+            last_activity = max(r.created_at for r in results if r.created_at) if results else None
+            return {
+                "total_analyses": total,
+                "avg_score": avg_score,
+                "max_score": max_score,
+                "eligible_count": eligible_count,
+                "eligible_percentage": eligible_percentage,
+                "last_activity": last_activity,
+            }
         return {
             "total_analyses": 0,
             "avg_score": 0,

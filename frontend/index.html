@@ -4,11 +4,40 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <meta http-equiv="X-Frame-Options" content="DENY" />
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
     <meta name="color-scheme" content="dark" />
-    <link rel="icon" type="image/svg+xml" href="/frontend/assets/logo1.png" />
+    <meta name="theme-color" content="#050816" />
+    <meta name="description" content="HireMind AI — Your Career. One Intelligent Workspace. AI-powered ATS resume analysis, JD matching, resume tailoring, mock interviews and career intelligence." />
+    <meta name="keywords" content="ATS, applicant tracking system, resume parser, AI matching, candidate screening, cover letter generator" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="HireMind AI — Intelligent Applicant Tracking System" />
+    <meta property="og:description" content="AI-Powered Applicant Tracking System with LLM-powered resume matching and cover letter generation." />
+    <meta property="og:image" content="/frontend/assets/logo.png" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary" />
+    <meta property="twitter:title" content="HireMind AI — Intelligent Applicant Tracking System" />
+    <meta property="twitter:description" content="AI-Powered Applicant Tracking System with LLM-powered resume matching and cover letter generation." />
+    <meta property="twitter:image" content="/frontend/assets/logo.png" />
+
+    <link rel="icon" type="image/svg+xml" href="/frontend/assets/logo.png" />
     <title>HireMind AI</title>
+    <script>
+      ;(function () {
+        try {
+          var stored = localStorage.getItem('hiremind_theme')
+          var theme = stored ? JSON.parse(stored).state.theme : 'dark'
+          var dark = theme === 'dark' || (theme === 'system' && (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches))
+          document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light')
+          document.documentElement.style.colorScheme = dark ? 'dark' : 'light'
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'dark')
+        }
+      })()
+    </script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>
   <body>
     <div id="root"></div>

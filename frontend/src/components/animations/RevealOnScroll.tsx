@@ -1,8 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
+import React from 'react';
+import { motion } from 'framer-motion';
 
 interface RevealOnScrollProps {
   children: React.ReactNode;
@@ -19,48 +16,35 @@ export default function RevealOnScroll({
   className = '',
   delay = 0,
   direction = 'up',
-  distance = 60,
-  duration = 0.8,
+  distance = 30,
+  duration = 0.5,
   once = true,
 }: RevealOnScrollProps) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const fromVars: gsap.TweenVars = { opacity: 0 };
+  const getInitialOffset = () => {
     switch (direction) {
-      case 'up': fromVars.y = distance; break;
-      case 'down': fromVars.y = -distance; break;
-      case 'left': fromVars.x = distance; break;
-      case 'right': fromVars.x = -distance; break;
+      case 'up': return { y: distance, x: 0 };
+      case 'down': return { y: -distance, x: 0 };
+      case 'left': return { x: distance, y: 0 };
+      case 'right': return { x: -distance, y: 0 };
+      default: return { y: distance, x: 0 };
     }
+  };
 
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: el,
-        start: 'top 85%',
-        toggleActions: once ? 'play none none none' : 'play none none reset',
-      },
-    });
+  const offset = getInitialOffset();
 
-    tl.fromTo(el, fromVars, {
-      opacity: 1,
-      x: 0,
-      y: 0,
-      duration,
-      delay,
-      ease: 'cubic-bezier(0.16, 1, 0.3, 1)',
-    });
-
-    return () => {
-      tl.kill();
-      ScrollTrigger.getAll().forEach(st => {
-        if (st.vars.trigger === el) st.kill();
-      });
-    };
-  }, [direction, distance, duration, delay, once]);
-
-  return <div ref={ref} className={className}>{children}</div>;
+  return (
+    <motion.div
+      initial={{ opacity: 0, ...offset }}
+      whileInView={{ opacity: 1, x: 0, y: 0 }}
+      viewport={{ once, margin: '0px 0px -50px 0px' }}
+      transition={{
+        duration,
+        delay,
+        ease: [0.25, 0.1, 0.25, 1],
+      }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
 }
