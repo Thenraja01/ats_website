@@ -18,6 +18,12 @@ from app.api.recruiter_routes import recruiter_router
 from app.api.admin_router import admin_router
 from app.api.public_router import public_router
 from app.api.ws_router import ws_router
+from app.api.career_router import career_router
+from app.api.resume_studio_router import studio_router
+from app.api.interview_router import interview_router
+from app.api.documents_router import documents_router
+from app.api.notifications_router import notifications_router
+from app.api.intelligence_router import intelligence_router
 from app.schemas.response_schema import HealthResponse
 
 
@@ -62,7 +68,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 # ── Trusted Host ──────────────────────────────────────────────────
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=["localhost", "127.0.0.1", "*.hiremind.ai"],
+    allowed_hosts=["localhost", "127.0.0.1", "*.hiremind.ai", "*.localfix.app", "jeeva.localfix.app", "*"],
 )
 
 # ── CORS ─────────────────────────────────────────
@@ -70,10 +76,15 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
+        "http://localhost:5137",
         "http://localhost:5173",
         "http://127.0.0.1:3000",
+        "http://127.0.0.1:5137",
         "http://127.0.0.1:5173",
+        "https://jeeva.localfix.app",
+        "http://jeeva.localfix.app",
     ],
+    allow_origin_regex=r"https?://.*\.localfix\.app.*",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
     allow_headers=[
@@ -94,6 +105,12 @@ app.include_router(candidate_router, prefix=settings.API_V1_STR)
 app.include_router(recruiter_router, prefix=settings.API_V1_STR)
 app.include_router(admin_router, prefix=settings.API_V1_STR)
 app.include_router(public_router, prefix=settings.API_V1_STR)
+app.include_router(career_router, prefix=settings.API_V1_STR)
+app.include_router(studio_router, prefix=settings.API_V1_STR)
+app.include_router(interview_router, prefix=settings.API_V1_STR)
+app.include_router(documents_router, prefix=settings.API_V1_STR)
+app.include_router(notifications_router, prefix=settings.API_V1_STR)
+app.include_router(intelligence_router, prefix=settings.API_V1_STR)
 app.include_router(ws_router)
 
 

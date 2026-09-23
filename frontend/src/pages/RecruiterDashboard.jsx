@@ -4,18 +4,26 @@ import { motion } from 'framer-motion';
 import { 
   Briefcase, Users, TrendingUp, FileText, Loader2, Plus, 
   Search, Filter, Star, X, Check, Clock, RefreshCw, 
-  ExternalLink, ChevronDown, MoreHorizontal 
+  ExternalLink, ChevronDown, MoreHorizontal, PieChart as PieIcon, BarChart3 
 } from 'lucide-react';
 import { recruiterAPI, resumeAPI } from '../services/api';
+import { getApiErrorMessage } from '../utils';
 import { GlassCard, Badge, GlowButton } from '../components/ui/GlassCard';
 import { staggerContainer, fadeInUp } from '../constants/theme';
 import { useNavigate } from 'react-router-dom';
+import {
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip,
+  PieChart, Pie, Cell, Legend
+} from 'recharts';
+
+const COLORS = ['#818cf8', '#34d399', '#fbbf24', '#f87171', '#a78bfa'];
 
 export default function RecruiterPortal() {
   const navigate = useNavigate();
   const [tab, setTab] = useState('applications');
   const [applications, setApplications] = useState([]);
   const [jobs, setJobs] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -25,14 +33,16 @@ export default function RecruiterPortal() {
     setLoading(true);
     setError(null);
     try {
-      const [appsRes, jobsRes] = await Promise.all([
+      const [appsRes, jobsRes, analyticsRes] = await Promise.all([
         recruiterAPI.getAllApplications(),
         recruiterAPI.getJobs(),
+        recruiterAPI.getAnalytics(),
       ]);
       setApplications(appsRes.data);
       setJobs(jobsRes.data);
+      setAnalytics(analyticsRes.data);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to load data');
+      setError(getApiErrorMessage(err, 'Failed to load data'));
     } finally {
       setLoading(false);
     }
@@ -141,6 +151,7 @@ export default function RecruiterPortal() {
         {[
           { id: 'applications', label: 'Applications', icon: Users },
           { id: 'jobs', label: 'Job Descriptions', icon: Briefcase },
+          { id: 'analytics', label: 'Analytics', icon: TrendingUp },
         ].map(t => (
           <button
             key={t.id}
@@ -323,6 +334,136 @@ export default function RecruiterPortal() {
               ))}
             </div>
           )}
+        </motion.div>
+      )}
+
+      {/* Analytics Tab */}
+      {tab === 'analytics' && analytics && (
+        <motion.div variants={fadeInUp} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* Score Distribution Card */}
+            <div className="glass rounded-2xl p-6 border border-white/[0.06] flex flex-col h-[320px]">
+              <div className="flex items-center gap-2 mb-4">
+                <BarChart3 className="w-4 h-4 text-primary" />
+                <h3 className="text-sm font-semibold text-white">ATS Score Distribution</h3>
+              </div>
+              <div className="flex-1 w-full min-h-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={analytics.score_distribution} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                    <XAxis dataKey="range" stroke="#64748b" fontSize={10} tickLine={false} />
+                    <YAxis stroke="#64748b" fontSize={10} tickLine={false} />
+                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '8px' }} labelStyle={{ color: '#fff' }} />
+                    <Bar dataKey="count" fill="#818cf8" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Application Status Card */}
+            <div className="glass rounded-2xl p-6 border border-white/[0.06] flex flex-col h-[320px]">
+              <div className="flex items-center gap-2 mb-4">
+                <PieIcon className="w-4 h-4 text-primary" />
+                <h3 className="text-sm font-semibold text-white">Applications by Status</h3>
+              </div>
+              <div className="flex-1 w-full min-h-0 relative">
+                {analytics.status_breakdown && analytics.status_breakdown.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={analytics.status_breakdown}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="count"
+                        nameKey="status"
+                      >
+                        {analytics.status_breakdown.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '8px' }} />
+                      <Legend verticalAlign="bottom" height={36} iconSize={8} iconType="circle" wrapperStyle={{ fontSize: '10px' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-xs text-slate-500">No applications data</div>
+                )}
+              </div>
+            </div>
+
+            {/* Applications per Job Card */}
+            <div className="glass rounded-2xl p-6 border border-white/[0.06] flex flex-col h-[320px]">
+              <div className="flex items-center gap-2 mb-4">
+                <Briefcase className="w-4 h-4 text-primary" />
+                <h3 className="text-sm font-semibold text-white">Top Jobs by Applications</h3>
+              </div>
+              <div className="flex-1 w-full min-h-0">
+                {analytics.applications_per_job && analytics.applications_per_job.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={analytics.applications_per_job} layout="vertical" margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                      <XAxis type="number" stroke="#64748b" fontSize={10} tickLine={false} />
+                      <YAxis dataKey="job" type="category" stroke="#64748b" fontSize={8} width={80} tickLine={false} />
+                      <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '8px' }} />
+                      <Bar dataKey="applications" fill="#34d399" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-xs text-slate-500">No active postings</div>
+                )}
+              </div>
+            </div>
+
+          </div>
+
+          {/* Overview summary */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <GlassCard className="p-6">
+              <h3 className="text-sm font-semibold text-white mb-4">Recruitment Funnel</h3>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-xs text-slate-400 mb-1">
+                    <span>Eligible Candidates</span>
+                    <span>{analytics.eligible_count} / {analytics.total_applications}</span>
+                  </div>
+                  <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                    <div 
+                      className="bg-emerald-400 h-1.5 rounded-full" 
+                      style={{ width: `${analytics.total_applications ? (analytics.eligible_count / analytics.total_applications) * 100 : 0}%` }}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between text-xs text-slate-400 mb-1">
+                    <span>Average ATS Quality Score</span>
+                    <span>{analytics.avg_ats_score}%</span>
+                  </div>
+                  <div className="w-full bg-white/5 rounded-full h-1.5 overflow-hidden">
+                    <div 
+                      className="bg-primary h-1.5 rounded-full" 
+                      style={{ width: `${analytics.avg_ats_score}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </GlassCard>
+
+            <GlassCard className="p-6">
+              <h3 className="text-sm font-semibold text-white mb-4">Status Summary</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] text-center">
+                  <div className="text-2xl font-bold text-white">{analytics.total_jobs}</div>
+                  <div className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Active Jobs</div>
+                </div>
+                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] text-center">
+                  <div className="text-2xl font-bold text-white">{analytics.total_applications}</div>
+                  <div className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Received Applications</div>
+                </div>
+              </div>
+            </GlassCard>
+          </div>
         </motion.div>
       )}
     </motion.div>

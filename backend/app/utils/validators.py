@@ -52,7 +52,7 @@ def sanitize_filename(filename: str) -> str:
 
 
 def validate_mime_type(file_bytes: bytes, allowed_mimes: List[str]) -> bool:
-    """Validate file content by checking magic bytes (first bytes)."""
+    """Validate file content by checking magic bytes and UTF-8 text decodability."""
     if len(file_bytes) < 4:
         return False
     header = file_bytes[:8]
@@ -62,8 +62,18 @@ def validate_mime_type(file_bytes: bytes, allowed_mimes: List[str]) -> bool:
     # DOCX (ZIP signature)
     if header[:4] == b"PK\x03\x04":
         return "application/vnd.openxmlformats-officedocument.wordprocessingml.document" in allowed_mimes
-    # Plain text — heuristic: first 512 bytes are printable
-    sample = file_bytes[:512]
-    if all(b < 128 for b in sample):
-        return "text/plain" in allowed_mimes
+    # Plain text / UTF-8 text support
+    if "text/plain" in allowed_mimes:
+        try:
+            sample = file_bytes[:2048].decode("utf-8")
+            # If it decodes and doesn't contain null bytes, it's valid text
+            if "\x00" not in sample:
+                return True
+        except UnicodeDecodeError:
+            try:
+                sample = file_bytes[:2048].decode("latin-1")
+                if "\x00" not in sample:
+                    return True
+            except Exception:
+                pass
     return False

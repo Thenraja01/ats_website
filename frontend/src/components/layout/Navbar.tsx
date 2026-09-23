@@ -1,41 +1,68 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LogOut, LayoutDashboard } from 'lucide-react';
+import { logout } from '@/store/slices/authSlice';
 import { cn } from '@/utils';
-import logo from '@/assets/icons/logo1.png';
+import logo from '@/assets/icons/logo.png';
 import { useMagnetic } from '@/hooks/useAnimations';
 
-const navLinks = [
+const publicLinks = [
   { label: 'Features', href: '/features' },
   { label: 'Pricing', href: '/pricing' },
-  { label: 'AI', href: '/upload' },
+  { label: 'AI Analyzer', href: '/upload' },
   { label: 'Docs', href: '/marketing' },
   { label: 'About', href: '/contact' },
 ];
 
+const authenticatedLinks = [
+  { label: 'Dashboard', href: '/dashboard' },
+  { label: 'Resume Studio', href: '/resume-studio' },
+  { label: 'JD Tailor', href: '/resume-studio/jd-tailor' },
+  { label: 'Interview Hub', href: '/interview' },
+];
+
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
-  const { scrollY } = useScroll();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  const navBg = useTransform(scrollY, [0, 80], ['rgba(5,8,22,0)', 'rgba(5,8,22,0.85)']);
-  const navBlur = useTransform(scrollY, [0, 80], [0, 20]);
-  const navBorder = useTransform(scrollY, [0, 80], [0, 1]);
+  const { isAuthenticated, user } = useSelector((state: any) => state.auth);
+  const navLinks = isAuthenticated ? authenticatedLinks : publicLinks;
 
-  const isAuthenticated = !!localStorage.getItem('token');
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const getDashboardPath = () => {
+    return '/dashboard';
+  };
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/login');
+    setMobileOpen(false);
+  };
 
   return (
-    <motion.nav
+    <motion.header
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-      style={{
-        backgroundColor: navBg,
-        backdropFilter: navBlur.get() ? `blur(${navBlur}px)` : undefined,
-        borderBottom: navBorder.get() ? '1px solid rgba(255,255,255,0.06)' : '1px solid transparent',
-      }}
-      className="fixed top-0 left-0 right-0 z-50 transition-shadow duration-500"
+      transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+      className={cn(
+        'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
+        isScrolled
+          ? 'bg-[#050816]/90 backdrop-blur-xl border-b border-white/[0.08] shadow-lg shadow-black/20'
+          : 'bg-transparent border-b border-transparent'
+      )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
@@ -81,12 +108,23 @@ export default function Navbar() {
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
-              <MagneticButtonLink
-                to="/candidate-dashboard"
-                className="px-5 py-2.5 rounded-xl bg-primary/10 border border-primary/20 text-sm font-medium text-primary hover:bg-primary/20 transition-all"
-              >
-                Dashboard
-              </MagneticButtonLink>
+              <div className="flex items-center gap-3">
+                <MagneticButtonLink
+                  to={getDashboardPath()}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/10 border border-primary/20 text-sm font-medium text-primary hover:bg-primary/20 transition-all"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  Dashboard
+                </MagneticButtonLink>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-slate-400 hover:text-red-400 hover:bg-white/5 text-sm transition-all"
+                  title="Sign Out"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="hidden lg:inline">Sign Out</span>
+                </button>
+              </div>
             ) : (
               <>
                 <Link
@@ -138,13 +176,21 @@ export default function Navbar() {
               ))}
               <div className="pt-3 border-t border-white/[0.06] space-y-2">
                 {isAuthenticated ? (
-                  <Link
-                    to="/candidate-dashboard"
-                    onClick={() => setMobileOpen(false)}
-                    className="block px-4 py-3 rounded-xl bg-primary/10 border border-primary/20 text-sm font-medium text-primary text-center"
-                  >
-                    Dashboard
-                  </Link>
+                  <>
+                    <Link
+                      to={getDashboardPath()}
+                      onClick={() => setMobileOpen(false)}
+                      className="block px-4 py-3 rounded-xl bg-primary/10 border border-primary/20 text-sm font-medium text-primary text-center"
+                    >
+                      Dashboard
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full px-4 py-3 rounded-xl bg-red-500/10 text-red-400 text-sm font-medium text-center hover:bg-red-500/20"
+                    >
+                      Sign Out
+                    </button>
+                  </>
                 ) : (
                   <>
                     <Link
@@ -168,7 +214,7 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.nav>
+    </motion.header>
   );
 }
 

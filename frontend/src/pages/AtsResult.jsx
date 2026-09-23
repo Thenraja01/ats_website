@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, XCircle, ChevronRight, FileCheck, Briefcase, GraduationCap, Code, Loader2, ArrowLeft, RefreshCw } from 'lucide-react';
+import { CheckCircle, XCircle, ChevronRight, FileCheck, Briefcase, GraduationCap, Code, Loader2, ArrowLeft, RefreshCw, Download } from 'lucide-react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { resumeAPI } from '../services/api';
+import { getApiErrorMessage } from '../utils';
 import RevealOnScroll from '../components/animations/RevealOnScroll';
 import ScoreRing from '../components/animations/ScoreRing';
 import { staggerContainer, fadeInUp } from '../constants/theme';
+import { toast } from 'sonner';
 
 export default function AtsResult() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -15,6 +17,51 @@ export default function AtsResult() {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownloadPDF = async () => {
+    setDownloading(true);
+    const element = document.getElementById('ats-report-content');
+    if (!element) {
+      toast.error('Report content container not found');
+      setDownloading(false);
+      return;
+    }
+
+    try {
+      const { default: html2canvas } = await import('html2canvas');
+      const { default: jsPDF } = await import('jspdf');
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#050816',
+      });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgWidth = 210;
+      const pageHeight = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+      pdf.save(`ats-report-${id}.pdf`);
+      toast.success('PDF report downloaded successfully!');
+    } catch (err) {
+      toast.error('Failed to generate PDF report');
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   useEffect(() => {
     // If result was passed via router state (e.g. from UploadResume), use it directly
@@ -32,7 +79,7 @@ export default function AtsResult() {
         const response = await resumeAPI.getResult(id);
         setResult(response.data);
       } catch (err) {
-        setError(err.response?.data?.detail || 'Failed to load analysis result');
+        setError(getApiErrorMessage(err, 'Failed to load analysis result'));
       } finally {
         setLoading(false);
       }
@@ -86,7 +133,33 @@ export default function AtsResult() {
   const interviewQuestions = result.interview_questions || [];
 
   return (
-    <motion.div className="max-w-6xl mx-auto" variants={staggerContainer} initial="hidden" animate="visible">
+    <div className="max-w-6xl mx-auto">
+      {/* Action Bar */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+        </button>
+        <button
+          onClick={handleDownloadPDF}
+          disabled={downloading}
+          className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-xl bg-primary/20 border border-primary/30 text-primary hover:text-white transition-all disabled:opacity-50"
+        >
+          {downloading ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating PDF...
+            </>
+          ) : (
+            <>
+              <Download className="w-3.5 h-3.5" /> Download Report PDF
+            </>
+          )}
+        </button>
+      </div>
+
+      <motion.div id="ats-report-content" className="p-4 rounded-3xl" variants={staggerContainer} initial="hidden" animate="visible">
       {/* Score Card */}
       <motion.div variants={fadeInUp} className="flex flex-col md:flex-row gap-8 mb-8">
         <div className="w-full md:w-1/3 glass rounded-2xl p-8 flex flex-col items-center justify-center text-center border-white/[0.06]">
@@ -264,6 +337,7 @@ export default function AtsResult() {
           </AnimatePresence>
         </div>
       </motion.div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }

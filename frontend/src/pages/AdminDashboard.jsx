@@ -5,6 +5,7 @@ import {
   RefreshCw, TrendingUp, Trophy, Building2, X
 } from 'lucide-react';
 import { adminAPI } from '../services/api';
+import { getApiErrorMessage } from '../utils';
 import { GlassCard, GlowButton } from '../components/ui/GlassCard';
 import { staggerContainer, fadeInUp } from '../constants/theme';
 
@@ -28,7 +29,7 @@ export default function AdminDashboard() {
       setCandidates(candidatesRes.data);
       setTopCandidates(topRes.data);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to load admin data');
+      setError(getApiErrorMessage(err, 'Failed to load admin data'));
     } finally {
       setLoading(false);
     }

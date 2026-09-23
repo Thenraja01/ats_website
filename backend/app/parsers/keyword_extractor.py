@@ -20,7 +20,11 @@ class KeywordExtractor:
         for category, keywords in skill_keywords.items():
             found_skills[category] = []
             for keyword in keywords:
-                if keyword.lower() in text.lower():
+                # Handle special keywords like C++, C#, .NET, Go
+                escaped = re.escape(keyword)
+                # If keyword starts/ends with alphanumeric, apply word boundaries
+                pattern = rf"(?:\b|_){escaped}(?:\b|_)" if re.match(r"^\w.*\w$", keyword) else rf"(?:^|\s){escaped}(?:$|[\s,\.;:])"
+                if re.search(pattern, text, re.IGNORECASE):
                     found_skills[category].append(keyword)
 
         logger.debug(f"Extracted skills: {found_skills}")

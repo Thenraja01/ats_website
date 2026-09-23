@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api, { authAPI } from '../../services/api';
+import { getApiErrorMessage } from '../../utils';
 
 const token = localStorage.getItem('token');
 
@@ -32,27 +33,59 @@ if (initialToken && isTokenExpired(initialToken)) {
 
 const initialUser = initialToken ? decodeToken(initialToken) : null;
 
-export const login = createAsyncThunk('auth/login', async (credentials, { rejectWithValue }) => {
+export const googleLogin = createAsyncThunk('auth/googleLogin', async ({ credential, role }, { rejectWithValue }) => {
   try {
-    const res = await authAPI.login(credentials);
+    const res = await authAPI.googleAuth(credential, role);
     const token = res.data.access_token;
     localStorage.setItem('token', token);
-    const user = decodeToken(token);
+    const user = res.data.user || decodeToken(token);
     return { token, user };
   } catch (err) {
-    return rejectWithValue(err.response?.data?.detail || 'Login failed');
+    return rejectWithValue(getApiErrorMessage(err, 'Google sign-in failed'));
   }
 });
 
-export const register = createAsyncThunk('auth/register', async (data, { rejectWithValue }) => {
+export const login = createAsyncThunk('auth/login', async ({ email, password }, { rejectWithValue }) => {
   try {
-    const { otp_code, ...signupData } = data;
-    const response = await api.post('/auth/signup?otp_code=' + encodeURIComponent(otp_code), signupData);
-    return response.data;
+    const res = await authAPI.login(email, password);
+    const token = res.data.access_token;
+    localStorage.setItem('token', token);
+    const user = res.data.user || decodeToken(token);
+    return { token, user };
   } catch (err) {
-    return rejectWithValue(err.response?.data?.detail || 'Registration failed');
+    return rejectWithValue(getApiErrorMessage(err, 'Invalid email or password'));
   }
 });
+
+export const register = createAsyncThunk('auth/register', async ({ name, email, password, role, organization_id }, { rejectWithValue }) => {
+  try {
+    const res = await authAPI.register(name, email, password, role, organization_id);
+    const token = res.data.access_token;
+    localStorage.setItem('token', token);
+    const user = res.data.user || decodeToken(token);
+    return { token, user };
+  } catch (err) {
+    return rejectWithValue(getApiErrorMessage(err, 'Registration failed. Please check your information.'));
+  }
+});
+
+const handlePending = (state) => {
+  state.loading = true;
+  state.error = null;
+};
+
+const handleFulfilled = (state, action) => {
+  state.loading = false;
+  state.token = action.payload.token;
+  state.user = action.payload.user;
+  state.isAuthenticated = true;
+  state.error = null;
+};
+
+const handleRejected = (state, action) => {
+  state.loading = false;
+  state.error = action.payload;
+};
 
 const authSlice = createSlice({
   name: 'auth',
@@ -77,23 +110,15 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(login.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(login.fulfilled, (state, action) => {
-        state.loading = false;
-        state.token = action.payload.token;
-        state.user = action.payload.user;
-        state.isAuthenticated = true;
-      })
-      .addCase(login.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      .addCase(register.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(register.fulfilled, (state) => { state.loading = false; })
-      .addCase(register.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      });
+      .addCase(googleLogin.pending, handlePending)
+      .addCase(googleLogin.fulfilled, handleFulfilled)
+      .addCase(googleLogin.rejected, handleRejected)
+      .addCase(login.pending, handlePending)
+      .addCase(login.fulfilled, handleFulfilled)
+      .addCase(login.rejected, handleRejected)
+      .addCase(register.pending, handlePending)
+      .addCase(register.fulfilled, handleFulfilled)
+      .addCase(register.rejected, handleRejected);
   },
 });
 

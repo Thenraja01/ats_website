@@ -1,12 +1,13 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { recruiterAPI } from '../../services/api';
+import { getApiErrorMessage } from '../../utils';
 
 export const fetchJobs = createAsyncThunk('recruiter/fetchJobs', async (_, { rejectWithValue }) => {
   try {
     const res = await recruiterAPI.getJobs();
     return res.data;
   } catch (err) {
-    return rejectWithValue(err.response?.data?.detail || 'Failed to fetch jobs');
+    return rejectWithValue(getApiErrorMessage(err, 'Failed to fetch jobs'));
   }
 });
 
@@ -15,7 +16,7 @@ export const createJob = createAsyncThunk('recruiter/createJob', async (data, { 
     const res = await recruiterAPI.createJob(data);
     return res.data;
   } catch (err) {
-    return rejectWithValue(err.response?.data?.detail || 'Failed to create job');
+    return rejectWithValue(getApiErrorMessage(err, 'Failed to create job'));
   }
 });
 
@@ -24,7 +25,7 @@ export const updateJob = createAsyncThunk('recruiter/updateJob', async ({ id, da
     await recruiterAPI.updateJob(id, data);
     return { id, data };
   } catch (err) {
-    return rejectWithValue(err.response?.data?.detail || 'Failed to update job');
+    return rejectWithValue(getApiErrorMessage(err, 'Failed to update job'));
   }
 });
 
@@ -33,7 +34,7 @@ export const deleteJob = createAsyncThunk('recruiter/deleteJob', async (id, { re
     await recruiterAPI.deleteJob(id);
     return id;
   } catch (err) {
-    return rejectWithValue(err.response?.data?.detail || 'Failed to delete job');
+    return rejectWithValue(getApiErrorMessage(err, 'Failed to delete job'));
   }
 });
 
@@ -42,7 +43,7 @@ export const fetchApplications = createAsyncThunk('recruiter/fetchApplications',
     const res = jobId ? await recruiterAPI.getApplications(jobId) : await recruiterAPI.getAllApplications();
     return res.data;
   } catch (err) {
-    return rejectWithValue(err.response?.data?.detail || 'Failed to fetch applications');
+    return rejectWithValue(getApiErrorMessage(err, 'Failed to fetch applications'));
   }
 });
 
@@ -51,7 +52,7 @@ export const updateApplicationStatus = createAsyncThunk('recruiter/updateStatus'
     await recruiterAPI.updateApplicationStatus(id, status);
     return { id, status };
   } catch (err) {
-    return rejectWithValue(err.response?.data?.detail || 'Failed to update status');
+    return rejectWithValue(getApiErrorMessage(err, 'Failed to update status'));
   }
 });
 

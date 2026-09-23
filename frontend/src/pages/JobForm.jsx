@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Loader2, ArrowLeft, Wand2, Plus, X } from 'lucide-react';
 import { recruiterAPI } from '../services/api';
+import { getApiErrorMessage } from '../utils';
 import { GlowButton } from '../components/ui/GlassCard';
 import { toast } from 'sonner';
 
@@ -22,6 +23,27 @@ export default function JobForm() {
   const [skillInput, setSkillInput] = useState('');
   const [respInput, setRespInput] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isEditing) {
+      const fetchJob = async () => {
+        try {
+          const res = await recruiterAPI.getJob(id);
+          setForm({
+            title: res.data.title || '',
+            description: res.data.description || '',
+            required_skills: res.data.required_skills || [],
+            experience_required: res.data.experience_required || '',
+            education_required: res.data.education_required || '',
+            responsibilities: res.data.responsibilities || [],
+          });
+        } catch (err) {
+          toast.error('Failed to load job details');
+        }
+      };
+      fetchJob();
+    }
+  }, [id, isEditing]);
 
   const addSkill = () => {
     if (skillInput.trim() && !form.required_skills.includes(skillInput.trim())) {
@@ -50,7 +72,7 @@ export default function JobForm() {
         navigate(`/recruiter/jobs/${res.data.id}/applications`);
       }
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Failed to save job');
+      toast.error(getApiErrorMessage(err, 'Failed to save job'));
     } finally {
       setLoading(false);
     }
@@ -93,7 +115,32 @@ export default function JobForm() {
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-2">Description *</label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="block text-sm font-medium text-slate-300">Description *</label>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!form.description.trim()) {
+                  toast.error('Please enter some text in the description first');
+                  return;
+                }
+                setLoading(true);
+                try {
+                  const res = await recruiterAPI.optimizeJobText(form.description);
+                  setForm(prev => ({ ...prev, description: res.data.optimized }));
+                  toast.success('Job description enhanced with AI!');
+                } catch (err) {
+                  toast.error('Failed to optimize description');
+                } finally {
+                  setLoading(false);
+                }
+              }}
+              disabled={loading}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-medium transition-all"
+            >
+              <Wand2 className="w-3.5 h-3.5" /> AI Enhance
+            </button>
+          </div>
           <textarea
             value={form.description}
             onChange={e => setForm({ ...form, description: e.target.value })}

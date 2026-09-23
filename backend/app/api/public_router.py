@@ -163,3 +163,181 @@ async def apply_to_job_public(
         "eligible": result["eligible"],
         "missing_skills": result["missing_skills"],
     }
+
+
+@public_router.get("/tenant-info")
+async def get_tenant_info(
+    request: Request,
+    slug: Optional[str] = None,
+    domain: Optional[str] = None,
+    subdomain: Optional[str] = None,
+    org_id: Optional[str] = None,
+):
+    """Retrieve tenant branding, statistics, and landing copy dynamically."""
+    # 1. Resolve identifier
+    target_key = (slug or subdomain or "").strip().lower()
+    
+    if not target_key and domain:
+        parts = domain.split(".")
+        if len(parts) > 2 and parts[0] not in ["www", "api", "app", "ats", "localhost"]:
+            target_key = parts[0].lower()
+
+    if not target_key:
+        host = request.headers.get("host", "").split(":")[0].lower()
+        parts = host.split(".")
+        if len(parts) > 2 and parts[0] not in ["www", "api", "app", "ats", "localhost"]:
+            target_key = parts[0].lower()
+
+    # Default tenant presets
+    PRESETS = {
+        "jeeva": {
+            "name": "Jeeva Technologies",
+            "tagline": "Next-Gen AI Talent Cloud & Autonomous Hiring",
+            "headline": "Empower your career journey at Jeeva",
+            "subheading": "Access the AI-powered recruitment engine with real-time skill matching and instant application tracking.",
+            "badge": "Jeeva Enterprise Workspace",
+            "stats": {
+                "match_rate": "99.4%",
+                "candidates_placed": "12,800+",
+                "hiring_speed": "4.2x Faster",
+                "active_jobs": "84 Openings",
+            },
+            "testimonial": {
+                "quote": "HireMind's intelligent screening engine reduced our candidate qualification time from days to seconds.",
+                "author": "Jeeva Talent Acquisition Lead",
+                "role": "Head of Engineering Hiring",
+            },
+            "accent_color": "#4F8CFF",
+        },
+        "nexus": {
+            "name": "Nexus AI Systems",
+            "tagline": "Autonomous Workforce & Intelligence Architecture",
+            "headline": "Join the Next Era of Innovation at Nexus",
+            "subheading": "Streamlined recruitment platform powered by deep semantic skill extraction and predictive ATS scoring.",
+            "badge": "Nexus AI Cloud",
+            "stats": {
+                "match_rate": "98.9%",
+                "candidates_placed": "24,500+",
+                "hiring_speed": "3.8x Faster",
+                "active_jobs": "120+ Openings",
+            },
+            "testimonial": {
+                "quote": "The match precision and candidate insights have completely supercharged our hiring pipeline.",
+                "author": "Nexus People Operations",
+                "role": "VP of Human Resources",
+            },
+            "accent_color": "#8B5CF6",
+        },
+        "apex": {
+            "name": "Apex Global Systems",
+            "tagline": "Enterprise Cloud & AI Solutions Ecosystem",
+            "headline": "Accelerate your impact with Apex Systems",
+            "subheading": "Connect directly with top enterprise opportunities matched precisely to your technical profile.",
+            "badge": "Apex Global Careers",
+            "stats": {
+                "match_rate": "99.1%",
+                "candidates_placed": "18,900+",
+                "hiring_speed": "5x Faster",
+                "active_jobs": "95 Openings",
+            },
+            "testimonial": {
+                "quote": "Our engineering managers love the transparent skill gap breakdowns and fast candidate filtering.",
+                "author": "Apex Hiring Team",
+                "role": "Lead Technical Recruiter",
+            },
+            "accent_color": "#06B6D4",
+        },
+    }
+
+    # Check DB Organization if org_id or match
+    db_org = None
+    if org_id:
+        db_org = await Organization.get(org_id)
+    elif target_key:
+        db_org = await Organization.find_one({"name": {"$regex": f"^{target_key}", "$options": "i"}})
+
+    if db_org:
+        org_name = db_org.name
+        preset = PRESETS.get(target_key, {})
+        return {
+            "id": str(db_org.id),
+            "slug": target_key or str(db_org.id),
+            "name": org_name,
+            "tagline": preset.get("tagline", db_org.description or "Intelligent Applicant Tracking & Talent Acquisition"),
+            "headline": preset.get("headline", f"Welcome to {org_name} Talent Portal"),
+            "subheading": preset.get("subheading", f"Sign in to access your {org_name} talent ecosystem and track your hiring pipeline in real-time."),
+            "badge": preset.get("badge", f"{org_name} Workspace"),
+            "website": db_org.website or "",
+            "stats": preset.get("stats", {
+                "match_rate": "99.2%",
+                "candidates_placed": "10,000+",
+                "hiring_speed": "3.5x Faster",
+                "active_jobs": "50+ Openings",
+            }),
+            "testimonial": preset.get("testimonial", {
+                "quote": "HireMind ATS delivers unmatched candidate matching accuracy and transparent scoring.",
+                "author": "Talent Partner",
+                "role": f"{org_name} Recruitment",
+            }),
+            "accent_color": preset.get("accent_color", "#4F8CFF"),
+            "features": [
+                "Semantic Resume Analysis & Parsing",
+                "Real-Time Match Score Calculation",
+                "Automated Skill Gap & Interview Insights",
+                "Role-Based Candidate & Recruiter Portals",
+            ],
+            "is_custom_tenant": True,
+        }
+
+    # Match predefined presets
+    if target_key in PRESETS:
+        preset = PRESETS[target_key]
+        return {
+            "id": target_key,
+            "slug": target_key,
+            "name": preset["name"],
+            "tagline": preset["tagline"],
+            "headline": preset["headline"],
+            "subheading": preset["subheading"],
+            "badge": preset["badge"],
+            "stats": preset["stats"],
+            "testimonial": preset["testimonial"],
+            "accent_color": preset["accent_color"],
+            "features": [
+                "Semantic Resume Analysis & Parsing",
+                "Real-Time Match Score Calculation",
+                "Automated Skill Gap & Interview Insights",
+                "Role-Based Candidate & Recruiter Portals",
+            ],
+            "is_custom_tenant": True,
+        }
+
+    # Fallback to HireMind Default Platform Branding
+    return {
+        "id": "hiremind",
+        "slug": "hiremind",
+        "name": "HireMind AI",
+        "tagline": "AI-Powered Applicant Tracking System & Resume Intelligence",
+        "headline": "Elevate your hiring pipeline with AI precision",
+        "subheading": "Evaluate resumes, bridge skill gaps, and match with top industry roles in seconds with next-gen LLM analysis.",
+        "badge": "Enterprise ATS Suite",
+        "stats": {
+            "match_rate": "99.4%",
+            "candidates_placed": "25,000+",
+            "hiring_speed": "4x Faster",
+            "active_jobs": "500+ Openings",
+        },
+        "testimonial": {
+            "quote": "HireMind transformed our technical recruitment workflow, cutting time-to-hire by over 60%.",
+            "author": "Sarah Jenkins",
+            "role": "VP of Talent Acquisition",
+        },
+        "accent_color": "#4F8CFF",
+        "features": [
+            "LLM-Powered Multi-Factor Resume Scoring",
+            "Context-Aware JD & Skill Gap Extraction",
+            "Instant Automated Interview Question Generator",
+            "Candidate & Recruiter Real-Time Portals",
+        ],
+        "is_custom_tenant": False,
+    }

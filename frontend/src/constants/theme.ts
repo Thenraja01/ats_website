@@ -1,3 +1,5 @@
+import type { Variants } from 'framer-motion';
+
 export const theme = {
   colors: {
     background: '#050816',
@@ -49,7 +51,7 @@ export const pageTransition = {
   transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] },
 };
 
-export const staggerContainer = {
+export const staggerContainer: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -60,20 +62,20 @@ export const staggerContainer = {
   },
 };
 
-export const fadeInUp = {
+export const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, ease: [0.25, 0.1, 0.25, 1] },
+    transition: { duration: 0.6, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] },
   },
 };
 
-export const fadeInScale = {
+export const fadeInScale: Variants = {
   hidden: { opacity: 0, scale: 0.95 },
   visible: {
     opacity: 1,
     scale: 1,
-    transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
+    transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] as [number, number, number, number] },
   },
 };

@@ -1,12 +1,13 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { candidateAPI } from '../../services/api';
+import { getApiErrorMessage } from '../../utils';
 
 export const fetchResumes = createAsyncThunk('candidate/fetchResumes', async (_, { rejectWithValue }) => {
   try {
     const res = await candidateAPI.getResumes();
     return res.data;
   } catch (err) {
-    return rejectWithValue(err.response?.data?.detail || 'Failed to fetch resumes');
+    return rejectWithValue(getApiErrorMessage(err, 'Failed to fetch resumes'));
   }
 });
 
@@ -17,7 +18,7 @@ export const uploadResumeFile = createAsyncThunk('candidate/uploadResume', async
     const res = await candidateAPI.uploadResume(formData);
     return res.data;
   } catch (err) {
-    return rejectWithValue(err.response?.data?.detail || 'Upload failed');
+    return rejectWithValue(getApiErrorMessage(err, 'Upload failed'));
   }
 });
 
@@ -26,7 +27,7 @@ export const deleteResume = createAsyncThunk('candidate/deleteResume', async (id
     await candidateAPI.deleteResume(id);
     return id;
   } catch (err) {
-    return rejectWithValue(err.response?.data?.detail || 'Delete failed');
+    return rejectWithValue(getApiErrorMessage(err, 'Delete failed'));
   }
 });
 

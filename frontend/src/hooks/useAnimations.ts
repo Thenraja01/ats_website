@@ -4,7 +4,7 @@ export function useTypewriter(texts: string[], { typeSpeed = 60, deleteSpeed = 4
   const [displayText, setDisplayText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [textIndex, setTextIndex] = useState(0);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const currentText = texts[textIndex];
@@ -28,7 +28,9 @@ export function useTypewriter(texts: string[], { typeSpeed = 60, deleteSpeed = 4
       }
     }
 
-    return () => clearTimeout(timeoutRef.current);
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
   }, [displayText, isDeleting, textIndex, texts, typeSpeed, deleteSpeed, pauseDuration]);
 
   return { displayText, cursor: true };

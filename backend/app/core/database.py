@@ -10,6 +10,11 @@ from app.models.application_model import Application
 from app.models.organization_model import Organization
 from app.models.resume_model import Resume
 from app.models.otp_model import OTPCode
+from app.models.career_model import CareerProfile
+from app.models.resume_version_model import ResumeVersion
+from app.models.interview_model import InterviewQuestion, InterviewSession, SavedQuestion
+from app.models.document_model import DocumentRecord
+from app.models.notification_model import Notification
 from app.core.config import settings
 
 
@@ -24,5 +29,21 @@ async def init_db():
     """Initialize Beanie with all document models."""
     await init_beanie(
         database=db,
-        document_models=[User, UploadRecord, AnalysisResult, JobDescription, Application, Organization, Resume, OTPCode],
+        document_models=[
+            User,
+            UploadRecord,
+            AnalysisResult,
+            JobDescription,
+            Application,
+            Organization,
+            Resume,
+            OTPCode,
+            CareerProfile,
+            ResumeVersion,
+            InterviewQuestion,
+            InterviewSession,
+            SavedQuestion,
+            DocumentRecord,
+            Notification,
+        ],
     )

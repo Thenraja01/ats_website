@@ -24,3 +24,171 @@
 2026-07-31 16:30:37,928 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
 2026-07-31 16:30:37,930 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
 2026-07-31 16:30:37,931 - hiremind.app.parsers.keyword_extractor - DEBUG - Extracted skills: {'languages': ['Python'], 'frameworks': ['React']}
+2026-08-29 18:57:50,203 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 18:57:50,204 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 18:57:50,205 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 18:57:50,205 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 18:57:50,206 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 18:57:50,206 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 18:57:50,207 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 18:57:50,207 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 18:57:50,208 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 18:57:50,208 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 18:57:50,209 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 18:57:50,209 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 18:57:50,216 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 18:57:50,217 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 18:57:50,218 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 18:57:50,219 - hiremind.app.parsers.keyword_extractor - DEBUG - Extracted skills: {'languages': ['Python'], 'frameworks': ['React']}
+2026-08-29 18:58:03,740 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 18:58:03,742 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 18:58:03,744 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 18:58:03,745 - hiremind.app.parsers.keyword_extractor - DEBUG - Extracted skills: {'languages': ['Python'], 'frameworks': ['React']}
+2026-08-29 18:58:04,989 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 18:58:04,989 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 18:58:04,990 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 18:58:04,990 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 18:58:04,991 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 18:58:04,991 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 18:58:04,992 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 18:58:04,992 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 18:58:04,994 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 18:58:04,994 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 18:58:04,995 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 18:58:04,995 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 18:59:57,003 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 18:59:57,004 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 18:59:57,005 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 18:59:57,006 - hiremind.app.parsers.keyword_extractor - DEBUG - Extracted skills: {'languages': ['Python'], 'frameworks': ['React']}
+2026-08-29 18:59:58,228 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 18:59:58,229 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 18:59:58,229 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 18:59:58,230 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 18:59:58,230 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 18:59:58,230 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 18:59:58,231 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 18:59:58,231 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 18:59:58,232 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 18:59:58,232 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 18:59:58,234 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 18:59:58,234 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:01:26,330 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 19:01:26,331 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 19:01:26,332 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 19:01:26,333 - hiremind.app.parsers.keyword_extractor - DEBUG - Extracted skills: {'languages': ['Python'], 'frameworks': ['React']}
+2026-08-29 19:01:27,562 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:01:27,562 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:01:27,564 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:01:27,564 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:01:27,565 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:01:27,565 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:01:27,566 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:01:27,566 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:01:27,567 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:01:27,567 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:01:27,568 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:01:27,568 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:03:32,417 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 19:03:32,418 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 19:03:32,421 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 19:03:32,423 - hiremind.app.parsers.keyword_extractor - DEBUG - Extracted skills: {'languages': ['Python'], 'frameworks': ['React']}
+2026-08-29 19:03:34,250 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:03:34,250 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:03:34,252 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:03:34,252 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:03:34,253 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:03:34,254 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:03:34,255 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:03:34,255 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:03:34,257 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:03:34,257 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:03:34,259 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:03:34,259 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:04:27,960 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 19:04:27,962 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 19:04:27,965 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 19:04:27,966 - hiremind.app.parsers.keyword_extractor - DEBUG - Extracted skills: {'languages': ['Python'], 'frameworks': ['React']}
+2026-08-29 19:04:29,760 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:04:29,761 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:04:29,762 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:04:29,763 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:04:29,764 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:04:29,764 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:04:29,765 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:04:29,765 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:04:29,767 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:04:29,767 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:04:29,769 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:04:29,769 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:07:12,235 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 19:07:12,237 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 19:07:12,239 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 19:07:12,241 - hiremind.app.parsers.keyword_extractor - DEBUG - Extracted skills: {'languages': ['Python'], 'frameworks': ['React']}
+2026-08-29 19:07:14,017 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:07:14,017 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:07:14,019 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:07:14,020 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:07:14,021 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:07:14,021 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:07:14,023 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:07:14,023 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:07:14,025 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:07:14,026 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:07:14,028 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:07:14,028 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:08:04,189 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 19:08:04,191 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 19:08:04,194 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 19:08:04,195 - hiremind.app.parsers.keyword_extractor - DEBUG - Extracted skills: {'languages': ['Python'], 'frameworks': ['React']}
+2026-08-29 19:08:05,958 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:08:05,959 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:08:05,961 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:08:05,961 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:08:05,963 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:08:05,963 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:08:05,965 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:08:05,965 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:08:05,967 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:08:05,968 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:08:05,969 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:08:05,969 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:26:06,560 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 19:26:06,561 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 19:26:06,564 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 19:26:06,565 - hiremind.app.parsers.keyword_extractor - DEBUG - Extracted skills: {'languages': ['Python'], 'frameworks': ['React']}
+2026-08-29 19:26:08,287 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:26:08,287 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:26:08,289 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:26:08,290 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:26:08,291 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:26:08,291 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:26:08,293 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:26:08,293 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:26:08,294 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:26:08,295 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:26:08,296 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:26:08,296 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:26:11,131 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:26:11,132 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:26:11,134 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:26:11,134 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:26:11,136 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:26:11,136 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:26:11,138 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:26:11,138 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:26:11,139 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:26:11,139 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:26:11,141 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-08-29 19:26:11,141 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-08-29 19:26:11,826 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 19:26:11,827 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 19:26:11,830 - hiremind.app.parsers.text_cleaner - DEBUG - Text cleaned successfully
+2026-08-29 19:26:11,832 - hiremind.app.parsers.keyword_extractor - DEBUG - Extracted skills: {'languages': ['Python'], 'frameworks': ['React']}
+2026-09-22 17:26:44,573 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-09-22 17:26:44,574 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-09-22 17:26:44,672 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-09-22 17:26:44,672 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-09-22 17:33:30,553 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-09-22 17:33:30,553 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
+2026-09-22 17:33:45,941 - hiremind.app.services.ats_service - INFO - Starting consolidated ATS pipeline
+2026-09-22 17:33:45,942 - hiremind.app.services.ats_service - WARNING - Using heuristic fallback for ATS analysis
