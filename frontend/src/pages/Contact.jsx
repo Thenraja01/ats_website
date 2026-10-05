@@ -32,9 +32,9 @@ export default function Contact() {
         >
           <CheckCircle className="w-10 h-10 text-emerald-400" />
         </motion.div>
-        <h1 className="text-3xl font-bold text-white mb-4 font-heading">Message Sent!</h1>
+        <h1 className="text-3xl font-bold text-primary mb-4 font-heading">Message Sent!</h1>
         <p className="text-slate-400 mb-8">Thank you for reaching out. Our team will get back to you within 24 hours.</p>
-        <Link to="/" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-primary to-accent text-white font-medium shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all">
+        <Link to="/" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-primary to-accent text-primary font-medium shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all">
           Back to Home <ArrowRight className="w-4 h-4" />
         </Link>
       </motion.div>
@@ -48,7 +48,7 @@ export default function Contact() {
           <MessageSquare className="w-4 h-4" />
           Get in Touch
         </div>
-        <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4 font-heading">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-primary mb-4 font-heading">
           Let's{' '}
           <GradientText colors="from-primary via-accent to-accent">Talk</GradientText>
         </h1>
@@ -66,11 +66,11 @@ export default function Contact() {
             { icon: MapPin, title: 'Location', detail: 'San Francisco, CA', sub: 'Remote-first team', color: 'from-pink-500 to-rose-600' },
           ].map((item, i) => (
             <RevealOnScroll key={item.title} direction="left" delay={i * 0.1}>
-              <TiltCard className="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-primary/30 transition-all duration-300" tiltDegree={3}>
+              <TiltCard className="p-6 rounded-2xl bg-primary/[0.03] border border-primary/[0.06] hover:border-primary/30 transition-all duration-300" tiltDegree={3}>
                 <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-4`}>
-                  <item.icon className="w-6 h-6 text-white" />
+                  <item.icon className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="text-lg font-bold text-white mb-1">{item.title}</h3>
+                <h3 className="text-lg font-bold text-primary mb-1">{item.title}</h3>
                 <p className="text-slate-300 text-sm">{item.detail}</p>
                 <p className="text-slate-500 text-xs mt-1">{item.sub}</p>
               </TiltCard>
@@ -78,8 +78,8 @@ export default function Contact() {
           ))}
 
           <RevealOnScroll direction="left" delay={0.3}>
-            <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-              <h3 className="text-lg font-bold text-white mb-2">Quick Links</h3>
+            <div className="p-6 rounded-2xl bg-primary/[0.03] border border-primary/[0.06]">
+              <h3 className="text-lg font-bold text-primary mb-2">Quick Links</h3>
               <div className="space-y-2">
                 <Link to="/features" className="block text-primary hover:text-accent text-sm transition-colors">Features</Link>
                 <Link to="/pricing" className="block text-primary hover:text-accent text-sm transition-colors">Pricing</Link>
@@ -91,8 +91,8 @@ export default function Contact() {
 
         {/* Contact Form */}
         <RevealOnScroll direction="right" className="md:col-span-3">
-          <div className="p-8 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-            <h2 className="text-xl font-bold text-white mb-6">Send us a message</h2>
+          <div className="p-8 rounded-2xl bg-primary/[0.03] border border-primary/[0.06]">
+            <h2 className="text-xl font-bold text-primary mb-6">Send us a message</h2>
             <form onSubmit={handleSubmit} className="space-y-5">
               {[
                 { label: 'Name', type: 'text', key: 'name', placeholder: 'Your name' },
@@ -104,7 +104,7 @@ export default function Contact() {
                     type={field.type}
                     value={form[field.key]}
                     onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+                    className="w-full bg-primary/5 border border-primary/10 rounded-xl px-4 py-3 text-primary placeholder:text-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
                     placeholder={field.placeholder}
                     required
                   />
@@ -115,7 +115,7 @@ export default function Contact() {
                 <select
                   value={form.subject}
                   onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+                  className="w-full bg-primary/5 border border-primary/10 rounded-xl px-4 py-3 text-primary focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
                   required
                 >
                   <option value="">Select a subject</option>
@@ -131,7 +131,7 @@ export default function Contact() {
                 <textarea
                   value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
-                  className="w-full h-40 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all resize-none"
+                  className="w-full h-40 bg-primary/5 border border-primary/10 rounded-xl px-4 py-3 text-primary placeholder:text-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all resize-none"
                   placeholder="Tell us how we can help..."
                   required
                 />
@@ -140,7 +140,7 @@ export default function Contact() {
                 type="submit"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-primary to-accent text-white font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-primary to-accent text-primary font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
               >
                 <Send className="w-4 h-4" />
                 Send Message

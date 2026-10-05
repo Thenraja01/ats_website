@@ -58,7 +58,7 @@ export default function ScoreRing({ score, size = 160, strokeWidth = 8, classNam
         />
       </svg>
       <div className="absolute flex flex-col items-center justify-center" style={{ width: size, height: size }}>
-        <span className="text-3xl font-bold text-white font-heading" style={{ color: getColor() }}>{animatedScore}%</span>
+        <span className="text-3xl font-bold text-primary font-heading" style={{ color: getColor() }}>{animatedScore}%</span>
         <span className="text-xs text-slate-500 mt-1">{label}</span>
       </div>
     </div>

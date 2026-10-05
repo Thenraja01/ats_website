@@ -34,26 +34,26 @@ const footerLinks = [
 
 export default function Footer() {
   return (
-    <footer className="border-t border-white/[0.06] bg-[#050816]">
+    <footer className="border-t border-primary/[0.06] bg-[#050816]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-4 group">
               <img src={logo} alt="HireMind AI" className="w-8 h-8 object-contain group-hover:scale-110 transition-transform" />
-              <span className="text-lg font-bold text-white">HireMind AI</span>
+              <span className="text-lg font-bold text-primary">HireMind AI</span>
             </Link>
             <p className="text-sm text-slate-500 mb-6 max-w-xs">
               AI-powered applicant tracking system. Smart resume analysis, intelligent candidate matching.
             </p>
             <div className="flex items-center gap-3">
-              <a href="mailto:hello@hiremind.ai" className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all">
+              <a href="mailto:hello@hiremind.ai" className="p-2 rounded-lg bg-primary/5 hover:bg-primary/10 text-slate-400 hover:text-primary transition-all">
                 <Mail className="w-4 h-4" />
               </a>
-              <a href="#" className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all">
+              <a href="#" className="p-2 rounded-lg bg-primary/5 hover:bg-primary/10 text-slate-400 hover:text-primary transition-all">
                 <Github className="w-4 h-4" />
               </a>
-              <a href="#" className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all">
+              <a href="#" className="p-2 rounded-lg bg-primary/5 hover:bg-primary/10 text-slate-400 hover:text-primary transition-all">
                 <Twitter className="w-4 h-4" />
               </a>
             </div>
@@ -62,7 +62,7 @@ export default function Footer() {
           {/* Link Groups */}
           {footerLinks.map((group) => (
             <div key={group.title}>
-              <h4 className="text-sm font-semibold text-white mb-4">{group.title}</h4>
+              <h4 className="text-sm font-semibold text-primary mb-4">{group.title}</h4>
               <ul className="space-y-3">
                 {group.links.map((link) => (
                   <li key={link.label}>
@@ -80,7 +80,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom */}
-        <div className="pt-8 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="pt-8 border-t border-primary/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-slate-600">
             © {new Date().getFullYear()} HireMind AI. All rights reserved.
           </p>

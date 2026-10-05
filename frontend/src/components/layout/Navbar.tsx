@@ -17,10 +17,10 @@ const publicLinks = [
 ];
 
 const authenticatedLinks = [
-  { label: 'Dashboard', href: '/dashboard' },
   { label: 'Resume Studio', href: '/resume-studio' },
-  { label: 'JD Tailor', href: '/resume-studio/jd-tailor' },
-  { label: 'Interview Hub', href: '/interview' },
+  { label: 'JD Match', href: '/jd-match' },
+  { label: 'Interview Coach', href: '/interviews' },
+  { label: 'Portfolio', href: '/profile' },
 ];
 
 export default function Navbar() {
@@ -43,7 +43,7 @@ export default function Navbar() {
   }, []);
 
   const getDashboardPath = () => {
-    return '/dashboard';
+    return '/resume-studio';
   };
 
   const handleLogout = () => {
@@ -59,9 +59,9 @@ export default function Navbar() {
       transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
       className={cn(
         'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-        isScrolled
-          ? 'bg-[#050816]/90 backdrop-blur-xl border-b border-white/[0.08] shadow-lg shadow-black/20'
-          : 'bg-transparent border-b border-transparent'
+      
+           'bg-[#050816]/90 backdrop-blur-xl border-b border-primary/[0.08] shadow-lg shadow-black/20'
+
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -77,7 +77,7 @@ export default function Navbar() {
               transition={{ duration: 0.6, ease: [0.25, 0.1, 0.3, 1] }}
               whileHover={{ rotate: 5, scale: 1.1 }}
             />
-            <span className="text-lg font-bold text-white tracking-tight">HireMind AI</span>
+            <span className="text-lg font-bold text-primary tracking-tight">HireMind AI</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -90,14 +90,14 @@ export default function Navbar() {
               >
                 <span className={cn(
                   'relative z-10',
-                  location.pathname === link.href ? 'text-white' : 'text-slate-400 hover:text-white'
+                  location.pathname === link.href ? 'text-primary' : 'text-slate-400 hover:text-primary'
                 )}>
                   {link.label}
                 </span>
                 {location.pathname === link.href && (
                   <motion.div
                     layoutId="nav-pill"
-                    className="absolute inset-0 rounded-lg bg-white/10"
+                    className="absolute inset-0 rounded-lg bg-primary/10"
                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                   />
                 )}
@@ -118,7 +118,7 @@ export default function Navbar() {
                 </MagneticButtonLink>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-slate-400 hover:text-red-400 hover:bg-white/5 text-sm transition-all"
+                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-slate-400 hover:text-red-400 hover:bg-primary/5 text-sm transition-all"
                   title="Sign Out"
                 >
                   <LogOut className="w-4 h-4" />
@@ -129,13 +129,13 @@ export default function Navbar() {
               <>
                 <Link
                   to="/login"
-                  className="px-5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-white transition-colors"
+                  className="px-5 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:text-primary transition-colors"
                 >
                   Sign In
                 </Link>
                 <MagneticButtonLink
                   to="/signup"
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-accent text-white text-sm font-medium shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-accent text-primary text-sm font-medium shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
                 >
                   Get Started
                 </MagneticButtonLink>
@@ -146,7 +146,7 @@ export default function Navbar() {
           {/* Mobile Toggle */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+            className="md:hidden p-2 rounded-lg text-slate-400 hover:text-primary hover:bg-primary/5 transition-all"
           >
             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
@@ -161,7 +161,7 @@ export default function Navbar() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            className="md:hidden border-t border-white/[0.06] bg-[#050816]/95 backdrop-blur-xl"
+            className="md:hidden border-t border-primary/[0.06] bg-[#050816]/95 backdrop-blur-xl"
           >
             <div className="px-4 py-4 space-y-2">
               {navLinks.map((link) => (
@@ -169,12 +169,12 @@ export default function Navbar() {
                   key={link.href}
                   to={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className="block px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all"
+                  className="block px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-primary hover:bg-primary/5 transition-all"
                 >
                   {link.label}
                 </Link>
               ))}
-              <div className="pt-3 border-t border-white/[0.06] space-y-2">
+              <div className="pt-3 border-t border-primary/[0.06] space-y-2">
                 {isAuthenticated ? (
                   <>
                     <Link
@@ -196,14 +196,14 @@ export default function Navbar() {
                     <Link
                       to="/login"
                       onClick={() => setMobileOpen(false)}
-                      className="block px-4 py-3 rounded-xl text-sm font-medium text-slate-300 text-center hover:bg-white/5"
+                      className="block px-4 py-3 rounded-xl text-sm font-medium text-slate-300 text-center hover:bg-primary/5"
                     >
                       Sign In
                     </Link>
                     <Link
                       to="/signup"
                       onClick={() => setMobileOpen(false)}
-                      className="block px-4 py-3 rounded-xl bg-gradient-to-r from-primary to-accent text-white text-sm font-medium text-center"
+                      className="block px-4 py-3 rounded-xl bg-gradient-to-r from-primary to-accent text-primary text-sm font-medium text-center"
                     >
                       Get Started
                     </Link>

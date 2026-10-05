@@ -3,17 +3,17 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { login, googleLogin, clearError } from '../store/slices/authSlice';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Loader2, 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  ArrowRight, 
-  Sparkles, 
-  ShieldCheck, 
-  CheckCircle2, 
-  AlertCircle, 
+import {
+  Loader2,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  Sparkles,
+  ShieldCheck,
+  CheckCircle2,
+  AlertCircle,
   X,
   Briefcase,
   UserCheck
@@ -47,27 +47,32 @@ export default function Login() {
 
   // Initialize Google Sign-In
   useEffect(() => {
-    if (window.google) {
-      window.google.accounts.id.initialize({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
-        callback: handleGoogleResponse,
-      });
-      const btnContainer = document.getElementById('google-login-btn');
-      if (btnContainer) {
-        btnContainer.innerHTML = '';
-        window.google.accounts.id.renderButton(btnContainer, {
-          theme: 'outline',
-          size: 'large',
-          text: 'signin_with',
-          shape: 'pill',
-          width: 320,
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (window.google && clientId && clientId.trim() && !clientId.includes('your-google-client-id')) {
+      try {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleGoogleResponse,
         });
+        const btnContainer = document.getElementById('google-login-btn');
+        if (btnContainer) {
+          btnContainer.innerHTML = '';
+          window.google.accounts.id.renderButton(btnContainer, {
+            theme: 'outline',
+            size: 'large',
+            text: 'signin_with',
+            shape: 'pill',
+            width: 320,
+          });
+        }
+      } catch (e) {
+        console.warn('Google Sign-In initialization skipped:', e);
       }
     }
   }, []);
 
   const handleRedirect = () => {
-    navigate('/dashboard');
+    navigate('/resume-studio');
   };
 
   const handleGoogleResponse = async (response) => {
@@ -127,9 +132,9 @@ export default function Login() {
         className="w-full max-w-md relative"
       >
         {/* Outer Glow Card Container */}
-        <div className="relative rounded-3xl p-[1px] bg-gradient-to-b from-white/15 via-white/5 to-white/0 shadow-2xl shadow-black/60">
-          <div className="rounded-3xl bg-[#080D1E]/90 backdrop-blur-2xl p-7 sm:p-9 border border-white/[0.08] relative overflow-hidden">
-            
+        <div className="relative rounded-3xl p-[1px] bg-gradient-to-b from-primary/15 via-primary/5 to-primary/0 shadow-2xl shadow-black/60">
+          <div className="rounded-3xl bg-[#080D1E]/90 backdrop-blur-2xl p-7 sm:p-9 border border-primary/[0.08] relative overflow-hidden">
+
             {/* Top Badge */}
             <div className="flex items-center justify-center mb-6">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-medium text-primary">
@@ -141,14 +146,14 @@ export default function Login() {
             {/* Header / Logo */}
             <div className="text-center mb-8">
               <Link to="/" className="inline-flex items-center gap-2.5 group mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 border border-white/10 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/10 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
                   <img src={logo} alt="HireMind AI" className="w-6 h-6 object-contain" />
                 </div>
-                <span className="text-2xl font-extrabold text-white tracking-tight font-heading">
+                <span className="text-2xl font-extrabold text-primary tracking-tight font-heading">
                   HireMind<span className="text-primary">.AI</span>
                 </span>
               </Link>
-              <h1 className="text-2xl font-bold text-white tracking-tight mb-1.5">Welcome back</h1>
+              <h1 className="text-2xl font-bold text-primary tracking-tight mb-1.5">Welcome back</h1>
               <p className="text-slate-400 text-sm">Sign in to access your dashboard and insights</p>
             </div>
 
@@ -194,7 +199,7 @@ export default function Login() {
                       if (error) dispatch(clearError());
                     }}
                     placeholder="username or you@company.com"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-200"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-primary/[0.04] border border-primary/[0.08] text-primary placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-200"
                   />
                 </div>
               </div>
@@ -224,12 +229,12 @@ export default function Login() {
                       if (error) dispatch(clearError());
                     }}
                     placeholder="••••••••••••"
-                    className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-200"
+                    className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-primary/[0.04] border border-primary/[0.08] text-primary placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-200"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-white transition-colors"
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-primary transition-colors"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -243,7 +248,7 @@ export default function Login() {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 rounded bg-white/5 border-white/20 text-primary focus:ring-primary/40 focus:ring-offset-0 transition-colors"
+                    className="w-4 h-4 rounded bg-primary/5 border-primary/20 text-primary focus:ring-primary/40 focus:ring-offset-0 transition-colors"
                   />
                   <span className="text-xs text-slate-400">Remember this device</span>
                 </label>
@@ -255,11 +260,11 @@ export default function Login() {
                 disabled={loading}
                 whileHover={{ scale: loading ? 1 : 1.01 }}
                 whileTap={{ scale: loading ? 1 : 0.99 }}
-                className="w-full mt-2 py-3 px-4 rounded-xl bg-gradient-to-r from-primary via-primary to-accent text-white font-semibold text-sm shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed group"
+                className="w-full mt-2 py-3 px-4 rounded-xl bg-gradient-to-r from-primary via-primary to-accent text-primary font-semibold text-sm shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed group"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
                     <span>Signing in...</span>
                   </>
                 ) : (
@@ -275,7 +280,7 @@ export default function Login() {
             {/* Divider */}
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/[0.08]"></div>
+                <div className="w-full border-t border-primary/[0.08]"></div>
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-[#080D1E] px-3 text-slate-500 font-medium">Or continue with</span>
@@ -326,7 +331,7 @@ export default function Login() {
             </div>
 
             {/* Security Guarantee */}
-            <div className="mt-4 pt-3 border-t border-white/[0.06] flex items-center justify-center gap-2 text-[11px] text-slate-500">
+            <div className="mt-4 pt-3 border-t border-primary/[0.06] flex items-center justify-center gap-2 text-[11px] text-slate-500">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
               <span>Enterprise-grade 256-bit encrypted security</span>
             </div>
@@ -349,20 +354,20 @@ export default function Login() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-[#0c1226] border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl relative"
+              className="bg-[#0c1226] border border-primary/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl relative"
             >
               <button
                 onClick={() => setForgotModalOpen(false)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-white"
+                className="absolute top-4 right-4 text-slate-400 hover:text-primary"
               >
                 <X className="w-4 h-4" />
               </button>
-              
+
               <div className="text-center mb-5">
                 <div className="w-10 h-10 rounded-full bg-primary/20 text-primary flex items-center justify-center mx-auto mb-3">
                   <Lock className="w-5 h-5" />
                 </div>
-                <h3 className="text-lg font-bold text-white">Reset Password</h3>
+                <h3 className="text-lg font-bold text-primary">Reset Password</h3>
                 <p className="text-xs text-slate-400 mt-1">
                   Enter your registered email address and we will send you a reset link.
                 </p>
@@ -383,12 +388,12 @@ export default function Login() {
                       value={resetEmail}
                       onChange={(e) => setResetEmail(e.target.value)}
                       placeholder="you@company.com"
-                      className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-primary"
+                      className="w-full px-3.5 py-2 rounded-xl bg-primary/5 border border-primary/10 text-primary text-sm focus:outline-none focus:border-primary"
                     />
                   </div>
                   <button
                     type="submit"
-                    className="w-full py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-semibold transition-all shadow-md"
+                    className="w-full py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary text-xs font-semibold transition-all shadow-md"
                   >
                     Send Reset Instructions
                   </button>

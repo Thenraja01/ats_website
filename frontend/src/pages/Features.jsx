@@ -57,7 +57,7 @@ export default function Features() {
           <Sparkles className="w-4 h-4" />
           Platform Features
         </div>
-        <h1 className="text-4xl md:text-5xl font-extrabold text-white mb-4 font-heading">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-primary mb-4 font-heading">
           Powerful Features for{' '}
           <GradientText colors="from-primary via-accent to-accent">Smarter Hiring</GradientText>
         </h1>
@@ -71,10 +71,10 @@ export default function Features() {
         <RevealOnScroll key={category.title}>
           <section className="mb-20">
             <div className="text-center mb-10">
-              <div className={`inline-block px-4 py-1.5 rounded-full bg-gradient-to-r ${category.color} text-white text-sm font-medium mb-4`}>
+              <div className={`inline-block px-4 py-1.5 rounded-full bg-gradient-to-r ${category.color} text-primary text-sm font-medium mb-4`}>
                 {category.title}
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 font-heading">{category.title}</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-primary mb-2 font-heading">{category.title}</h2>
               <p className="text-slate-400">{category.subtitle}</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -85,11 +85,11 @@ export default function Features() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: fi * 0.05, ease: [0.16, 1, 0.3, 1] }}
                 >
-                  <TiltCard className="group p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] hover:border-primary/30 transition-all duration-300" tiltDegree={5}>
+                  <TiltCard className="group p-6 rounded-2xl bg-primary/[0.03] border border-primary/[0.06] hover:bg-primary/[0.05] hover:border-primary/30 transition-all duration-300" tiltDegree={5}>
                     <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${category.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                      <f.icon className="w-6 h-6 text-white" />
+                      <f.icon className="w-6 h-6 text-primary" />
                     </div>
-                    <h3 className="text-lg font-bold text-white mb-2">{f.name}</h3>
+                    <h3 className="text-lg font-bold text-primary mb-2">{f.name}</h3>
                     <p className="text-slate-400 text-sm leading-relaxed">{f.desc}</p>
                   </TiltCard>
                 </motion.div>
@@ -102,13 +102,13 @@ export default function Features() {
       {/* CTA */}
       <RevealOnScroll>
         <section className="text-center py-16 mb-12 rounded-3xl bg-gradient-to-br from-primary/5 via-accent/5 to-primary/5 border border-primary/10">
-          <h2 className="text-3xl font-bold text-white mb-4 font-heading">Ready to try these features?</h2>
+          <h2 className="text-3xl font-bold text-primary mb-4 font-heading">Ready to try these features?</h2>
           <p className="text-slate-400 mb-8 max-w-xl mx-auto">Start with a free resume analysis — no account required.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/upload" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-primary to-accent text-white font-semibold text-lg shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all">
+            <Link to="/upload" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-primary to-accent text-primary font-semibold text-lg shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all">
               Try Free Analysis <ArrowRight className="w-5 h-5" />
             </Link>
-            <Link to="/pricing" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl glass text-white font-semibold text-lg hover:bg-white/10 hover:scale-105 active:scale-95 transition-all">
+            <Link to="/pricing" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl glass text-primary font-semibold text-lg hover:bg-primary/10 hover:scale-105 active:scale-95 transition-all">
               View Pricing
             </Link>
           </div>

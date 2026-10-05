@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { 
-  getMasterCareerProfile, 
-  getResumeData 
+import {
+  getMasterCareerProfile,
+  getResumeData
 } from '../services/careerProfileSync';
-import { 
-  Cpu, 
-  Eye, 
-  CheckCircle, 
-  AlertTriangle, 
-  FileText, 
-  Search, 
-  ShieldCheck, 
-  Sliders, 
-  Layers, 
-  Zap, 
+import {
+  Cpu,
+  Eye,
+  CheckCircle,
+  AlertTriangle,
+  FileText,
+  Search,
+  ShieldCheck,
+  Sliders,
+  Layers,
+  Zap,
   ArrowRight,
   Terminal,
   Activity,
@@ -46,7 +46,7 @@ export default function AtsSimulator() {
   }
 
   // Diagnostics calculations
-  const skills = Array.isArray(resumeData.skills) 
+  const skills = Array.isArray(resumeData.skills)
     ? resumeData.skills.map(s => typeof s === 'string' ? s : s.name)
     : [];
   const experiences = resumeData.experience || [];
@@ -62,16 +62,16 @@ export default function AtsSimulator() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        
+
         {/* Header Hero */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/60 p-6 rounded-2xl border border-slate-800 backdrop-blur-xl shadow-2xl">
           <div>
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
-                <Cpu className="w-6 h-6 text-white" />
+                <Cpu className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-primary tracking-tight flex items-center gap-2">
                   ATS Diagnostics & Recruiter Eye-Scan Simulator
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/30">
                     Dual Parser Engine
@@ -99,33 +99,30 @@ export default function AtsSimulator() {
         <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
           <button
             onClick={() => setActiveTab('rawParser')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all ${
-              activeTab === 'rawParser'
+            className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all ${activeTab === 'rawParser'
                 ? 'bg-purple-600/20 text-purple-400 border border-purple-500/40'
-                : 'text-slate-400 hover:text-white hover:bg-slate-900'
-            }`}
+                : 'text-slate-400 hover:text-primary hover:bg-slate-900'
+              }`}
           >
             <Terminal className="w-4 h-4" />
             1. ATS Raw Token Stream (Machine View)
           </button>
           <button
             onClick={() => setActiveTab('recruiterScan')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all ${
-              activeTab === 'recruiterScan'
+            className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all ${activeTab === 'recruiterScan'
                 ? 'bg-cyan-600/20 text-cyan-400 border border-cyan-500/40'
-                : 'text-slate-400 hover:text-white hover:bg-slate-900'
-            }`}
+                : 'text-slate-400 hover:text-primary hover:bg-slate-900'
+              }`}
           >
             <Eye className="w-4 h-4" />
             2. Recruiter 6-Second Quick-Scan Heatmap
           </button>
           <button
             onClick={() => setActiveTab('diagnosticReport')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all ${
-              activeTab === 'diagnosticReport'
+            className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all ${activeTab === 'diagnosticReport'
                 ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/40'
-                : 'text-slate-400 hover:text-white hover:bg-slate-900'
-            }`}
+                : 'text-slate-400 hover:text-primary hover:bg-slate-900'
+              }`}
           >
             <ShieldCheck className="w-4 h-4" />
             3. Compliance & Structural Scorecard
@@ -148,7 +145,7 @@ export default function AtsSimulator() {
                 <div>
                   <span className="text-purple-400">=== CANDIDATE CONTACT TOKENS ===</span>
                   <div className="text-slate-400 pl-4">
-                    <div>NAME: <strong className="text-white">{resumeData.personalInfo?.fullName || 'N/A'}</strong></div>
+                    <div>NAME: <strong className="text-primary">{resumeData.personalInfo?.fullName || 'N/A'}</strong></div>
                     <div>ROLE_TARGET: <span className="text-cyan-400">{resumeData.personalInfo?.title || resumeData.personalInfo?.headline || 'N/A'}</span></div>
                     <div>EMAIL: <span className="text-emerald-400">{resumeData.personalInfo?.email || 'N/A'}</span></div>
                     <div>PHONE: <span className="text-emerald-400">{resumeData.personalInfo?.phone || 'N/A'}</span></div>
@@ -169,7 +166,7 @@ export default function AtsSimulator() {
                   <div className="flex flex-wrap gap-1.5 pl-4 pt-1">
                     {skills.map((s, idx) => (
                       <span key={idx} className="bg-purple-500/10 text-purple-300 px-2 py-0.5 rounded border border-purple-500/20 text-[11px]">
-                        TOKEN_{idx+1}: {s}
+                        TOKEN_{idx + 1}: {s}
                       </span>
                     ))}
                   </div>
@@ -180,8 +177,8 @@ export default function AtsSimulator() {
                   <div className="pl-4 space-y-3 pt-1">
                     {experiences.map((exp, idx) => (
                       <div key={idx} className="border-l border-slate-800 pl-3 space-y-1">
-                        <div className="text-white font-semibold">
-                          [{idx+1}] {exp.company || 'Company'} — {exp.position || exp.jobTitle || 'Role'} ({exp.startDate || 'N/A'} - {exp.endDate || 'Present'})
+                        <div className="text-primary font-semibold">
+                          [{idx + 1}] {exp.company || 'Company'} — {exp.position || exp.jobTitle || 'Role'} ({exp.startDate || 'N/A'} - {exp.endDate || 'Present'})
                         </div>
                         <ul className="text-slate-400 text-[11px] list-disc list-inside">
                           {(exp.bullets || exp.responsibilities || [exp.description]).map((b, bIdx) => (
@@ -213,7 +210,7 @@ export default function AtsSimulator() {
                   <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">ATS Parseability</span>
                   <span className="text-base font-bold text-emerald-400">{atsParseScore}%</span>
                 </div>
-                
+
                 <div className="w-full bg-slate-800 rounded-full h-2">
                   <div className="bg-gradient-to-r from-purple-500 to-emerald-400 h-2 rounded-full" style={{ width: `${atsParseScore}%` }} />
                 </div>
@@ -246,7 +243,7 @@ export default function AtsSimulator() {
           <div className="space-y-4">
             <div className="flex items-center justify-between bg-slate-900/40 p-4 rounded-xl border border-slate-800">
               <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <h3 className="text-sm font-bold text-primary flex items-center gap-2">
                   <Eye className="w-4 h-4 text-cyan-400" />
                   Simulated 6-Second Visual Scan Overlay
                 </h3>
@@ -256,23 +253,22 @@ export default function AtsSimulator() {
               </div>
               <button
                 onClick={() => setHeatMapActive(!heatMapActive)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  heatMapActive
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${heatMapActive
                     ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
                     : 'bg-slate-800 text-slate-400'
-                }`}
+                  }`}
               >
                 {heatMapActive ? 'Heatmap: ON' : 'Heatmap: OFF'}
               </button>
             </div>
 
             {/* Simulated Resume Canvas with Heatmap Highlights */}
-            <div className="max-w-3xl mx-auto bg-white text-slate-900 p-8 rounded-xl shadow-2xl relative overflow-hidden font-sans border border-slate-200">
-              
+            <div className="max-w-3xl mx-auto bg-primary text-slate-900 p-8 rounded-xl shadow-2xl relative overflow-hidden font-sans border border-slate-200">
+
               {/* Eye Scan Marker 1: Top Left Header */}
               {heatMapActive && (
                 <div className="absolute top-6 left-6 w-56 h-24 bg-rose-500/20 border-2 border-rose-500 rounded-lg pointer-events-none animate-pulse flex items-start justify-end p-1">
-                  <span className="bg-rose-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow">1. FIXATION (0.8s)</span>
+                  <span className="bg-rose-600 text-primary text-[9px] font-bold px-1.5 py-0.5 rounded shadow">1. FIXATION (0.8s)</span>
                 </div>
               )}
 
@@ -294,7 +290,7 @@ export default function AtsSimulator() {
               {/* Eye Scan Marker 2: Most Recent Role */}
               {heatMapActive && (
                 <div className="absolute top-44 left-6 right-6 h-24 bg-amber-500/20 border-2 border-amber-500 rounded-lg pointer-events-none flex items-start justify-end p-1">
-                  <span className="bg-amber-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow">2. MOST RECENT IMPACT (2.2s)</span>
+                  <span className="bg-amber-600 text-primary text-[9px] font-bold px-1.5 py-0.5 rounded shadow">2. MOST RECENT IMPACT (2.2s)</span>
                 </div>
               )}
 
@@ -321,7 +317,7 @@ export default function AtsSimulator() {
               {/* Eye Scan Marker 3: Core Skills */}
               {heatMapActive && (
                 <div className="absolute bottom-28 left-6 right-6 h-20 bg-emerald-500/20 border-2 border-emerald-500 rounded-lg pointer-events-none flex items-start justify-end p-1">
-                  <span className="bg-emerald-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow">3. KEYWORD SKILL SCAN (1.8s)</span>
+                  <span className="bg-emerald-600 text-primary text-[9px] font-bold px-1.5 py-0.5 rounded shadow">3. KEYWORD SKILL SCAN (1.8s)</span>
                 </div>
               )}
 
@@ -357,7 +353,7 @@ export default function AtsSimulator() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 space-y-3">
               <div className="text-xs font-semibold text-purple-400 uppercase tracking-wider">Format Safety</div>
-              <div className="text-3xl font-bold text-white">100%</div>
+              <div className="text-3xl font-bold text-primary">100%</div>
               <p className="text-xs text-slate-400">
                 Single-column ATS compliant structure ensures 0 text scrambling across Workday, Greenhouse, Taleo, and Lever.
               </p>

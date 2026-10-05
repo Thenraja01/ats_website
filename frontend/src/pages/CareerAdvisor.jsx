@@ -1,31 +1,31 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Bot, 
-  Send, 
-  Sparkles, 
-  User, 
-  ArrowRight, 
-  ShieldCheck, 
-  TrendingUp, 
-  BookOpen, 
-  Briefcase, 
-  Code2, 
-  CheckCircle2, 
+import {
+  Bot,
+  Send,
+  Sparkles,
+  User,
+  ArrowRight,
+  ShieldCheck,
+  TrendingUp,
+  BookOpen,
+  Briefcase,
+  Code2,
+  CheckCircle2,
   RefreshCw,
   Lightbulb,
   Compass
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { 
-  getMasterCareerProfile, 
-  getApplicationsMemory, 
-  calculateSkillEvidenceMap 
+import {
+  getMasterCareerProfile,
+  getApplicationsMemory,
+  calculateSkillEvidenceMap
 } from '../services/careerProfileSync';
-import { 
-  Activity, 
-  BarChart2, 
-  Target, 
+import {
+  Activity,
+  BarChart2,
+  Target,
   AlertCircle,
   GraduationCap
 } from 'lucide-react';
@@ -120,16 +120,16 @@ export default function CareerAdvisor() {
 
   return (
     <div className="min-h-[85vh] pt-4 pb-12 px-3 sm:px-6 max-w-5xl mx-auto flex flex-col space-y-4">
-      
+
       {/* Top Header Card */}
-      <div className="bg-[#0A1026] border border-white/[0.08] rounded-3xl p-5 shadow-xl flex items-center justify-between">
+      <div className="bg-[#0A1026] border border-primary/[0.08] rounded-3xl p-5 shadow-xl flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 border border-white/10 flex items-center justify-center text-primary shadow-inner">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/10 flex items-center justify-center text-primary shadow-inner">
             <Compass className="w-6 h-6 text-accent" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold text-white font-heading">AI Career Intelligence & Strategic Advisor</h1>
+              <h1 className="text-base font-bold text-primary font-heading">AI Career Intelligence & Strategic Advisor</h1>
               <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-semibold">
                 Vault Grounded
               </span>
@@ -151,7 +151,7 @@ export default function CareerAdvisor() {
             <span className="font-semibold text-slate-300">Target Role Fit</span>
             <Target className="w-4 h-4 text-cyan-400" />
           </div>
-          <div className="text-xl font-bold text-white">{headline || 'Software Engineer'}</div>
+          <div className="text-xl font-bold text-primary">{headline || 'Software Engineer'}</div>
           <div className="text-[11px] text-cyan-400 mt-0.5">{userSkills.length} Verified Skills in Vault</div>
         </div>
 
@@ -179,7 +179,7 @@ export default function CareerAdvisor() {
       </div>
 
       {/* Chat Messages Container */}
-      <div className="flex-1 bg-[#080D1E] border border-white/[0.08] rounded-3xl p-5 sm:p-6 shadow-2xl overflow-y-auto space-y-4 min-h-[500px] max-h-[600px] custom-scrollbar">
+      <div className="flex-1 bg-[#080D1E] border border-primary/[0.08] rounded-3xl p-5 sm:p-6 shadow-2xl overflow-y-auto space-y-4 min-h-[500px] max-h-[600px] custom-scrollbar">
         {messages.map((msg) => {
           const isAI = msg.sender === 'ai';
           return (
@@ -194,22 +194,21 @@ export default function CareerAdvisor() {
               )}
 
               <div
-                className={`p-4 rounded-2xl max-w-2xl text-xs leading-relaxed ${
-                  isAI
-                    ? 'bg-white/[0.04] border border-white/[0.08] text-slate-200'
-                    : 'bg-gradient-to-r from-primary to-accent text-white font-medium shadow-md shadow-primary/20'
-                }`}
+                className={`p-4 rounded-2xl max-w-2xl text-xs leading-relaxed ${isAI
+                    ? 'bg-primary/[0.04] border border-primary/[0.08] text-slate-200'
+                    : 'bg-gradient-to-r from-primary to-accent text-primary font-medium shadow-md shadow-primary/20'
+                  }`}
               >
-                <div className="whitespace-pre-line space-y-2">
+                <div className="primaryspace-pre-line space-y-2">
                   {msg.text}
                 </div>
-                <span className={`block text-[10px] mt-2 ${isAI ? 'text-slate-500' : 'text-white/70'} text-right`}>
+                <span className={`block text-[10px] mt-2 ${isAI ? 'text-slate-500' : 'text-primary/70'} text-right`}>
                   {msg.timestamp}
                 </span>
               </div>
 
               {!isAI && (
-                <div className="w-8 h-8 rounded-xl bg-white/10 text-white flex items-center justify-center shrink-0 mt-1">
+                <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-1">
                   <User className="w-4 h-4 text-slate-300" />
                 </div>
               )}
@@ -222,7 +221,7 @@ export default function CareerAdvisor() {
             <div className="w-8 h-8 rounded-xl bg-primary/20 text-primary flex items-center justify-center shrink-0">
               <Bot className="w-4 h-4 text-accent animate-spin" />
             </div>
-            <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] text-xs text-slate-400 flex items-center gap-2">
+            <div className="p-3.5 rounded-2xl bg-primary/[0.04] border border-primary/[0.08] text-xs text-slate-400 flex items-center gap-2">
               <Sparkles className="w-3.5 h-3.5 text-accent animate-pulse" />
               <span>Analyzing Master Profile context and consulting...</span>
             </div>
@@ -239,7 +238,7 @@ export default function CareerAdvisor() {
             key={idx}
             type="button"
             onClick={() => handleSendMessage(sug)}
-            className="px-3 py-1.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.08] text-slate-300 hover:text-white text-[11px] whitespace-nowrap transition-all shrink-0 flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-xl bg-primary/[0.03] hover:bg-primary/[0.08] border border-primary/[0.08] text-slate-300 hover:text-primary text-[11px] primaryspace-nowrap transition-all shrink-0 flex items-center gap-1.5"
           >
             <Lightbulb className="w-3 h-3 text-amber-400" />
             <span>{sug}</span>
@@ -253,19 +252,19 @@ export default function CareerAdvisor() {
           e.preventDefault();
           handleSendMessage();
         }}
-        className="flex items-center gap-2 bg-[#0A1026] border border-white/[0.08] rounded-2xl p-2 shadow-xl"
+        className="flex items-center gap-2 bg-[#0A1026] border border-primary/[0.08] rounded-2xl p-2 shadow-xl"
       >
         <input
           type="text"
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           placeholder="Ask anything about your resume, skill gaps, or target roles..."
-          className="flex-1 px-4 py-2.5 rounded-xl bg-transparent text-white text-xs placeholder-slate-500 focus:outline-none"
+          className="flex-1 px-4 py-2.5 rounded-xl bg-transparent text-primary text-xs placeholder-slate-500 focus:outline-none"
         />
         <button
           type="submit"
           disabled={!inputText.trim() || loading}
-          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary to-accent text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-primary/25 hover:shadow-primary/40 transition-all disabled:opacity-40"
+          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary to-accent text-primary text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-primary/25 hover:shadow-primary/40 transition-all disabled:opacity-40"
         >
           <span>Send</span>
           <Send className="w-3.5 h-3.5" />

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Search, Briefcase, Calendar, Star, MapPin, 
+import {
+  Search, Briefcase, Calendar, Star, MapPin,
   ChevronRight, Sparkles, Loader2, Filter, Info, FileText, CheckCircle2
 } from 'lucide-react';
 import { candidateAPI } from '../services/api';
@@ -16,14 +16,14 @@ export default function Jobs() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // Search & Filter
   const [search, setSearch] = useState('');
   const [skillFilter, setSkillFilter] = useState('');
-  
+
   // Selected Job for Detailed View
   const [selectedJob, setSelectedJob] = useState(null);
-  
+
   // Apply Modal state
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [resumes, setResumes] = useState([]);
@@ -65,7 +65,7 @@ export default function Jobs() {
         }
       });
       setAppliedJobs(mappings);
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   const handleSearchSubmit = (e) => {
@@ -121,7 +121,7 @@ export default function Jobs() {
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="max-w-7xl mx-auto"
       variants={staggerContainer}
       initial="hidden"
@@ -129,7 +129,7 @@ export default function Jobs() {
     >
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white font-heading mb-2">Discover Career Openings</h1>
+        <h1 className="text-3xl font-bold text-primary font-heading mb-2">Discover Career Openings</h1>
         <p className="text-slate-400 text-sm">Browse current openings and run AI resume matching instantly.</p>
       </div>
 
@@ -144,7 +144,7 @@ export default function Jobs() {
             placeholder="Search jobs by title or keywords..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+            className="w-full bg-primary/5 border border-primary/10 rounded-xl py-3 pl-10 pr-4 text-sm text-primary placeholder:text-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
           />
         </div>
         <div className="flex gap-2">
@@ -157,7 +157,7 @@ export default function Jobs() {
               placeholder="Filter by skill..."
               value={skillFilter}
               onChange={(e) => setSkillFilter(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+              className="w-full bg-primary/5 border border-primary/10 rounded-xl py-3 pl-10 pr-4 text-sm text-primary placeholder:text-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
             />
           </div>
           <GlowButton type="submit" id="search-submit-btn" aria-label="Submit search query">
@@ -178,28 +178,27 @@ export default function Jobs() {
           <GlowButton onClick={() => navigate('/login')}>Go to Sign In</GlowButton>
         </div>
       ) : jobs.length === 0 ? (
-        <div className="glass rounded-2xl p-12 text-center border-white/[0.06]">
+        <div className="glass rounded-2xl p-12 text-center border-primary/[0.06]">
           <Briefcase className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-white mb-2">No active jobs found</h3>
+          <h3 className="text-lg font-semibold text-primary mb-2">No active jobs found</h3>
           <p className="text-slate-400 text-sm">Try broadening your search keywords or skill filters.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
+
           {/* Jobs List (Left Col) */}
           <div className="lg:col-span-5 space-y-4">
             {jobs.map((job) => (
               <div
                 key={job.id}
                 onClick={() => setSelectedJob(job)}
-                className={`glass p-5 rounded-2xl border transition-all cursor-pointer text-left ${
-                  selectedJob?.id === job.id 
-                    ? 'border-primary/50 bg-primary/5 shadow-md shadow-primary/10' 
-                    : 'border-white/[0.06] hover:border-white/20'
-                }`}
+                className={`glass p-5 rounded-2xl border transition-all cursor-pointer text-left ${selectedJob?.id === job.id
+                    ? 'border-primary/50 bg-primary/5 shadow-md shadow-primary/10'
+                    : 'border-primary/[0.06] hover:border-primary/20'
+                  }`}
               >
                 <div className="flex justify-between items-start gap-2 mb-2">
-                  <h3 className="font-semibold text-white text-base leading-tight truncate">{job.title}</h3>
+                  <h3 className="font-semibold text-primary text-base leading-tight truncate">{job.title}</h3>
                   {appliedJobs[job.id] && (
                     <Badge color="success">Applied ({appliedJobs[job.id].ats_score}%)</Badge>
                   )}
@@ -207,7 +206,7 @@ export default function Jobs() {
                 <p className="text-slate-400 text-xs line-clamp-2 mb-4">{job.description}</p>
                 <div className="flex flex-wrap gap-1 mb-3">
                   {(job.required_skills || []).slice(0, 3).map((skill) => (
-                    <span key={skill} className="px-2 py-0.5 rounded bg-white/5 text-slate-300 text-[10px]">
+                    <span key={skill} className="px-2 py-0.5 rounded bg-primary/5 text-slate-300 text-[10px]">
                       {skill}
                     </span>
                   ))}
@@ -222,7 +221,7 @@ export default function Jobs() {
                     <Calendar className="w-3 h-3" />
                     {job.created_at ? new Date(job.created_at).toLocaleDateString() : 'N/A'}
                   </span>
-                  <span className="flex items-center gap-0.5 text-primary hover:text-white font-medium">
+                  <span className="flex items-center gap-0.5 text-primary hover:text-primary font-medium">
                     View Details <ChevronRight className="w-3 h-3" />
                   </span>
                 </div>
@@ -232,15 +231,15 @@ export default function Jobs() {
 
           {/* Job Details Panel (Right Col) */}
           {selectedJob && (
-            <div className="lg:col-span-7 glass rounded-2xl p-6 border-white/[0.06] sticky top-24 space-y-6 text-left">
+            <div className="lg:col-span-7 glass rounded-2xl p-6 border-primary/[0.06] sticky top-24 space-y-6 text-left">
               <div className="flex justify-between items-start gap-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-white font-heading leading-tight">{selectedJob.title}</h2>
+                  <h2 className="text-2xl font-bold text-primary font-heading leading-tight">{selectedJob.title}</h2>
                   <p className="text-slate-400 text-xs mt-2 flex items-center gap-1">
                     <Calendar className="w-3.5 h-3.5" /> Posted on {selectedJob.created_at ? new Date(selectedJob.created_at).toLocaleDateString() : 'N/A'}
                   </p>
                 </div>
-                
+
                 {appliedJobs[selectedJob.id] ? (
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
                     <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-500/10 text-emerald-400 font-semibold text-sm border border-emerald-500/20">
@@ -249,7 +248,7 @@ export default function Jobs() {
                     {appliedJobs[selectedJob.id].analysis_id && (
                       <Link
                         to={`/result/${appliedJobs[selectedJob.id].analysis_id}`}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary/25 border border-primary/30 text-primary hover:text-white text-xs font-semibold hover:scale-105 transition-all"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary/25 border border-primary/30 text-primary hover:text-primary text-xs font-semibold hover:scale-105 transition-all"
                       >
                         <Star className="w-3.5 h-3.5 text-primary" /> View AI Report
                       </Link>
@@ -262,14 +261,14 @@ export default function Jobs() {
                 )}
               </div>
 
-              <div className="border-t border-white/[0.06] pt-4">
-                <h3 className="text-sm font-semibold text-white mb-2">Job Description</h3>
-                <p className="text-slate-300 text-sm whitespace-pre-line leading-relaxed">{selectedJob.description}</p>
+              <div className="border-t border-primary/[0.06] pt-4">
+                <h3 className="text-sm font-semibold text-primary mb-2">Job Description</h3>
+                <p className="text-slate-300 text-sm primaryspace-pre-line leading-relaxed">{selectedJob.description}</p>
               </div>
 
               {selectedJob.required_skills?.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-white mb-2">Required Skills & Expertise</h3>
+                  <h3 className="text-sm font-semibold text-primary mb-2">Required Skills & Expertise</h3>
                   <div className="flex flex-wrap gap-1.5">
                     {selectedJob.required_skills.map((skill) => (
                       <span key={skill} className="px-2.5 py-1 bg-primary/10 border border-primary/20 text-primary text-xs rounded-lg">
@@ -282,7 +281,7 @@ export default function Jobs() {
 
               {selectedJob.responsibilities?.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-white mb-2">Key Responsibilities</h3>
+                  <h3 className="text-sm font-semibold text-primary mb-2">Key Responsibilities</h3>
                   <ul className="list-disc pl-5 text-slate-300 text-sm space-y-1">
                     {selectedJob.responsibilities.map((r, i) => (
                       <li key={i}>{r}</li>
@@ -292,7 +291,7 @@ export default function Jobs() {
               )}
 
               {selectedJob.experience_required && (
-                <div className="grid grid-cols-2 gap-4 bg-white/[0.02] p-4 rounded-xl border border-white/[0.06]">
+                <div className="grid grid-cols-2 gap-4 bg-primary/[0.02] p-4 rounded-xl border border-primary/[0.06]">
                   <div>
                     <h4 className="text-xs text-slate-500 uppercase tracking-wider font-semibold">Experience Required</h4>
                     <p className="text-sm text-slate-200 mt-1 font-medium">{selectedJob.experience_required}</p>
@@ -313,21 +312,21 @@ export default function Jobs() {
       <AnimatePresence>
         {showApplyModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="glass max-w-md w-full rounded-2xl border border-white/[0.08] overflow-hidden shadow-2xl"
+              className="glass max-w-md w-full rounded-2xl border border-primary/[0.08] overflow-hidden shadow-2xl"
             >
-              <div className="p-6 border-b border-white/[0.06] flex items-center justify-between">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <div className="p-6 border-b border-primary/[0.06] flex items-center justify-between">
+                <h3 className="text-lg font-bold text-primary flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-primary" /> AI Sift & Match
                 </h3>
-                <button 
+                <button
                   onClick={() => setShowApplyModal(false)}
                   id="close-apply-modal-btn"
                   aria-label="Close match and apply dialog"
-                  className="p-1 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white"
+                  className="p-1 rounded-lg hover:bg-primary/5 text-slate-400 hover:text-primary"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -343,7 +342,7 @@ export default function Jobs() {
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
                   </div>
                 ) : resumes.length === 0 ? (
-                  <div className="p-4 rounded-xl border border-dashed border-white/10 text-center">
+                  <div className="p-4 rounded-xl border border-dashed border-primary/10 text-center">
                     <p className="text-xs text-slate-400 mb-3">No resumes saved in your account.</p>
                     <GlowButton variant="secondary" onClick={() => {
                       setShowApplyModal(false);
@@ -356,14 +355,13 @@ export default function Jobs() {
                   <div className="space-y-2">
                     <label className="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Choose Resume</label>
                     {resumes.map((resume) => (
-                      <div 
+                      <div
                         key={resume.id}
                         onClick={() => setSelectedResumeId(resume.id)}
-                        className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${
-                          selectedResumeId === resume.id 
-                            ? 'border-primary bg-primary/5 text-white' 
-                            : 'border-white/10 bg-white/[0.01] hover:bg-white/5 text-slate-300'
-                        }`}
+                        className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${selectedResumeId === resume.id
+                            ? 'border-primary bg-primary/5 text-primary'
+                            : 'border-primary/10 bg-primary/[0.01] hover:bg-primary/5 text-slate-300'
+                          }`}
                       >
                         <FileText className={`w-5 h-5 ${selectedResumeId === resume.id ? 'text-primary' : 'text-slate-500'}`} />
                         <div className="truncate flex-1">
@@ -376,16 +374,16 @@ export default function Jobs() {
                 )}
               </div>
 
-              <div className="p-6 bg-white/[0.02] border-t border-white/[0.06] flex justify-end gap-2">
-                <button 
+              <div className="p-6 bg-primary/[0.02] border-t border-primary/[0.06] flex justify-end gap-2">
+                <button
                   onClick={() => setShowApplyModal(false)}
                   id="cancel-apply-btn"
                   aria-label="Cancel application"
-                  className="px-4 py-2 rounded-xl text-slate-400 hover:text-white text-sm font-medium"
+                  className="px-4 py-2 rounded-xl text-slate-400 hover:text-primary text-sm font-medium"
                 >
                   Cancel
                 </button>
-                <GlowButton 
+                <GlowButton
                   onClick={handleApply}
                   id="submit-apply-btn"
                   aria-label="Submit match and apply application"

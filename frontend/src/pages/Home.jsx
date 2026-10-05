@@ -163,7 +163,7 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto mb-6 leading-relaxed"
           >
-            Leverage Llama 3 AI to <span className="text-white font-medium">{displayText}</span>
+            Leverage Llama 3 AI to <span className="text-primary font-medium">{displayText}</span>
             <span className="inline-block w-0.5 h-5 bg-primary ml-1 animate-pulse" />
           </motion.p>
 
@@ -184,7 +184,7 @@ export default function Home() {
           >
             <Link
               to="/upload"
-              className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-primary to-accent text-white font-semibold text-lg overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-primary/25 hover:shadow-primary/40"
+              className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-primary to-accent text-primary font-semibold text-lg overflow-hidden transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg shadow-primary/25 hover:shadow-primary/40"
             >
               <span className="relative z-10 flex items-center gap-2">
                 Analyze Your Resume <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -192,13 +192,13 @@ export default function Home() {
             </Link>
             <Link
               to="/features"
-              className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl border border-white/10 text-white font-semibold text-lg hover:bg-white/5 hover:border-white/20 transition-all duration-300 hover:scale-105 active:scale-95"
+              className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl border border-primary/10 text-primary font-semibold text-lg hover:bg-primary/5 hover:border-primary/20 transition-all duration-300 hover:scale-105 active:scale-95"
             >
               Explore Features
             </Link>
             <Link
               to="/pricing"
-              className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-slate-400 font-semibold text-lg hover:text-white transition-all duration-300 hover:scale-105 active:scale-95"
+              className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl text-slate-400 font-semibold text-lg hover:text-primary transition-all duration-300 hover:scale-105 active:scale-95"
             >
               See Pricing
             </Link>
@@ -210,7 +210,7 @@ export default function Home() {
           className="absolute top-20 right-10 hidden lg:block"
           style={{ x: useTransform(springX, [-0.5, 0.5], [-30, 30]), y: useTransform(springY, [-0.5, 0.5], [-20, 20]) }}
         >
-          <div className="glass rounded-2xl p-4 w-48 border border-white/[0.06]">
+          <div className="glass rounded-2xl p-4 w-48 border border-primary/[0.06]">
             <ScoreRing score={92} size={100} strokeWidth={6} label="" />
             <p className="text-xs text-slate-400 text-center mt-2">Match Score</p>
           </div>
@@ -220,10 +220,10 @@ export default function Home() {
           className="absolute top-40 left-10 hidden lg:block"
           style={{ x: useTransform(springX, [-0.5, 0.5], [20, -20]), y: useTransform(springY, [-0.5, 0.5], [30, -30]) }}
         >
-          <div className="glass rounded-2xl p-4 w-40 border border-white/[0.06]">
+          <div className="glass rounded-2xl p-4 w-40 border border-primary/[0.06]">
             <div className="flex items-center gap-2 mb-2">
               <Bot className="w-4 h-4 text-primary" />
-              <span className="text-xs text-white font-medium">AI Analysis</span>
+              <span className="text-xs text-primary font-medium">AI Analysis</span>
             </div>
             <div className="space-y-1">
               {['React', 'Python', 'AWS'].map(s => (
@@ -242,9 +242,9 @@ export default function Home() {
         <p className="text-center text-xs text-slate-600 uppercase tracking-widest mb-6">Trusted by teams at</p>
         <Marquee speed={25}>
           {trustedLogos.map((name) => (
-            <div key={name} className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+            <div key={name} className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary/[0.02] border border-primary/[0.04]">
               <Server className="w-4 h-4 text-slate-500" />
-              <span className="text-sm font-medium text-slate-400 whitespace-nowrap">{name}</span>
+              <span className="text-sm font-medium text-slate-400 primaryspace-nowrap">{name}</span>
             </div>
           ))}
         </Marquee>
@@ -254,11 +254,11 @@ export default function Home() {
       <RevealOnScroll className="mb-24 max-w-5xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {stats.map((stat) => (
-            <TiltCard key={stat.label} className="relative p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06] text-center group hover:border-primary/30 transition-all duration-300" tiltDegree={5}>
+            <TiltCard key={stat.label} className="relative p-6 rounded-2xl bg-primary/[0.03] border border-primary/[0.06] text-center group hover:border-primary/30 transition-all duration-300" tiltDegree={5}>
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
                 <stat.icon className="w-5 h-5 text-primary" />
               </div>
-              <h3 className="text-3xl font-bold text-white font-heading">
+              <h3 className="text-3xl font-bold text-primary font-heading">
                 <AnimatedCounter to={stat.value} duration={2.5} suffix={stat.suffix || ''} />
               </h3>
               <p className="text-slate-500 text-sm mt-1">{stat.label}</p>
@@ -270,17 +270,17 @@ export default function Home() {
       {/* How It Works */}
       <RevealOnScroll className="mb-24 max-w-5xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 font-heading">How It Works</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4 font-heading">How It Works</h2>
           <p className="text-slate-400 max-w-xl mx-auto">Three simple steps to get your ATS compatibility score and AI-powered insights.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {steps.map((s, i) => (
             <RevealOnScroll key={s.step} delay={i * 0.15}>
-              <TiltCard className="relative p-8 rounded-2xl bg-white/[0.03] border border-white/[0.06] text-center group hover:border-primary/30 transition-all duration-300" tiltDegree={8}>
+              <TiltCard className="relative p-8 rounded-2xl bg-primary/[0.03] border border-primary/[0.06] text-center group hover:border-primary/30 transition-all duration-300" tiltDegree={8}>
                 <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${s.gradient} flex items-center justify-center mx-auto mb-5 group-hover:scale-110 transition-transform shadow-lg`}>
-                  <span className="text-2xl font-bold text-white">{s.step}</span>
+                  <span className="text-2xl font-bold text-primary">{s.step}</span>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3">{s.title}</h3>
+                <h3 className="text-xl font-bold text-primary mb-3">{s.title}</h3>
                 <p className="text-slate-400 text-sm leading-relaxed">{s.desc}</p>
               </TiltCard>
             </RevealOnScroll>
@@ -291,13 +291,13 @@ export default function Home() {
       {/* Features Grid */}
       <RevealOnScroll className="mb-24 max-w-5xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 font-heading">Everything You Need</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4 font-heading">Everything You Need</h2>
           <p className="text-slate-400 max-w-xl mx-auto">Comprehensive AI-powered tools for both job seekers and recruitment teams.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {features.map((f, i) => (
             <RevealOnScroll key={f.title} delay={i * 0.05}>
-              <TiltCard className="group p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] hover:border-primary/30 transition-all duration-300" tiltDegree={5}>
+              <TiltCard className="group p-6 rounded-2xl bg-primary/[0.03] border border-primary/[0.06] hover:bg-primary/[0.05] hover:border-primary/30 transition-all duration-300" tiltDegree={5}>
                 <motion.div
                   className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4"
                   whileHover={{ scale: 1.2, rotate: 10 }}
@@ -305,7 +305,7 @@ export default function Home() {
                 >
                   <f.icon className="w-6 h-6 text-primary" />
                 </motion.div>
-                <h3 className="text-lg font-bold text-white mb-2">{f.title}</h3>
+                <h3 className="text-lg font-bold text-primary mb-2">{f.title}</h3>
                 <p className="text-slate-400 text-sm leading-relaxed">{f.desc}</p>
               </TiltCard>
             </RevealOnScroll>
@@ -316,7 +316,7 @@ export default function Home() {
       {/* Testimonials */}
       <RevealOnScroll className="mb-24 max-w-5xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 font-heading">Trusted by Users</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4 font-heading">Trusted by Users</h2>
           <p className="text-slate-400 max-w-xl mx-auto">See how HireMind AI is transforming the hiring process.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -326,7 +326,7 @@ export default function Home() {
             { quote: 'The interview questions were surprisingly relevant. Felt like having a career coach.', name: 'Priya M.', role: 'Product Designer' },
           ].map((t, i) => (
             <RevealOnScroll key={t.name} delay={i * 0.1}>
-              <div className="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-primary/20 transition-all duration-300">
+              <div className="p-6 rounded-2xl bg-primary/[0.03] border border-primary/[0.06] hover:border-primary/20 transition-all duration-300">
                 <div className="flex gap-1 mb-4">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
@@ -334,11 +334,11 @@ export default function Home() {
                 </div>
                 <p className="text-slate-300 mb-6 italic leading-relaxed text-sm">&ldquo;{t.quote}&rdquo;</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent/50 flex items-center justify-center text-white font-bold text-sm">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent/50 flex items-center justify-center text-primary font-bold text-sm">
                     {t.name.charAt(0)}
                   </div>
                   <div>
-                    <p className="text-white font-medium text-sm">{t.name}</p>
+                    <p className="text-primary font-medium text-sm">{t.name}</p>
                     <p className="text-slate-500 text-xs">{t.role}</p>
                   </div>
                 </div>
@@ -353,18 +353,18 @@ export default function Home() {
         <div className="max-w-4xl mx-auto text-center py-16 px-8 rounded-3xl bg-gradient-to-br from-primary/5 via-accent/5 to-primary/5 border border-primary/10 relative overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-[128px] animate-pulse" style={{ animationDuration: '10s' }} />
           <div className="relative z-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 font-heading">Ready to Transform Your Hiring?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4 font-heading">Ready to Transform Your Hiring?</h2>
             <p className="text-slate-400 mb-8 max-w-xl mx-auto">Join thousands of users leveraging AI for smarter hiring decisions.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/signup"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-primary to-accent text-white font-semibold text-lg shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-primary to-accent text-primary font-semibold text-lg shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all"
               >
                 Get Started Free <ArrowRight className="w-5 h-5" />
               </Link>
               <Link
                 to="/contact"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-white/10 text-white font-semibold text-lg hover:bg-white/5 hover:border-white/20 transition-all hover:scale-105 active:scale-95"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-xl border border-primary/10 text-primary font-semibold text-lg hover:bg-primary/5 hover:border-primary/20 transition-all hover:scale-105 active:scale-95"
               >
                 Contact Sales
               </Link>

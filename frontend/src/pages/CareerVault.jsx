@@ -1,24 +1,24 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  User, 
-  Briefcase, 
-  GraduationCap, 
-  Code2, 
-  Award, 
-  Languages as LanguagesIcon, 
-  Plus, 
-  Trash2, 
-  Save, 
-  Download, 
-  Upload, 
-  CheckCircle2, 
-  Sparkles, 
-  ShieldCheck, 
-  Layers, 
-  FileText, 
-  ExternalLink, 
+import {
+  User,
+  Briefcase,
+  GraduationCap,
+  Code2,
+  Award,
+  Languages as LanguagesIcon,
+  Plus,
+  Trash2,
+  Save,
+  Download,
+  Upload,
+  CheckCircle2,
+  Sparkles,
+  ShieldCheck,
+  Layers,
+  FileText,
+  ExternalLink,
   Info,
   Check,
   AlertTriangle,
@@ -40,9 +40,9 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { 
-  getMasterCareerProfile, 
-  saveMasterCareerProfile, 
+import {
+  getMasterCareerProfile,
+  saveMasterCareerProfile,
   calculateProfileScore,
   calculateSkillEvidenceMap,
   DEFAULT_MASTER_PROFILE
@@ -55,7 +55,7 @@ export default function CareerVault() {
   const [newSkillCategory, setNewSkillCategory] = useState('Technical');
   const [newSkillProficiency, setNewSkillProficiency] = useState('Advanced');
   const [syncedTime, setSyncedTime] = useState(() => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-  
+
   // Multi-Document Ingestion & Conflict Resolver State
   const [isUploadingDocs, setIsUploadingDocs] = useState(false);
   const [conflictModalOpen, setConflictModalOpen] = useState(false);
@@ -83,7 +83,7 @@ export default function CareerVault() {
     setTimeout(() => {
       // Simulate intelligent parsing & conflict detection
       const conflicts = [];
-      
+
       // Example conflict simulation if candidate has existing experience
       if (profile.experience && profile.experience.length > 0) {
         const firstExp = profile.experience[0];
@@ -188,18 +188,18 @@ export default function CareerVault() {
 
   return (
     <div className="min-h-screen pt-4 pb-20 px-3 sm:px-6 max-w-7xl mx-auto space-y-6">
-      
+
       {/* Top Hero Banner - Career Vault Pillar */}
-      <div className="bg-gradient-to-r from-[#0C142E] via-[#0A1026] to-[#0D1838] border border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+      <div className="bg-gradient-to-r from-[#0C142E] via-[#0A1026] to-[#0D1838] border border-primary/[0.08] rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none -z-0" />
-        
+
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold text-primary mb-3">
               <Database className="w-3.5 h-3.5 text-emerald-400" />
               <span>Career Vault • Single Source of Truth</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white font-heading">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-primary font-heading">
               The Career Vault
             </h1>
             <p className="text-slate-300 text-xs sm:text-sm mt-1 max-w-2xl">
@@ -210,26 +210,26 @@ export default function CareerVault() {
           {/* Actions & Completion Score */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 shrink-0">
             {/* Completion Meter */}
-            <div className="p-3.5 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center gap-3">
+            <div className="p-3.5 rounded-2xl bg-primary/[0.04] border border-primary/[0.08] flex items-center gap-3">
               <div className="relative w-12 h-12 flex items-center justify-center">
                 <svg className="w-full h-full transform -rotate-90">
-                  <circle cx="24" cy="24" r="20" className="text-white/10 stroke-current" strokeWidth="4" fill="transparent" />
-                  <circle 
-                    cx="24" 
-                    cy="24" 
-                    r="20" 
-                    className="text-primary stroke-current transition-all duration-1000" 
-                    strokeWidth="4" 
-                    strokeDasharray="125.6" 
-                    strokeDashoffset={125.6 - (125.6 * completionScore) / 100} 
-                    fill="transparent" 
-                    strokeLinecap="round" 
+                  <circle cx="24" cy="24" r="20" className="text-primary/10 stroke-current" strokeWidth="4" fill="transparent" />
+                  <circle
+                    cx="24"
+                    cy="24"
+                    r="20"
+                    className="text-primary stroke-current transition-all duration-1000"
+                    strokeWidth="4"
+                    strokeDasharray="125.6"
+                    strokeDashoffset={125.6 - (125.6 * completionScore) / 100}
+                    fill="transparent"
+                    strokeLinecap="round"
                   />
                 </svg>
-                <span className="absolute text-xs font-bold text-white">{completionScore}%</span>
+                <span className="absolute text-xs font-bold text-primary">{completionScore}%</span>
               </div>
               <div>
-                <p className="text-xs font-bold text-white">Vault Readiness</p>
+                <p className="text-xs font-bold text-primary">Vault Readiness</p>
                 <p className="text-[11px] text-slate-400">100% Fact Grounded</p>
               </div>
             </div>
@@ -239,19 +239,19 @@ export default function CareerVault() {
               <label className="px-3.5 py-2.5 rounded-xl bg-primary/20 hover:bg-primary/30 border border-primary/30 text-primary text-xs font-bold flex items-center gap-2 cursor-pointer transition-all">
                 <Upload className="w-4 h-4" />
                 <span>Upload Documents</span>
-                <input 
-                  type="file" 
-                  multiple 
-                  accept=".pdf,.docx,.txt,.json" 
-                  onChange={handleMultiDocUpload} 
-                  className="hidden" 
+                <input
+                  type="file"
+                  multiple
+                  accept=".pdf,.docx,.txt,.json"
+                  onChange={handleMultiDocUpload}
+                  className="hidden"
                 />
               </label>
 
               <button
                 type="button"
                 onClick={handleExportJSON}
-                className="px-3.5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 hover:text-white text-xs font-semibold flex items-center gap-2 transition-all"
+                className="px-3.5 py-2.5 rounded-xl bg-primary/5 hover:bg-primary/10 border border-primary/10 text-slate-200 hover:text-primary text-xs font-semibold flex items-center gap-2 transition-all"
                 title="Export vault as JSON"
               >
                 <Download className="w-4 h-4 text-accent" />
@@ -260,7 +260,7 @@ export default function CareerVault() {
 
               <Link
                 to="/builder"
-                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white text-xs font-semibold shadow-lg shadow-primary/20 flex items-center gap-2 transition-all"
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary text-xs font-semibold shadow-lg shadow-primary/20 flex items-center gap-2 transition-all"
               >
                 <FileText className="w-4 h-4" />
                 <span>Resume Studio</span>
@@ -286,9 +286,9 @@ export default function CareerVault() {
 
       {/* Main Content Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
+
         {/* Navigation Sidebar Tabs (3 Cols) */}
-        <div className="lg:col-span-3 bg-[#080D1E] border border-white/[0.08] rounded-3xl p-3 shadow-xl space-y-1 sticky top-20">
+        <div className="lg:col-span-3 bg-[#080D1E] border border-primary/[0.08] rounded-3xl p-3 shadow-xl space-y-1 sticky top-20">
           <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 py-2">
             Career Vault Modules
           </p>
@@ -299,20 +299,18 @@ export default function CareerVault() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full px-3.5 py-2.5 rounded-2xl text-xs font-semibold flex items-center justify-between transition-all ${
-                  isActive
-                    ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                    : 'text-slate-400 hover:text-white hover:bg-white/5'
-                }`}
+                className={`w-full px-3.5 py-2.5 rounded-2xl text-xs font-semibold flex items-center justify-between transition-all ${isActive
+                    ? 'bg-primary text-primary shadow-lg shadow-primary/20'
+                    : 'text-slate-400 hover:text-primary hover:bg-primary/5'
+                  }`}
               >
                 <div className="flex items-center gap-2.5 truncate">
                   <Icon className="w-4 h-4 shrink-0" />
                   <span className="truncate">{tab.label}</span>
                 </div>
                 {tab.count !== undefined && (
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] shrink-0 ${
-                    isActive ? 'bg-white/20 text-white' : 'bg-white/5 text-slate-400'
-                  }`}>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] shrink-0 ${isActive ? 'bg-primary/20 text-primary' : 'bg-primary/5 text-slate-400'
+                    }`}>
                     {tab.count}
                   </span>
                 )}
@@ -322,14 +320,14 @@ export default function CareerVault() {
         </div>
 
         {/* Section Editor Card (9 Cols) */}
-        <div className="lg:col-span-9 bg-[#080D1E] border border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-xl">
-          
+        <div className="lg:col-span-9 bg-[#080D1E] border border-primary/[0.08] rounded-3xl p-6 sm:p-8 shadow-xl">
+
           {/* 1. Personal Information */}
           {activeTab === 'personal' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-white">Personal Identity & Links</h2>
+                  <h2 className="text-base font-bold text-primary">Personal Identity & Links</h2>
                   <p className="text-xs text-slate-400">Core contact info and public developer links</p>
                 </div>
                 <button
@@ -360,7 +358,7 @@ export default function CareerVault() {
                       ...prev,
                       personalInfo: { ...prev.personalInfo, fullName: e.target.value }
                     }))}
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                    className="w-full px-4 py-2.5 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                   />
                 </div>
 
@@ -374,7 +372,7 @@ export default function CareerVault() {
                       personalInfo: { ...prev.personalInfo, headline: e.target.value }
                     }))}
                     placeholder="e.g. Senior Full Stack & AI Engineer"
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                    className="w-full px-4 py-2.5 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                   />
                 </div>
 
@@ -387,7 +385,7 @@ export default function CareerVault() {
                       ...prev,
                       personalInfo: { ...prev.personalInfo, email: e.target.value }
                     }))}
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                    className="w-full px-4 py-2.5 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                   />
                 </div>
 
@@ -400,7 +398,7 @@ export default function CareerVault() {
                       ...prev,
                       personalInfo: { ...prev.personalInfo, phone: e.target.value }
                     }))}
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                    className="w-full px-4 py-2.5 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                   />
                 </div>
 
@@ -414,7 +412,7 @@ export default function CareerVault() {
                       personalInfo: { ...prev.personalInfo, location: e.target.value }
                     }))}
                     placeholder="City, State, Country"
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                    className="w-full px-4 py-2.5 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                   />
                 </div>
 
@@ -428,7 +426,7 @@ export default function CareerVault() {
                       personalInfo: { ...prev.personalInfo, linkedin: e.target.value }
                     }))}
                     placeholder="linkedin.com/in/..."
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                    className="w-full px-4 py-2.5 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                   />
                 </div>
 
@@ -442,13 +440,13 @@ export default function CareerVault() {
                       personalInfo: { ...prev.personalInfo, github: e.target.value }
                     }))}
                     placeholder="github.com/..."
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                    className="w-full px-4 py-2.5 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                   />
                 </div>
               </div>
 
               {/* Dynamic Custom Contact / Profile Fields */}
-              <div className="pt-4 border-t border-white/[0.06] space-y-3">
+              <div className="pt-4 border-t border-primary/[0.06] space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xs font-bold text-slate-200">Custom Profile Fields</h3>
@@ -458,7 +456,7 @@ export default function CareerVault() {
 
                 <div className="space-y-2">
                   {(profile.personalInfo?.customFields || []).map((cf, cIdx) => (
-                    <div key={cf.id || cIdx} className="flex items-center gap-2.5 p-2 rounded-xl bg-white/[0.02] border border-white/[0.06]">
+                    <div key={cf.id || cIdx} className="flex items-center gap-2.5 p-2 rounded-xl bg-primary/[0.02] border border-primary/[0.06]">
                       <input
                         type="text"
                         value={cf.label}
@@ -471,7 +469,7 @@ export default function CareerVault() {
                           }));
                         }}
                         placeholder="Label (e.g. LeetCode, Medium)"
-                        className="w-1/3 px-3.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs font-semibold focus:outline-none focus:border-primary"
+                        className="w-1/3 px-3.5 py-1.5 rounded-lg bg-primary/5 border border-primary/10 text-primary text-xs font-semibold focus:outline-none focus:border-primary"
                       />
                       <input
                         type="text"
@@ -485,7 +483,7 @@ export default function CareerVault() {
                           }));
                         }}
                         placeholder="Value (e.g. leetcode.com/username, Authorized to work)"
-                        className="flex-1 px-3.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                        className="flex-1 px-3.5 py-1.5 rounded-lg bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                       />
                       <button
                         type="button"
@@ -516,14 +514,14 @@ export default function CareerVault() {
           {activeTab === 'summary' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
               <div>
-                <h2 className="text-base font-bold text-white">Professional Summary & Human Voice Engine</h2>
+                <h2 className="text-base font-bold text-primary">Professional Summary & Human Voice Engine</h2>
                 <p className="text-xs text-slate-400">Master elevator pitch and preferred writing tone presets</p>
               </div>
 
               {/* Human Voice Engine Selector */}
-              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-3">
+              <div className="p-4 rounded-2xl bg-primary/[0.02] border border-primary/[0.08] space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <label className="text-xs font-bold text-primary flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-primary" /> Human Voice Engine Preset
                   </label>
                   <span className="text-[11px] text-slate-400">Prevents generic corporate AI fluff</span>
@@ -544,11 +542,10 @@ export default function CareerVault() {
                         ...prev,
                         voiceProfile: { ...(prev.voiceProfile || {}), style: style.id }
                       }))}
-                      className={`p-2.5 rounded-xl border text-left transition-all ${
-                        (profile.voiceProfile?.style || 'Professional') === style.id
-                          ? 'bg-primary/20 border-primary text-white'
-                          : 'bg-white/[0.02] border-white/[0.06] text-slate-400 hover:text-white'
-                      }`}
+                      className={`p-2.5 rounded-xl border text-left transition-all ${(profile.voiceProfile?.style || 'Professional') === style.id
+                          ? 'bg-primary/20 border-primary text-primary'
+                          : 'bg-primary/[0.02] border-primary/[0.06] text-slate-400 hover:text-primary'
+                        }`}
                     >
                       <div className="text-xs font-bold">{style.id}</div>
                       <div className="text-[10px] text-slate-500 mt-0.5">{style.desc}</div>
@@ -568,7 +565,7 @@ export default function CareerVault() {
                       summary: { ...prev.summary, primary: e.target.value }
                     }))}
                     placeholder="Describe your career achievements, core architectural philosophies, and value proposition..."
-                    className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white text-xs leading-relaxed focus:outline-none focus:border-primary resize-y"
+                    className="w-full px-4 py-3 rounded-2xl bg-primary/5 border border-primary/10 text-primary text-xs leading-relaxed focus:outline-none focus:border-primary resize-y"
                   />
                 </div>
               </div>
@@ -580,7 +577,7 @@ export default function CareerVault() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-white">Work Experience</h2>
+                  <h2 className="text-base font-bold text-primary">Work Experience</h2>
                   <p className="text-xs text-slate-400">Granular roles, companies, responsibilities, and verified metrics</p>
                 </div>
                 <button
@@ -599,7 +596,7 @@ export default function CareerVault() {
                     };
                     setProfile(prev => ({ ...prev, experience: [...(prev.experience || []), newExp] }));
                   }}
-                  className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-primary/20"
+                  className="px-4 py-2 rounded-xl bg-primary text-primary text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-primary/20"
                 >
                   <Plus className="w-3.5 h-3.5" /> Add Experience
                 </button>
@@ -607,7 +604,7 @@ export default function CareerVault() {
 
               <div className="space-y-5">
                 {profile.experience?.map((exp, expIdx) => (
-                  <div key={exp.id || expIdx} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-4 relative">
+                  <div key={exp.id || expIdx} className="p-5 rounded-2xl bg-primary/[0.02] border border-primary/[0.08] space-y-4 relative">
                     <button
                       type="button"
                       onClick={() => setProfile(prev => ({
@@ -631,7 +628,7 @@ export default function CareerVault() {
                             setProfile(prev => ({ ...prev, experience: updated }));
                           }}
                           placeholder="e.g. Senior Software Engineer"
-                          className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                          className="w-full px-3.5 py-2 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                         />
                       </div>
                       <div className="space-y-1">
@@ -645,7 +642,7 @@ export default function CareerVault() {
                             setProfile(prev => ({ ...prev, experience: updated }));
                           }}
                           placeholder="e.g. Google"
-                          className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                          className="w-full px-3.5 py-2 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                         />
                       </div>
                       <div className="space-y-1">
@@ -659,7 +656,7 @@ export default function CareerVault() {
                             setProfile(prev => ({ ...prev, experience: updated }));
                           }}
                           placeholder="e.g. Jan 2022"
-                          className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                          className="w-full px-3.5 py-2 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                         />
                       </div>
                       <div className="space-y-1">
@@ -674,7 +671,7 @@ export default function CareerVault() {
                             setProfile(prev => ({ ...prev, experience: updated }));
                           }}
                           placeholder="e.g. Dec 2023"
-                          className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary disabled:opacity-40"
+                          className="w-full px-3.5 py-2 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary disabled:opacity-40"
                         />
                       </div>
                     </div>
@@ -689,7 +686,7 @@ export default function CareerVault() {
                           updated[expIdx].current = e.target.checked;
                           setProfile(prev => ({ ...prev, experience: updated }));
                         }}
-                        className="rounded bg-white/5 border-white/20 text-primary focus:ring-0"
+                        className="rounded bg-primary/5 border-primary/20 text-primary focus:ring-0"
                       />
                       <label htmlFor={`curr-${expIdx}`} className="text-xs text-slate-400 cursor-pointer">
                         Currently employed in this role
@@ -697,7 +694,7 @@ export default function CareerVault() {
                     </div>
 
                     {/* Quantified Responsibilities / Bullets */}
-                    <div className="space-y-2 pt-2 border-t border-white/[0.04]">
+                    <div className="space-y-2 pt-2 border-t border-primary/[0.04]">
                       <div className="flex items-center justify-between">
                         <label className="text-xs text-slate-400 font-medium">Key Responsibility & Achievement Bullets</label>
                         <button
@@ -725,7 +722,7 @@ export default function CareerVault() {
                               setProfile(prev => ({ ...prev, experience: updated }));
                             }}
                             placeholder="e.g. Architected FastAPI microservices processing 100k+ candidate profiles..."
-                            className="flex-1 px-3.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                            className="flex-1 px-3.5 py-1.5 rounded-lg bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                           />
                           <button
                             type="button"
@@ -752,7 +749,7 @@ export default function CareerVault() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-white">Education & Academics</h2>
+                  <h2 className="text-base font-bold text-primary">Education & Academics</h2>
                   <p className="text-xs text-slate-400">Degrees, institutions, honors, and graduation timelines</p>
                 </div>
                 <button
@@ -761,7 +758,7 @@ export default function CareerVault() {
                     const newEdu = { id: `edu_${Date.now()}`, institution: '', degree: '', startDate: '', endDate: '', gpa: '' };
                     setProfile(prev => ({ ...prev, education: [...(prev.education || []), newEdu] }));
                   }}
-                  className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-primary/20"
+                  className="px-4 py-2 rounded-xl bg-primary text-primary text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-primary/20"
                 >
                   <Plus className="w-3.5 h-3.5" /> Add Degree
                 </button>
@@ -769,7 +766,7 @@ export default function CareerVault() {
 
               <div className="space-y-4">
                 {profile.education?.map((edu, idx) => (
-                  <div key={edu.id || idx} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-3 relative">
+                  <div key={edu.id || idx} className="p-5 rounded-2xl bg-primary/[0.02] border border-primary/[0.08] space-y-3 relative">
                     <button
                       type="button"
                       onClick={() => setProfile(prev => ({
@@ -792,7 +789,7 @@ export default function CareerVault() {
                             setProfile(prev => ({ ...prev, education: updated }));
                           }}
                           placeholder="e.g. Stanford University"
-                          className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                          className="w-full px-3.5 py-2 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                         />
                       </div>
                       <div className="space-y-1">
@@ -806,7 +803,7 @@ export default function CareerVault() {
                             setProfile(prev => ({ ...prev, education: updated }));
                           }}
                           placeholder="e.g. B.S. in Computer Science"
-                          className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                          className="w-full px-3.5 py-2 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                         />
                       </div>
                       <div className="space-y-1">
@@ -820,7 +817,7 @@ export default function CareerVault() {
                             setProfile(prev => ({ ...prev, education: updated }));
                           }}
                           placeholder="e.g. 2024"
-                          className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                          className="w-full px-3.5 py-2 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                         />
                       </div>
                     </div>
@@ -835,7 +832,7 @@ export default function CareerVault() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-white">Engineering Projects</h2>
+                  <h2 className="text-base font-bold text-primary">Engineering Projects</h2>
                   <p className="text-xs text-slate-400">Applications, open-source repositories, and technical deliverables</p>
                 </div>
                 <button
@@ -844,7 +841,7 @@ export default function CareerVault() {
                     const newProj = { id: `proj_${Date.now()}`, name: '', technologies: '', startDate: '', url: '', description: '' };
                     setProfile(prev => ({ ...prev, projects: [...(prev.projects || []), newProj] }));
                   }}
-                  className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-primary/20"
+                  className="px-4 py-2 rounded-xl bg-primary text-primary text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-primary/20"
                 >
                   <Plus className="w-3.5 h-3.5" /> Add Project
                 </button>
@@ -852,7 +849,7 @@ export default function CareerVault() {
 
               <div className="space-y-4">
                 {profile.projects?.map((proj, idx) => (
-                  <div key={proj.id || idx} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-3 relative">
+                  <div key={proj.id || idx} className="p-5 rounded-2xl bg-primary/[0.02] border border-primary/[0.08] space-y-3 relative">
                     <button
                       type="button"
                       onClick={() => setProfile(prev => ({
@@ -875,7 +872,7 @@ export default function CareerVault() {
                             setProfile(prev => ({ ...prev, projects: updated }));
                           }}
                           placeholder="e.g. AI Resume Intelligence Engine"
-                          className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                          className="w-full px-3.5 py-2 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                         />
                       </div>
                       <div className="space-y-1">
@@ -889,7 +886,7 @@ export default function CareerVault() {
                             setProfile(prev => ({ ...prev, projects: updated }));
                           }}
                           placeholder="e.g. Python, FastAPI, React, PostgreSQL"
-                          className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                          className="w-full px-3.5 py-2 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                         />
                       </div>
                       <div className="space-y-1 sm:col-span-2">
@@ -903,7 +900,7 @@ export default function CareerVault() {
                             setProfile(prev => ({ ...prev, projects: updated }));
                           }}
                           placeholder="Key features, engineering challenges overcome, and measurable outcome..."
-                          className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary resize-y"
+                          className="w-full px-3.5 py-2 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary resize-y"
                         />
                       </div>
                     </div>
@@ -918,23 +915,23 @@ export default function CareerVault() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-white">Verified Skills & Evidence Map</h2>
+                  <h2 className="text-base font-bold text-primary">Verified Skills & Evidence Map</h2>
                   <p className="text-xs text-slate-400">Skills mapped directly to factual experiences and projects in your vault</p>
                 </div>
               </div>
 
               {/* Add Skill Form */}
-              <form onSubmit={handleAddSkill} className="flex flex-wrap items-center gap-2 p-3 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+              <form onSubmit={handleAddSkill} className="flex flex-wrap items-center gap-2 p-3 rounded-2xl bg-primary/[0.02] border border-primary/[0.06]">
                 <input
                   type="text"
                   value={newSkillName}
                   onChange={(e) => setNewSkillName(e.target.value)}
                   placeholder="Enter verified skill (e.g. Docker, RAG, PyTorch)..."
-                  className="flex-1 min-w-[200px] px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                  className="flex-1 min-w-[200px] px-3.5 py-2 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                 />
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-semibold flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary text-xs font-semibold flex items-center gap-1.5"
                 >
                   <Plus className="w-3.5 h-3.5" /> Add Skill
                 </button>
@@ -943,26 +940,25 @@ export default function CareerVault() {
               {/* Skill Evidence Map Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {skillEvidence.map((se, idx) => (
-                  <div key={idx} className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.08] flex items-start justify-between gap-3">
+                  <div key={idx} className="p-3.5 rounded-2xl bg-primary/[0.02] border border-primary/[0.08] flex items-start justify-between gap-3">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-white">{se.name}</span>
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                          se.confidence === 'Strong Evidence' 
+                        <span className="text-xs font-bold text-primary">{se.name}</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${se.confidence === 'Strong Evidence'
                             ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                             : se.confidence === 'Moderate Evidence'
-                            ? 'bg-primary/20 text-primary border border-primary/30'
-                            : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                        }`}>
+                              ? 'bg-primary/20 text-primary border border-primary/30'
+                              : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                          }`}>
                           {se.confidence}
                         </span>
                       </div>
-                      
+
                       {se.sources.length > 0 ? (
                         <div className="text-[10px] text-slate-400 flex flex-wrap gap-1 mt-1">
                           <span className="font-semibold text-slate-300">Sources:</span>
                           {se.sources.map((src, sIdx) => (
-                            <span key={sIdx} className="px-1.5 py-0.2 rounded bg-white/5 text-slate-300">
+                            <span key={sIdx} className="px-1.5 py-0.2 rounded bg-primary/5 text-slate-300">
                               {src.title}
                             </span>
                           ))}
@@ -990,7 +986,7 @@ export default function CareerVault() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-white">Certifications & Languages</h2>
+                  <h2 className="text-base font-bold text-primary">Certifications & Languages</h2>
                   <p className="text-xs text-slate-400">Industry credentials, licenses, and language competencies</p>
                 </div>
                 <div className="flex gap-2">
@@ -1021,7 +1017,7 @@ export default function CareerVault() {
               <div className="space-y-3">
                 <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Certifications</h3>
                 {profile.certifications?.map((c, idx) => (
-                  <div key={idx} className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.08] flex items-center gap-3">
+                  <div key={idx} className="p-3 rounded-xl bg-primary/[0.02] border border-primary/[0.08] flex items-center gap-3">
                     <input
                       type="text"
                       value={c.name}
@@ -1031,7 +1027,7 @@ export default function CareerVault() {
                         setProfile(prev => ({ ...prev, certifications: updated }));
                       }}
                       placeholder="Certification Name"
-                      className="flex-1 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                      className="flex-1 px-3 py-1.5 rounded-lg bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                     />
                     <input
                       type="text"
@@ -1042,7 +1038,7 @@ export default function CareerVault() {
                         setProfile(prev => ({ ...prev, certifications: updated }));
                       }}
                       placeholder="Issuer (e.g. AWS)"
-                      className="w-1/3 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                      className="w-1/3 px-3 py-1.5 rounded-lg bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                     />
                     <button
                       type="button"
@@ -1056,7 +1052,7 @@ export default function CareerVault() {
               </div>
 
               {/* Languages List */}
-              <div className="space-y-3 pt-3 border-t border-white/[0.06]">
+              <div className="space-y-3 pt-3 border-t border-primary/[0.06]">
                 <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Languages</h3>
                 {profile.languages?.map((l, idx) => (
                   <div key={idx} className="flex items-center gap-3">
@@ -1069,7 +1065,7 @@ export default function CareerVault() {
                         setProfile(prev => ({ ...prev, languages: updated }));
                       }}
                       placeholder="Language"
-                      className="flex-1 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                      className="flex-1 px-3 py-1.5 rounded-lg bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                     />
                     <select
                       value={l.proficiency}
@@ -1078,7 +1074,7 @@ export default function CareerVault() {
                         updated[idx].proficiency = e.target.value;
                         setProfile(prev => ({ ...prev, languages: updated }));
                       }}
-                      className="px-3 py-1.5 rounded-lg bg-[#0C1226] border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                      className="px-3 py-1.5 rounded-lg bg-[#0C1226] border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                     >
                       <option value="Native / Bilingual">Native / Bilingual</option>
                       <option value="Fluent">Fluent</option>
@@ -1103,8 +1099,8 @@ export default function CareerVault() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-white">Publications & Research Papers</h2>
-                  <p className="text-xs text-slate-400">Academic papers, journal articles, conference talks, and whitepapers</p>
+                  <h2 className="text-base font-bold text-primary">Publications & Research Papers</h2>
+                  <p className="text-xs text-slate-400">Academic papers, journal articles, conference talks, and primarypapers</p>
                 </div>
                 <button
                   type="button"
@@ -1112,7 +1108,7 @@ export default function CareerVault() {
                     const newPub = { id: `pub_${Date.now()}`, title: '', publisher: '', year: '', link: '', description: '' };
                     setProfile(prev => ({ ...prev, publications: [...(prev.publications || []), newPub] }));
                   }}
-                  className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-primary/20"
+                  className="px-4 py-2 rounded-xl bg-primary text-primary text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-primary/20"
                 >
                   <Plus className="w-3.5 h-3.5" /> Add Publication
                 </button>
@@ -1120,7 +1116,7 @@ export default function CareerVault() {
 
               <div className="space-y-4">
                 {(profile.publications || []).map((pub, idx) => (
-                  <div key={pub.id || idx} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-3 relative">
+                  <div key={pub.id || idx} className="p-5 rounded-2xl bg-primary/[0.02] border border-primary/[0.08] space-y-3 relative">
                     <button
                       type="button"
                       onClick={() => setProfile(prev => ({ ...prev, publications: prev.publications.filter((_, i) => i !== idx) }))}
@@ -1140,7 +1136,7 @@ export default function CareerVault() {
                             setProfile(prev => ({ ...prev, publications: updated }));
                           }}
                           placeholder="e.g. Distributed Consensus in Asynchronous Networks"
-                          className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                          className="w-full px-3.5 py-2 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                         />
                       </div>
                       <div className="space-y-1">
@@ -1154,7 +1150,7 @@ export default function CareerVault() {
                             setProfile(prev => ({ ...prev, publications: updated }));
                           }}
                           placeholder="e.g. IEEE / ACM"
-                          className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                          className="w-full px-3.5 py-2 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                         />
                       </div>
                       <div className="space-y-1">
@@ -1168,7 +1164,7 @@ export default function CareerVault() {
                             setProfile(prev => ({ ...prev, publications: updated }));
                           }}
                           placeholder="e.g. 2024"
-                          className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                          className="w-full px-3.5 py-2 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                         />
                       </div>
                     </div>
@@ -1176,7 +1172,7 @@ export default function CareerVault() {
                 ))}
 
                 {(!profile.publications || profile.publications.length === 0) && (
-                  <div className="p-8 text-center text-slate-500 text-xs border border-dashed border-white/10 rounded-2xl">
+                  <div className="p-8 text-center text-slate-500 text-xs border border-dashed border-primary/10 rounded-2xl">
                     No publications added yet. Click "Add Publication" above.
                   </div>
                 )}
@@ -1189,7 +1185,7 @@ export default function CareerVault() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-white">Open Source & Patents</h2>
+                  <h2 className="text-base font-bold text-primary">Open Source & Patents</h2>
                   <p className="text-xs text-slate-400">Public OSS maintainership, major contributions, and filed patents</p>
                 </div>
                 <button
@@ -1198,7 +1194,7 @@ export default function CareerVault() {
                     const newOSS = { id: `oss_${Date.now()}`, name: '', role: 'Maintainer / Contributor', link: '', impact: '' };
                     setProfile(prev => ({ ...prev, openSource: [...(prev.openSource || []), newOSS] }));
                   }}
-                  className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-primary/20"
+                  className="px-4 py-2 rounded-xl bg-primary text-primary text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-primary/20"
                 >
                   <Plus className="w-3.5 h-3.5" /> Add Contribution
                 </button>
@@ -1206,7 +1202,7 @@ export default function CareerVault() {
 
               <div className="space-y-4">
                 {(profile.openSource || []).map((oss, idx) => (
-                  <div key={oss.id || idx} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-3 relative">
+                  <div key={oss.id || idx} className="p-5 rounded-2xl bg-primary/[0.02] border border-primary/[0.08] space-y-3 relative">
                     <button
                       type="button"
                       onClick={() => setProfile(prev => ({ ...prev, openSource: prev.openSource.filter((_, i) => i !== idx) }))}
@@ -1226,7 +1222,7 @@ export default function CareerVault() {
                             setProfile(prev => ({ ...prev, openSource: updated }));
                           }}
                           placeholder="e.g. LangChain Contributor"
-                          className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                          className="w-full px-3.5 py-2 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                         />
                       </div>
                       <div className="space-y-1">
@@ -1240,7 +1236,7 @@ export default function CareerVault() {
                             setProfile(prev => ({ ...prev, openSource: updated }));
                           }}
                           placeholder="e.g. github.com/..."
-                          className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                          className="w-full px-3.5 py-2 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                         />
                       </div>
                     </div>
@@ -1248,7 +1244,7 @@ export default function CareerVault() {
                 ))}
 
                 {(!profile.openSource || profile.openSource.length === 0) && (
-                  <div className="p-8 text-center text-slate-500 text-xs border border-dashed border-white/10 rounded-2xl">
+                  <div className="p-8 text-center text-slate-500 text-xs border border-dashed border-primary/10 rounded-2xl">
                     No open source or patent items added yet. Click "Add Contribution" above.
                   </div>
                 )}
@@ -1261,7 +1257,7 @@ export default function CareerVault() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-white">Custom Career Sections</h2>
+                  <h2 className="text-base font-bold text-primary">Custom Career Sections</h2>
                   <p className="text-xs text-slate-400">Add arbitrary career dimensions (Volunteering, Speaking, Advisory, Awards)</p>
                 </div>
                 <button
@@ -1278,7 +1274,7 @@ export default function CareerVault() {
                       customSections: [...(prev.customSections || []), newSec]
                     }));
                   }}
-                  className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-primary/20"
+                  className="px-4 py-2 rounded-xl bg-primary text-primary text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-primary/20"
                 >
                   <Plus className="w-3.5 h-3.5" /> Add Section
                 </button>
@@ -1286,7 +1282,7 @@ export default function CareerVault() {
 
               <div className="space-y-4">
                 {(profile.customSections || []).map((sec, sIdx) => (
-                  <div key={sec.id || sIdx} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-3 relative">
+                  <div key={sec.id || sIdx} className="p-5 rounded-2xl bg-primary/[0.02] border border-primary/[0.08] space-y-3 relative">
                     <button
                       type="button"
                       onClick={() => setProfile(prev => ({
@@ -1309,11 +1305,11 @@ export default function CareerVault() {
                           setProfile(prev => ({ ...prev, customSections: updated }));
                         }}
                         placeholder="e.g. Community & Volunteering"
-                        className="w-full px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-bold focus:outline-none focus:border-primary"
+                        className="w-full px-4 py-2 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs font-bold focus:outline-none focus:border-primary"
                       />
                     </div>
 
-                    <div className="space-y-2 pt-2 border-t border-white/[0.04]">
+                    <div className="space-y-2 pt-2 border-t border-primary/[0.04]">
                       <div className="flex items-center justify-between">
                         <label className="text-xs text-slate-400 font-medium">Bullet Items</label>
                         <button
@@ -1342,7 +1338,7 @@ export default function CareerVault() {
                               setProfile(prev => ({ ...prev, customSections: updated }));
                             }}
                             placeholder="e.g. Mentored 20+ underrepresented engineers in cloud architecture..."
-                            className="flex-1 px-3.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                            className="flex-1 px-3.5 py-1.5 rounded-lg bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
                           />
                           <button
                             type="button"
@@ -1376,7 +1372,7 @@ export default function CareerVault() {
                 <AlertTriangle className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-white">Conflicting Career Facts Detected</h3>
+                <h3 className="text-base font-bold text-primary">Conflicting Career Facts Detected</h3>
                 <p className="text-xs text-slate-400 mt-0.5">
                   Different dates or titles were found in your uploaded document vs existing Career Vault. Please select the accurate fact:
                 </p>
@@ -1385,9 +1381,9 @@ export default function CareerVault() {
 
             <div className="space-y-3 pt-2">
               {detectedConflicts.map(conf => (
-                <div key={conf.id} className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.08] space-y-3">
-                  <div className="text-xs font-bold text-white">{conf.entity} — <span className="text-amber-400">{conf.field}</span></div>
-                  
+                <div key={conf.id} className="p-4 rounded-2xl bg-primary/[0.02] border border-primary/[0.08] space-y-3">
+                  <div className="text-xs font-bold text-primary">{conf.entity} — <span className="text-amber-400">{conf.field}</span></div>
+
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
@@ -1395,7 +1391,7 @@ export default function CareerVault() {
                       className="p-3 rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 text-left transition-all"
                     >
                       <span className="text-[10px] font-bold text-primary block uppercase">Vault Value</span>
-                      <span className="text-xs text-white font-medium">{conf.currentValue}</span>
+                      <span className="text-xs text-primary font-medium">{conf.currentValue}</span>
                     </button>
 
                     <button
@@ -1404,7 +1400,7 @@ export default function CareerVault() {
                       className="p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-left transition-all"
                     >
                       <span className="text-[10px] font-bold text-amber-400 block uppercase">Uploaded Doc ({conf.sourceDoc})</span>
-                      <span className="text-xs text-white font-medium">{conf.incomingValue}</span>
+                      <span className="text-xs text-primary font-medium">{conf.incomingValue}</span>
                     </button>
                   </div>
                 </div>
@@ -1415,7 +1411,7 @@ export default function CareerVault() {
               <button
                 type="button"
                 onClick={() => setConflictModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-white/10 text-slate-300 text-xs hover:text-white"
+                className="px-4 py-2 rounded-xl bg-primary/10 text-slate-300 text-xs hover:text-primary"
               >
                 Dismiss & Review Later
               </button>

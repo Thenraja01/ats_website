@@ -1,22 +1,22 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FileSearch, 
-  Sparkles, 
-  CheckCircle2, 
-  AlertTriangle, 
-  XCircle, 
-  ArrowRight, 
-  ShieldCheck, 
-  Briefcase, 
-  Code2, 
-  Layers, 
-  Download, 
-  RotateCcw, 
-  Copy, 
-  Check, 
-  FileText, 
-  Eye, 
+import {
+  FileSearch,
+  Sparkles,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  ArrowRight,
+  ShieldCheck,
+  Briefcase,
+  Code2,
+  Layers,
+  Download,
+  RotateCcw,
+  Copy,
+  Check,
+  FileText,
+  Eye,
   History,
   Info,
   ChevronRight,
@@ -34,9 +34,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { 
-  getMasterCareerProfile, 
-  convertMasterToResume, 
+import {
+  getMasterCareerProfile,
+  convertMasterToResume,
   saveResumeData,
   saveApplicationMemory
 } from '../services/careerProfileSync';
@@ -44,38 +44,38 @@ import {
 // Comprehensive 250+ skill keywords categorized across tech stacks
 const COMPREHENSIVE_SKILL_TAXONOMY = [
   // Languages
-  'Python', 'TypeScript', 'JavaScript', 'Java', 'C++', 'C#', '.NET', 'Go', 'Golang', 'Rust', 
+  'Python', 'TypeScript', 'JavaScript', 'Java', 'C++', 'C#', '.NET', 'Go', 'Golang', 'Rust',
   'Kotlin', 'Swift', 'PHP', 'Ruby', 'Scala', 'R', 'SQL', 'Dart', 'Elixir', 'Bash', 'Shell',
-  
+
   // Frontend
-  'React', 'React.js', 'Next.js', 'Vue', 'Vue.js', 'Nuxt', 'Angular', 'Svelte', 'TailwindCSS', 
+  'React', 'React.js', 'Next.js', 'Vue', 'Vue.js', 'Nuxt', 'Angular', 'Svelte', 'TailwindCSS',
   'CSS3', 'HTML5', 'Redux', 'Zustand', 'GraphQL', 'REST API', 'Vite', 'Webpack',
-  
+
   // Backend & Frameworks
-  'FastAPI', 'Django', 'Flask', 'Node.js', 'Express', 'Express.js', 'Spring Boot', 'Spring', 
+  'FastAPI', 'Django', 'Flask', 'Node.js', 'Express', 'Express.js', 'Spring Boot', 'Spring',
   'ASP.NET', 'NestJS', 'Ruby on Rails', 'gRPC', 'WebSockets', 'Microservices', 'Kafka', 'RabbitMQ',
-  
+
   // Databases & Caching
-  'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'Elasticsearch', 'DynamoDB', 'Cassandra', 
+  'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'Elasticsearch', 'DynamoDB', 'Cassandra',
   'SQLite', 'Snowflake', 'BigQuery', 'Supabase', 'Firebase', 'Prisma', 'TypeORM', 'SQLAlchemy',
-  
+
   // Cloud & DevOps
-  'AWS', 'Amazon Web Services', 'GCP', 'Google Cloud', 'Azure', 'Docker', 'Kubernetes', 'K8s', 
-  'Terraform', 'CI/CD', 'GitHub Actions', 'GitLab CI', 'Linux', 'Ansible', 'Helm', 'Nginx', 
+  'AWS', 'Amazon Web Services', 'GCP', 'Google Cloud', 'Azure', 'Docker', 'Kubernetes', 'K8s',
+  'Terraform', 'CI/CD', 'GitHub Actions', 'GitLab CI', 'Linux', 'Ansible', 'Helm', 'Nginx',
   'Prometheus', 'Grafana', 'Serverless', 'Datadog',
-  
+
   // AI / ML & LLMs
-  'LLM', 'LLMs', 'RAG', 'Prompt Engineering', 'LangChain', 'LlamaIndex', 'PyTorch', 'TensorFlow', 
-  'Machine Learning', 'Deep Learning', 'NLP', 'Natural Language Processing', 'Computer Vision', 
+  'LLM', 'LLMs', 'RAG', 'Prompt Engineering', 'LangChain', 'LlamaIndex', 'PyTorch', 'TensorFlow',
+  'Machine Learning', 'Deep Learning', 'NLP', 'Natural Language Processing', 'Computer Vision',
   'OpenCV', 'Scikit-Learn', 'Hugging Face', 'Vector Database', 'Pinecone', 'ChromaDB', 'Qdrant', 'Milvus',
-  
+
   // Data Engineering
   'Pandas', 'NumPy', 'Apache Spark', 'Airflow', 'dbt', 'Data Pipelines', 'ETL',
-  
+
   // Architecture, System Design & Methods
-  'System Design', 'Distributed Systems', 'Object-Oriented Programming', 'OOP', 'Agile', 'Scrum', 
+  'System Design', 'Distributed Systems', 'Object-Oriented Programming', 'OOP', 'Agile', 'Scrum',
   'TDD', 'Design Patterns', 'High Availability', 'Event-Driven Architecture', 'Git',
-  
+
   // Testing & Security
   'Jest', 'PyTest', 'Cypress', 'Playwright', 'Selenium', 'OAuth2', 'JWT', 'Cybersecurity', 'OWASP'
 ];
@@ -159,7 +159,7 @@ export default function JdAnalyzer() {
 
       // 1. Gather all candidate skills from Master Profile
       const userMasterSkills = (masterProfile?.skills || []).map(s => typeof s === 'string' ? s : s.name);
-      
+
       // 2. Combine comprehensive taxonomy + user verified skills for comprehensive detection
       const fullTaxonomy = Array.from(new Set([...COMPREHENSIVE_SKILL_TAXONOMY, ...userMasterSkills]));
 
@@ -212,7 +212,7 @@ export default function JdAnalyzer() {
     e.preventDefault();
     if (!newSkillInput.trim() || !analysisResult) return;
     const skillName = newSkillInput.trim();
-    
+
     const userMasterSkills = (masterProfile?.skills || []).map(s => (typeof s === 'string' ? s : s.name).toLowerCase());
     const isMatched = userMasterSkills.some(us => us === skillName.toLowerCase() || us.includes(skillName.toLowerCase()) || skillName.toLowerCase().includes(us));
 
@@ -257,7 +257,7 @@ export default function JdAnalyzer() {
     if (!analysisResult) return;
     setAnalysisResult(prev => ({
       ...prev,
-      matchingMatrix: prev.matchingMatrix.map(m => 
+      matchingMatrix: prev.matchingMatrix.map(m =>
         m.name === skillName ? { ...m, priority: m.priority === 'Required' ? 'Preferred' : 'Required' } : m
       )
     }));
@@ -273,7 +273,7 @@ export default function JdAnalyzer() {
       const currentHeadline = masterProfile?.personalInfo?.headline || 'Professional';
       const currentSummary = typeof masterProfile?.summary === 'string' ? masterProfile.summary : (masterProfile?.summary?.primary || '');
 
-      const tailoredSummary = currentSummary 
+      const tailoredSummary = currentSummary
         ? `${currentSummary} Focused on applying proven expertise in ${matched.slice(0, 4).join(', ') || 'core domains'} for the ${analysisResult?.jobTitle || 'target'} role.`
         : `${currentHeadline} with verified background in ${matched.join(', ') || 'industry competencies'}. Dedicated to high-standard execution at ${analysisResult?.company || 'target company'}.`;
 
@@ -322,16 +322,16 @@ export default function JdAnalyzer() {
 
   return (
     <div className="min-h-screen pt-4 pb-20 px-3 sm:px-6 max-w-7xl mx-auto space-y-6">
-      
+
       {/* Header Banner */}
-      <div className="bg-[#0A1026] border border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+      <div className="bg-[#0A1026] border border-primary/[0.08] rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-xs font-semibold text-accent mb-2.5">
               <Cpu className="w-3.5 h-3.5 text-accent animate-pulse" />
               <span>Level 3 • Deterministic JD Matching & Tailoring</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white font-heading">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-primary font-heading">
               JD Analyzer & Resume Tailorer
             </h1>
             <p className="text-slate-400 text-xs sm:text-sm mt-1 max-w-2xl">
@@ -341,15 +341,15 @@ export default function JdAnalyzer() {
 
           {/* Step Breadcrumb Indicator */}
           <div className="flex items-center gap-2 text-xs font-medium">
-            <span className={`px-3 py-1 rounded-xl ${activeStep === 1 ? 'bg-primary text-white font-bold' : 'bg-white/5 text-slate-400'}`}>
+            <span className={`px-3 py-1 rounded-xl ${activeStep === 1 ? 'bg-primary text-primary font-bold' : 'bg-primary/5 text-slate-400'}`}>
               1. Input JD
             </span>
             <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
-            <span className={`px-3 py-1 rounded-xl ${activeStep === 2 ? 'bg-primary text-white font-bold' : 'bg-white/5 text-slate-400'}`}>
+            <span className={`px-3 py-1 rounded-xl ${activeStep === 2 ? 'bg-primary text-primary font-bold' : 'bg-primary/5 text-slate-400'}`}>
               2. Skill Matrix
             </span>
             <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
-            <span className={`px-3 py-1 rounded-xl ${activeStep === 3 ? 'bg-primary text-white font-bold' : 'bg-white/5 text-slate-400'}`}>
+            <span className={`px-3 py-1 rounded-xl ${activeStep === 3 ? 'bg-primary text-primary font-bold' : 'bg-primary/5 text-slate-400'}`}>
               3. Tailored Resume
             </span>
           </div>
@@ -359,10 +359,10 @@ export default function JdAnalyzer() {
       {/* Step 1: Input Target Job Description */}
       {activeStep === 1 && (
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-          <div className="bg-[#080D1E] border border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-xl space-y-4">
+          <div className="bg-[#080D1E] border border-primary/[0.08] rounded-3xl p-6 sm:p-8 shadow-xl space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <h2 className="text-base font-bold text-primary flex items-center gap-2">
                   <FileSearch className="w-5 h-5 text-primary" /> Target Job Description
                 </h2>
                 <p className="text-xs text-slate-400">Paste the job description or role requirements below</p>
@@ -370,7 +370,7 @@ export default function JdAnalyzer() {
               <button
                 type="button"
                 onClick={() => setJdText(SAMPLE_JD)}
-                className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs text-slate-300 font-medium flex items-center gap-1.5 transition-all"
+                className="px-3 py-1.5 rounded-xl bg-primary/5 hover:bg-primary/10 text-xs text-slate-300 font-medium flex items-center gap-1.5 transition-all"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-accent" /> Load Sample JD
               </button>
@@ -381,7 +381,7 @@ export default function JdAnalyzer() {
               value={jdText}
               onChange={(e) => setJdText(e.target.value)}
               placeholder="Paste job posting (title, requirements, responsibilities, tech stack)..."
-              className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white text-xs leading-relaxed focus:outline-none focus:border-primary font-mono resize-y"
+              className="w-full px-4 py-3 rounded-2xl bg-primary/5 border border-primary/10 text-primary text-xs leading-relaxed focus:outline-none focus:border-primary font-mono resize-y"
             />
 
             <div className="flex items-center justify-between pt-2">
@@ -394,11 +394,11 @@ export default function JdAnalyzer() {
                 type="button"
                 onClick={handleAnalyzeJD}
                 disabled={analyzing}
-                className="px-6 py-3 rounded-xl bg-gradient-to-r from-primary via-primary to-accent text-white text-xs font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all flex items-center gap-2 disabled:opacity-50"
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-primary via-primary to-accent text-primary text-xs font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all flex items-center gap-2 disabled:opacity-50"
               >
                 {analyzing ? (
                   <>
-                    <Sparkles className="w-4 h-4 animate-spin text-white" />
+                    <Sparkles className="w-4 h-4 animate-spin text-primary" />
                     <span>Extracting & Matching Requirements...</span>
                   </>
                 ) : (
@@ -416,26 +416,26 @@ export default function JdAnalyzer() {
       {/* Step 2: Deterministic Matching Matrix & Skill Customizer */}
       {activeStep === 2 && analysisResult && (
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-          
+
           {/* Match Score Overview */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-[#080D1E] border border-white/[0.08] rounded-3xl p-6 shadow-xl flex items-center gap-4">
+            <div className="bg-[#080D1E] border border-primary/[0.08] rounded-3xl p-6 shadow-xl flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-primary/20 text-primary flex items-center justify-center font-bold text-xl font-heading">
                 {analysisResult.matchScore}%
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white">Profile Relevance Score</h3>
+                <h3 className="text-sm font-bold text-primary">Profile Relevance Score</h3>
                 <p className="text-xs text-slate-400">Based on verified facts in your Master Profile</p>
               </div>
             </div>
 
-            <div className="bg-[#080D1E] border border-white/[0.08] rounded-3xl p-6 shadow-xl">
+            <div className="bg-[#080D1E] border border-primary/[0.08] rounded-3xl p-6 shadow-xl">
               <span className="text-xs text-slate-400 block">Target Role & Employer</span>
-              <p className="text-sm font-bold text-white mt-1">{analysisResult.jobTitle}</p>
+              <p className="text-sm font-bold text-primary mt-1">{analysisResult.jobTitle}</p>
               <p className="text-xs text-primary font-medium">{analysisResult.company}</p>
             </div>
 
-            <div className="bg-[#080D1E] border border-white/[0.08] rounded-3xl p-6 shadow-xl flex items-center justify-between">
+            <div className="bg-[#080D1E] border border-primary/[0.08] rounded-3xl p-6 shadow-xl flex items-center justify-between">
               <div>
                 <span className="text-xs text-slate-400 block">Ready for Tailoring</span>
                 <p className="text-xs text-emerald-400 font-semibold mt-1">Zero Hallucination Guardrail Active</p>
@@ -444,7 +444,7 @@ export default function JdAnalyzer() {
                 type="button"
                 onClick={handleGenerateTailoredResume}
                 disabled={generatingResume}
-                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary to-accent text-white text-xs font-semibold shadow-md flex items-center gap-1.5"
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-primary to-accent text-primary text-xs font-semibold shadow-md flex items-center gap-1.5"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>{generatingResume ? 'Tailoring...' : 'Generate Version'}</span>
@@ -453,10 +453,10 @@ export default function JdAnalyzer() {
           </div>
 
           {/* Requirement Matching Matrix Table & Custom Skill Adder */}
-          <div className="bg-[#080D1E] border border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-xl space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.06] pb-4">
+          <div className="bg-[#080D1E] border border-primary/[0.08] rounded-3xl p-6 sm:p-8 shadow-xl space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-primary/[0.06] pb-4">
               <div>
-                <h3 className="text-base font-bold text-white">Skill & Qualification Match Matrix</h3>
+                <h3 className="text-base font-bold text-primary">Skill & Qualification Match Matrix</h3>
                 <p className="text-xs text-slate-400">Matched requirements against your verified Master Career Profile</p>
               </div>
               <div className="flex items-center gap-3 text-xs">
@@ -470,25 +470,25 @@ export default function JdAnalyzer() {
             </div>
 
             {/* Custom Skill Requirement Input */}
-            <form onSubmit={handleAddCustomSkill} className="flex flex-wrap items-center gap-2 p-3 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+            <form onSubmit={handleAddCustomSkill} className="flex flex-wrap items-center gap-2 p-3 rounded-2xl bg-primary/[0.02] border border-primary/[0.06]">
               <input
                 type="text"
                 value={newSkillInput}
                 onChange={(e) => setNewSkillInput(e.target.value)}
                 placeholder="Add custom skill requirement (e.g. PyTorch, Golang, GraphQL)..."
-                className="flex-1 min-w-[200px] px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                className="flex-1 min-w-[200px] px-3.5 py-2 rounded-xl bg-primary/5 border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
               />
               <select
                 value={newSkillPriority}
                 onChange={(e) => setNewSkillPriority(e.target.value)}
-                className="px-3 py-2 rounded-xl bg-[#0C1226] border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                className="px-3 py-2 rounded-xl bg-[#0C1226] border border-primary/10 text-primary text-xs focus:outline-none focus:border-primary"
               >
                 <option value="Required">Required</option>
                 <option value="Preferred">Preferred (Nice to have)</option>
               </select>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-semibold flex items-center gap-1.5"
+                className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary text-xs font-semibold flex items-center gap-1.5"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Skill</span>
@@ -501,11 +501,10 @@ export default function JdAnalyzer() {
                 return (
                   <div
                     key={idx}
-                    className={`p-3.5 rounded-2xl border flex items-center justify-between transition-all group ${
-                      isMatched
+                    className={`p-3.5 rounded-2xl border flex items-center justify-between transition-all group ${isMatched
                         ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-300'
                         : 'bg-red-500/5 border-red-500/20 text-red-300'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-2.5">
                       {isMatched ? (
@@ -514,12 +513,12 @@ export default function JdAnalyzer() {
                         <XCircle className="w-4 h-4 text-red-400 shrink-0" />
                       )}
                       <div>
-                        <span className="text-xs font-bold text-white block">{item.name}</span>
+                        <span className="text-xs font-bold text-primary block">{item.name}</span>
                         <div className="flex items-center gap-2 mt-0.5">
                           <button
                             type="button"
                             onClick={() => handleTogglePriority(item.name)}
-                            className="text-[10px] text-slate-400 hover:text-white underline"
+                            className="text-[10px] text-slate-400 hover:text-primary underline"
                           >
                             {item.priority}
                           </button>
@@ -529,9 +528,8 @@ export default function JdAnalyzer() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        isMatched ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
-                      }`}>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isMatched ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
+                        }`}>
                         {isMatched ? 'MATCHED' : 'MISSING'}
                       </span>
                       <button
@@ -560,14 +558,14 @@ export default function JdAnalyzer() {
               <button
                 type="button"
                 onClick={() => setActiveStep(1)}
-                className="text-xs text-slate-400 hover:text-white"
+                className="text-xs text-slate-400 hover:text-primary"
               >
                 ← Edit Job Description
               </button>
               <button
                 type="button"
                 onClick={handleGenerateTailoredResume}
-                className="px-6 py-2.5 rounded-xl bg-primary text-white text-xs font-semibold shadow-md flex items-center gap-2"
+                className="px-6 py-2.5 rounded-xl bg-primary text-primary text-xs font-semibold shadow-md flex items-center gap-2"
               >
                 <span>Proceed to Job-Specific Resume</span>
                 <ArrowRight className="w-4 h-4" />
@@ -580,15 +578,15 @@ export default function JdAnalyzer() {
       {/* Step 3: Generated Tailored Resume with Before/After Diff */}
       {activeStep === 3 && generatedResume && (
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-          
+
           {/* Version Header Card */}
-          <div className="bg-[#080D1E] border border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-xl space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.06] pb-4">
+          <div className="bg-[#080D1E] border border-primary/[0.08] rounded-3xl p-6 sm:p-8 shadow-xl space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-primary/[0.06] pb-4">
               <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold mb-1.5">
                   <History className="w-3.5 h-3.5" /> {generatedResume.version}
                 </div>
-                <h2 className="text-xl font-bold text-white">Targeted: {generatedResume.targetCompany}</h2>
+                <h2 className="text-xl font-bold text-primary">Targeted: {generatedResume.targetCompany}</h2>
                 <p className="text-xs text-slate-400">Created: {generatedResume.createdAt} • Snapshot ID: #snap_83921</p>
               </div>
 
@@ -596,7 +594,7 @@ export default function JdAnalyzer() {
                 <button
                   type="button"
                   onClick={handleOpenInVisualBuilder}
-                  className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold shadow-md flex items-center gap-1.5 hover:bg-primary/90 transition-all"
+                  className="px-4 py-2 rounded-xl bg-primary text-primary text-xs font-semibold shadow-md flex items-center gap-1.5 hover:bg-primary/90 transition-all"
                 >
                   <Eye className="w-3.5 h-3.5" />
                   <span>Open in Visual Builder</span>
@@ -619,7 +617,7 @@ export default function JdAnalyzer() {
                   <span>{copied ? 'Copied' : 'Copy Summary'}</span>
                 </button>
               </div>
-              <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-xs text-slate-200 leading-relaxed">
+              <div className="p-4 rounded-2xl bg-primary/[0.03] border border-primary/[0.08] text-xs text-slate-200 leading-relaxed">
                 {generatedResume.tailoredSummary}
               </div>
             </div>
@@ -632,7 +630,7 @@ export default function JdAnalyzer() {
 
               <div className="space-y-3">
                 {generatedResume.bulletDiffs.map((diff, idx) => (
-                  <div key={idx} className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-2.5">
+                  <div key={idx} className="p-4 rounded-2xl bg-primary/[0.02] border border-primary/[0.06] space-y-2.5">
                     <div className="flex items-center justify-between text-[11px]">
                       <span className="font-semibold text-primary">Source: {diff.source}</span>
                       <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-bold text-[10px]">
@@ -660,7 +658,7 @@ export default function JdAnalyzer() {
             <div className="p-5 rounded-2xl bg-gradient-to-r from-primary/10 via-accent/5 to-cyan-500/10 border border-primary/20 space-y-3">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <h4 className="text-sm font-bold text-primary flex items-center gap-2">
                     <BookmarkPlus className="w-4 h-4 text-cyan-400" />
                     Career OS 1-Click Application Package
                   </h4>
@@ -685,7 +683,7 @@ export default function JdAnalyzer() {
                       toast.success('Tailored snapshot saved to your workspace.');
                       navigate('/resume-studio');
                     }}
-                    className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shadow-md flex items-center gap-1.5 transition-all"
+                    className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-primary text-xs font-semibold shadow-md flex items-center gap-1.5 transition-all"
                   >
                     <Briefcase className="w-3.5 h-3.5" />
                     <span>Save to Application Memory</span>
@@ -703,7 +701,7 @@ export default function JdAnalyzer() {
                         }
                       });
                     }}
-                    className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold shadow-md flex items-center gap-1.5 transition-all"
+                    className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-primary text-xs font-semibold shadow-md flex items-center gap-1.5 transition-all"
                   >
                     <MessageSquare className="w-3.5 h-3.5" />
                     <span>Prep for Interview</span>
@@ -717,7 +715,7 @@ export default function JdAnalyzer() {
               <div className="p-5 rounded-2xl bg-purple-950/20 border border-purple-500/20 space-y-3">
                 <div className="flex items-center gap-2">
                   <GraduationCap className="w-4 h-4 text-purple-400" />
-                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider">
                     Targeted Skill Gap Learning Roadmap (Don't Fake It — Build It)
                   </h4>
                 </div>
@@ -741,7 +739,7 @@ export default function JdAnalyzer() {
             )}
 
             {/* Missing Skills Safety Record */}
-            <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-1.5 text-xs">
+            <div className="p-4 rounded-2xl bg-primary/[0.02] border border-primary/[0.06] space-y-1.5 text-xs">
               <span className="font-bold text-slate-400 block">Missing Skills Omission Log:</span>
               <ul className="list-disc list-outside ml-4 text-slate-400 space-y-0.5 text-[11px]">
                 {generatedResume.missingSkillsNotice.map((notice, nIdx) => (
@@ -750,18 +748,18 @@ export default function JdAnalyzer() {
               </ul>
             </div>
 
-            <div className="flex justify-between items-center pt-3 border-t border-white/[0.06]">
+            <div className="flex justify-between items-center pt-3 border-t border-primary/[0.06]">
               <button
                 type="button"
                 onClick={() => setActiveStep(2)}
-                className="text-xs text-slate-400 hover:text-white"
+                className="text-xs text-slate-400 hover:text-primary"
               >
                 ← Back to Skill Matrix
               </button>
               <button
                 type="button"
                 onClick={handleOpenInVisualBuilder}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-accent text-white text-xs font-semibold shadow-md flex items-center gap-1.5 hover:from-primary/90 hover:to-accent/90 transition-all"
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-accent text-primary text-xs font-semibold shadow-md flex items-center gap-1.5 hover:from-primary/90 hover:to-accent/90 transition-all"
               >
                 <span>Export & Print in Resume Builder</span>
                 <ArrowRight className="w-4 h-4" />

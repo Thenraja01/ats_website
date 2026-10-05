@@ -1,11 +1,11 @@
 import React from 'react';
-import { 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Globe, 
-  Linkedin, 
-  Github, 
+import {
+  Mail,
+  Phone,
+  MapPin,
+  Globe,
+  Linkedin,
+  Github,
   ExternalLink,
   Award,
   BookOpen,
@@ -25,7 +25,7 @@ import {
  */
 export const getFontFamilyStyle = (font = 'inter') => {
   if (!font) return { fontFamily: '"Inter", sans-serif' };
-  
+
   // If a full CSS fontFamily string was passed (e.g. "'Poppins', sans-serif")
   if (font.includes(',') || font.includes("'") || font.includes('"')) {
     return { fontFamily: font };
@@ -89,8 +89,8 @@ export const getFontFamilyStyle = (font = 'inter') => {
  * Dynamic Numeric Styling Resolver
  */
 export const getDynamicStyles = (options = {}) => {
-  const baseSize = typeof options.fontSizeNum === 'number' 
-    ? options.fontSizeNum 
+  const baseSize = typeof options.fontSizeNum === 'number'
+    ? options.fontSizeNum
     : (options.fontSize === 'small' ? 9.5 : (options.fontSize === 'large' ? 12 : 10.5));
 
   const lineHeight = typeof options.lineHeight === 'number'
@@ -181,13 +181,13 @@ export function ModernTemplate({ data, color = '#4F8CFF', options = {} }) {
   const isVisible = (secId) => !hiddenSections.includes(secId);
 
   return (
-    <div 
-      className="w-full bg-white text-slate-800 shadow-sm min-h-[1123px] box-border"
+    <div
+      className="w-full bg-primary text-slate-800 shadow-sm min-h-[1123px] box-border"
       style={{ ...fontStyle, padding: s.pagePadding, fontSize: s.baseSize, lineHeight: s.lineHeight }}
     >
       {/* Header */}
-      <div 
-        className={`border-b-2 pb-4 mb-4 ${headerLayout === 'center' ? 'text-center' : ''}`} 
+      <div
+        className={`border-b-2 pb-4 mb-4 ${headerLayout === 'center' ? 'text-center' : ''}`}
         style={{ borderColor: color }}
       >
         <div className={`flex ${headerLayout === 'center' ? 'flex-col items-center' : 'justify-between items-start'}`}>
@@ -200,16 +200,16 @@ export function ModernTemplate({ data, color = '#4F8CFF', options = {} }) {
             </p>
           </div>
           {showAvatar && personalInfo.avatar && (
-            <img 
-              src={personalInfo.avatar} 
-              alt={personalInfo.fullName} 
-              className="w-14 h-14 rounded-full object-cover border border-slate-200 mt-2 sm:mt-0" 
+            <img
+              src={personalInfo.avatar}
+              alt={personalInfo.fullName}
+              className="w-14 h-14 rounded-full object-cover border border-slate-200 mt-2 sm:mt-0"
             />
           )}
         </div>
 
         {/* Contact Info Pills + Custom Fields */}
-        <div 
+        <div
           className={`flex flex-wrap items-center gap-x-3.5 gap-y-1 mt-2.5 text-slate-600 ${headerLayout === 'center' ? 'justify-center' : ''}`}
           style={{ fontSize: s.subSize }}
         >
@@ -258,13 +258,13 @@ export function ModernTemplate({ data, color = '#4F8CFF', options = {} }) {
       {/* Summary */}
       {isVisible('summary') && summary && (
         <div style={{ marginBottom: s.sectionGap }}>
-          <h2 
-            className="font-bold uppercase tracking-wider mb-1.5 flex items-center gap-1.5" 
+          <h2
+            className="font-bold uppercase tracking-wider mb-1.5 flex items-center gap-1.5"
             style={{ color, fontSize: s.sectionHeadingSize }}
           >
             <Sparkles className="w-3.5 h-3.5" /> Professional Summary
           </h2>
-          <p className="text-slate-700 whitespace-pre-line leading-relaxed">{summary}</p>
+          <p className="text-slate-700 primaryspace-pre-line leading-relaxed">{summary}</p>
         </div>
       )}
 
@@ -272,12 +272,12 @@ export function ModernTemplate({ data, color = '#4F8CFF', options = {} }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* Left Column (Experience, Projects) */}
         <div className="md:col-span-2" style={{ display: 'flex', flexDirection: 'column', gap: s.sectionGap }}>
-          
+
           {/* Work Experience */}
           {isVisible('experience') && experience && experience.length > 0 && (
             <div>
-              <h2 
-                className="font-bold uppercase tracking-wider mb-2 pb-1 border-b border-slate-200 flex items-center gap-1.5" 
+              <h2
+                className="font-bold uppercase tracking-wider mb-2 pb-1 border-b border-slate-200 flex items-center gap-1.5"
                 style={{ color, fontSize: s.sectionHeadingSize }}
               >
                 <Briefcase className="w-3.5 h-3.5" /> Work Experience
@@ -316,8 +316,8 @@ export function ModernTemplate({ data, color = '#4F8CFF', options = {} }) {
           {/* Key Projects */}
           {isVisible('projects') && projects && projects.length > 0 && (
             <div>
-              <h2 
-                className="font-bold uppercase tracking-wider mb-2 pb-1 border-b border-slate-200 flex items-center gap-1.5" 
+              <h2
+                className="font-bold uppercase tracking-wider mb-2 pb-1 border-b border-slate-200 flex items-center gap-1.5"
                 style={{ color, fontSize: s.sectionHeadingSize }}
               >
                 <Code2 className="w-3.5 h-3.5" /> Key Projects
@@ -348,20 +348,20 @@ export function ModernTemplate({ data, color = '#4F8CFF', options = {} }) {
 
         {/* Right Sidebar Column (Skills, Education, Certs, Languages, Custom Sections) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: s.sectionGap }}>
-          
+
           {/* Skills */}
           {isVisible('skills') && skills && skills.length > 0 && (
             <div>
-              <h2 
-                className="font-bold uppercase tracking-wider mb-2 pb-1 border-b border-slate-200 flex items-center gap-1.5" 
+              <h2
+                className="font-bold uppercase tracking-wider mb-2 pb-1 border-b border-slate-200 flex items-center gap-1.5"
                 style={{ color, fontSize: s.sectionHeadingSize }}
               >
                 <Award className="w-3.5 h-3.5" /> Skills & Competencies
               </h2>
               <div className="flex flex-wrap gap-1">
                 {skills.map((skill, idx) => (
-                  <span 
-                    key={idx} 
+                  <span
+                    key={idx}
                     className="px-2 py-0.5 bg-slate-100 text-slate-800 font-medium"
                     style={{ fontSize: s.microSize, borderRadius: s.borderRadius }}
                   >
@@ -375,8 +375,8 @@ export function ModernTemplate({ data, color = '#4F8CFF', options = {} }) {
           {/* Education */}
           {isVisible('education') && education && education.length > 0 && (
             <div>
-              <h2 
-                className="font-bold uppercase tracking-wider mb-2 pb-1 border-b border-slate-200 flex items-center gap-1.5" 
+              <h2
+                className="font-bold uppercase tracking-wider mb-2 pb-1 border-b border-slate-200 flex items-center gap-1.5"
                 style={{ color, fontSize: s.sectionHeadingSize }}
               >
                 <BookOpen className="w-3.5 h-3.5" /> Education
@@ -398,8 +398,8 @@ export function ModernTemplate({ data, color = '#4F8CFF', options = {} }) {
           {/* Certifications */}
           {isVisible('certifications') && certifications && certifications.length > 0 && (
             <div>
-              <h2 
-                className="font-bold uppercase tracking-wider mb-2 pb-1 border-b border-slate-200 flex items-center gap-1.5" 
+              <h2
+                className="font-bold uppercase tracking-wider mb-2 pb-1 border-b border-slate-200 flex items-center gap-1.5"
                 style={{ color, fontSize: s.sectionHeadingSize }}
               >
                 <CheckCircle2 className="w-3.5 h-3.5" /> Certifications
@@ -420,8 +420,8 @@ export function ModernTemplate({ data, color = '#4F8CFF', options = {} }) {
           {/* Languages */}
           {isVisible('languages') && languages && languages.length > 0 && (
             <div>
-              <h2 
-                className="font-bold uppercase tracking-wider mb-2 pb-1 border-b border-slate-200 flex items-center gap-1.5" 
+              <h2
+                className="font-bold uppercase tracking-wider mb-2 pb-1 border-b border-slate-200 flex items-center gap-1.5"
                 style={{ color, fontSize: s.sectionHeadingSize }}
               >
                 <LanguagesIcon className="w-3.5 h-3.5" /> Languages
@@ -441,13 +441,13 @@ export function ModernTemplate({ data, color = '#4F8CFF', options = {} }) {
           {isVisible('customSections') && customSections && customSections.length > 0 && customSections.map((sec, sIdx) => (
             sec.title && (
               <div key={sec.id || sIdx}>
-                <h2 
-                  className="font-bold uppercase tracking-wider mb-2 pb-1 border-b border-slate-200 flex items-center gap-1.5" 
+                <h2
+                  className="font-bold uppercase tracking-wider mb-2 pb-1 border-b border-slate-200 flex items-center gap-1.5"
                   style={{ color, fontSize: s.sectionHeadingSize }}
                 >
                   <Layers className="w-3.5 h-3.5" /> {sec.title}
                 </h2>
-                {sec.content && <p className="text-slate-700 whitespace-pre-line" style={{ fontSize: s.subSize }}>{sec.content}</p>}
+                {sec.content && <p className="text-slate-700 primaryspace-pre-line" style={{ fontSize: s.subSize }}>{sec.content}</p>}
                 {sec.items && sec.items.length > 0 && (
                   <ul className="space-y-1 text-slate-700 mt-1" style={{ fontSize: s.subSize }}>
                     {sec.items.filter(it => typeof it === 'string' ? it.trim() : it?.text?.trim()).map((it, itIdx) => (
@@ -494,8 +494,8 @@ export function MinimalTemplate({ data, color = '#1E293B', options = {} }) {
   const isVisible = (secId) => !hiddenSections.includes(secId);
 
   return (
-    <div 
-      className="w-full bg-white text-slate-900 shadow-sm min-h-[1123px] box-border"
+    <div
+      className="w-full bg-primary text-slate-900 shadow-sm min-h-[1123px] box-border"
       style={{ ...fontStyle, padding: s.pagePadding, fontSize: s.baseSize, lineHeight: s.lineHeight }}
     >
       {/* Header Minimal */}
@@ -506,8 +506,8 @@ export function MinimalTemplate({ data, color = '#1E293B', options = {} }) {
         <p className="font-medium text-slate-600 mt-0.5 uppercase tracking-widest font-sans" style={{ fontSize: s.subSize }}>
           {personalInfo.title || 'Professional Title / Specialization'}
         </p>
-        
-        <div 
+
+        <div
           className="flex flex-wrap justify-center items-center gap-x-2.5 gap-y-0.5 mt-1.5 text-slate-600 font-sans"
           style={{ fontSize: s.subSize }}
         >
@@ -625,7 +625,7 @@ export function MinimalTemplate({ data, color = '#1E293B', options = {} }) {
             <h2 className="font-bold uppercase tracking-widest text-slate-900 border-b border-slate-300 pb-0.5 mb-1" style={{ fontSize: s.sectionHeadingSize }}>
               {sec.title}
             </h2>
-            {sec.content && <p className="text-slate-800 whitespace-pre-line" style={{ fontSize: s.subSize }}>{sec.content}</p>}
+            {sec.content && <p className="text-slate-800 primaryspace-pre-line" style={{ fontSize: s.subSize }}>{sec.content}</p>}
             {sec.items && sec.items.length > 0 && (
               <ul className="space-y-0.5 text-slate-800" style={{ fontSize: s.subSize }}>
                 {sec.items.filter(it => typeof it === 'string' ? it.trim() : it?.text?.trim()).map((it, itIdx) => (
@@ -670,8 +670,8 @@ export function ExecutiveTemplate({ data, color = '#0F172A', options = {} }) {
   const isVisible = (secId) => !hiddenSections.includes(secId);
 
   return (
-    <div 
-      className="w-full bg-white text-slate-900 shadow-sm min-h-[1123px] box-border"
+    <div
+      className="w-full bg-primary text-slate-900 shadow-sm min-h-[1123px] box-border"
       style={{ ...fontStyle, padding: s.pagePadding, fontSize: s.baseSize, lineHeight: s.lineHeight }}
     >
       {/* Executive Header */}
@@ -698,8 +698,8 @@ export function ExecutiveTemplate({ data, color = '#0F172A', options = {} }) {
 
       {/* Summary */}
       {isVisible('summary') && summary && (
-        <div 
-          className="bg-slate-50 p-3 rounded-lg border-l-4" 
+        <div
+          className="bg-slate-50 p-3 rounded-lg border-l-4"
           style={{ borderColor: color, marginBottom: s.sectionGap, borderRadius: s.borderRadius }}
         >
           <h2 className="font-bold uppercase tracking-wider text-slate-900 mb-0.5" style={{ fontSize: s.sectionHeadingSize }}>
@@ -768,7 +768,7 @@ export function ExecutiveTemplate({ data, color = '#0F172A', options = {} }) {
             <h2 className="font-bold uppercase tracking-widest text-slate-900 border-b-2 border-slate-200 pb-0.5 mb-1.5" style={{ fontSize: s.sectionHeadingSize }}>
               {sec.title}
             </h2>
-            {sec.content && <p className="text-slate-700 whitespace-pre-line" style={{ fontSize: s.subSize }}>{sec.content}</p>}
+            {sec.content && <p className="text-slate-700 primaryspace-pre-line" style={{ fontSize: s.subSize }}>{sec.content}</p>}
             {sec.items && sec.items.length > 0 && (
               <ul className="space-y-0.5 text-slate-700" style={{ fontSize: s.subSize }}>
                 {sec.items.filter(it => typeof it === 'string' ? it.trim() : it?.text?.trim()).map((it, itIdx) => (
@@ -814,24 +814,24 @@ export function CreativeTemplate({ data, color = '#6366F1', options = {} }) {
   const isVisible = (secId) => !hiddenSections.includes(secId);
 
   return (
-    <div 
+    <div
       className="w-full bg-slate-50 text-slate-800 shadow-sm min-h-[1123px] flex box-border"
       style={{ ...fontStyle, fontSize: s.baseSize, lineHeight: s.lineHeight }}
     >
       {/* Left Sidebar */}
-      <div 
-        className="w-1/3 bg-[#0C1222] text-white space-y-4"
+      <div
+        className="w-1/3 bg-[#0C1222] text-primary space-y-4"
         style={{ padding: s.pagePadding }}
       >
         <div>
           {showAvatar && personalInfo.avatar && (
-            <img 
-              src={personalInfo.avatar} 
-              alt={personalInfo.fullName} 
-              className="w-16 h-16 rounded-2xl object-cover border-2 border-white/20 mb-3" 
+            <img
+              src={personalInfo.avatar}
+              alt={personalInfo.fullName}
+              className="w-16 h-16 rounded-2xl object-cover border-2 border-primary/20 mb-3"
             />
           )}
-          <h1 className="font-bold tracking-tight text-white" style={{ fontSize: s.headingSize }}>
+          <h1 className="font-bold tracking-tight text-primary" style={{ fontSize: s.headingSize }}>
             {personalInfo.fullName || 'Creative Candidate'}
           </h1>
           <p className="font-medium mt-0.5" style={{ color, fontSize: s.titleSize }}>
@@ -859,8 +859,8 @@ export function CreativeTemplate({ data, color = '#6366F1', options = {} }) {
             <h3 className="font-bold uppercase tracking-wider mb-2" style={{ color, fontSize: s.sectionHeadingSize }}>Skills</h3>
             <div className="flex flex-wrap gap-1">
               {skills.map((skill, idx) => (
-                <span 
-                  key={idx} 
+                <span
+                  key={idx}
                   className="px-2 py-0.5 bg-slate-800 text-slate-200"
                   style={{ fontSize: s.microSize, borderRadius: s.borderRadius }}
                 >
@@ -878,7 +878,7 @@ export function CreativeTemplate({ data, color = '#6366F1', options = {} }) {
             <div className="space-y-2">
               {education.map((edu, idx) => (
                 <div key={idx}>
-                  <div className="font-bold text-white" style={{ fontSize: s.subSize }}>{edu.degree}</div>
+                  <div className="font-bold text-primary" style={{ fontSize: s.subSize }}>{edu.degree}</div>
                   <div className="text-slate-400" style={{ fontSize: s.microSize }}>{edu.institution}</div>
                   <div className="text-slate-500" style={{ fontSize: s.microSize }}>{edu.startYear} – {edu.endYear || 'Present'}</div>
                 </div>
@@ -889,8 +889,8 @@ export function CreativeTemplate({ data, color = '#6366F1', options = {} }) {
       </div>
 
       {/* Right Content */}
-      <div 
-        className="w-2/3 bg-white"
+      <div
+        className="w-2/3 bg-primary"
         style={{ padding: s.pagePadding, display: 'flex', flexDirection: 'column', gap: s.sectionGap }}
       >
         {isVisible('summary') && summary && (
@@ -958,7 +958,7 @@ export function CreativeTemplate({ data, color = '#6366F1', options = {} }) {
               <h2 className="font-bold uppercase tracking-wider mb-1 pb-1 border-b border-slate-100" style={{ color, fontSize: s.sectionHeadingSize }}>
                 {sec.title}
               </h2>
-              {sec.content && <p className="text-slate-700 whitespace-pre-line" style={{ fontSize: s.subSize }}>{sec.content}</p>}
+              {sec.content && <p className="text-slate-700 primaryspace-pre-line" style={{ fontSize: s.subSize }}>{sec.content}</p>}
               {sec.items && sec.items.length > 0 && (
                 <ul className="space-y-0.5 text-slate-700 mt-1" style={{ fontSize: s.subSize }}>
                   {sec.items.filter(it => typeof it === 'string' ? it.trim() : it?.text?.trim()).map((it, itIdx) => (
@@ -1003,8 +1003,8 @@ export function TechSingleColumnTemplate({ data, color = '#2563EB', options = {}
   const isVisible = (secId) => !hiddenSections.includes(secId);
 
   return (
-    <div 
-      className="w-full bg-white text-slate-900 shadow-sm min-h-[1123px] box-border"
+    <div
+      className="w-full bg-primary text-slate-900 shadow-sm min-h-[1123px] box-border"
       style={{ ...fontStyle, padding: s.pagePadding, fontSize: s.baseSize, lineHeight: s.lineHeight }}
     >
       {/* Top Header */}
@@ -1117,7 +1117,7 @@ export function TechSingleColumnTemplate({ data, color = '#2563EB', options = {}
             <h2 className="font-bold uppercase tracking-wider pb-0.5 border-b border-slate-300 mb-1" style={{ color, fontSize: s.sectionHeadingSize }}>
               {sec.title}
             </h2>
-            {sec.content && <p className="text-slate-800 whitespace-pre-line" style={{ fontSize: s.subSize }}>{sec.content}</p>}
+            {sec.content && <p className="text-slate-800 primaryspace-pre-line" style={{ fontSize: s.subSize }}>{sec.content}</p>}
             {sec.items && sec.items.length > 0 && (
               <ul className="space-y-0.5 text-slate-800 font-sans" style={{ fontSize: s.subSize }}>
                 {sec.items.filter(it => typeof it === 'string' ? it.trim() : it?.text?.trim()).map((it, itIdx) => (

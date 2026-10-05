@@ -3,20 +3,20 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { register, googleLogin, clearError } from '../store/slices/authSlice';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Loader2, 
-  Briefcase, 
-  User as UserIcon, 
-  Building2, 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  ArrowRight, 
-  Sparkles, 
-  ShieldCheck, 
-  CheckCircle2, 
-  AlertCircle, 
+import {
+  Loader2,
+  Briefcase,
+  User as UserIcon,
+  Building2,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  Sparkles,
+  ShieldCheck,
+  CheckCircle2,
+  AlertCircle,
   X,
   Check
 } from 'lucide-react';
@@ -40,27 +40,32 @@ export default function Signup() {
   // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated && user) {
-      navigate('/dashboard');
+      navigate('/resume-studio');
     }
   }, [isAuthenticated, user]);
 
   // Google Sign-In setup
   useEffect(() => {
-    if (window.google) {
-      window.google.accounts.id.initialize({
-        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
-        callback: handleGoogleResponse,
-      });
-      const btnContainer = document.getElementById('google-signup-btn');
-      if (btnContainer) {
-        btnContainer.innerHTML = '';
-        window.google.accounts.id.renderButton(btnContainer, {
-          theme: 'outline',
-          size: 'large',
-          text: 'signup_with',
-          shape: 'pill',
-          width: 320,
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (window.google && clientId && clientId.trim() && !clientId.includes('your-google-client-id')) {
+      try {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleGoogleResponse,
         });
+        const btnContainer = document.getElementById('google-signup-btn');
+        if (btnContainer) {
+          btnContainer.innerHTML = '';
+          window.google.accounts.id.renderButton(btnContainer, {
+            theme: 'outline',
+            size: 'large',
+            text: 'signup_with',
+            shape: 'pill',
+            width: 320,
+          });
+        }
+      } catch (e) {
+        console.warn('Google Sign-In initialization skipped:', e);
       }
     }
   }, []);
@@ -117,7 +122,7 @@ export default function Signup() {
             email: email.trim(),
           }
         }));
-      } catch (e) {}
+      } catch (e) { }
       navigate('/onboarding');
     } else {
       toast.error(result.payload || 'Registration failed. Please check your details.');
@@ -154,9 +159,9 @@ export default function Signup() {
         className="w-full max-w-lg relative"
       >
         {/* Outer Card Container */}
-        <div className="relative rounded-3xl p-[1px] bg-gradient-to-b from-white/15 via-white/5 to-white/0 shadow-2xl shadow-black/60">
-          <div className="rounded-3xl bg-[#080D1E]/90 backdrop-blur-2xl p-7 sm:p-9 border border-white/[0.08] relative overflow-hidden">
-            
+        <div className="relative rounded-3xl p-[1px] bg-gradient-to-b from-primary/15 via-primary/5 to-primary/0 shadow-2xl shadow-black/60">
+          <div className="rounded-3xl bg-[#080D1E]/90 backdrop-blur-2xl p-7 sm:p-9 border border-primary/[0.08] relative overflow-hidden">
+
             {/* Top Badge */}
             <div className="flex items-center justify-center mb-6">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-xs font-medium text-accent">
@@ -168,14 +173,14 @@ export default function Signup() {
             {/* Header / Logo */}
             <div className="text-center mb-7">
               <Link to="/" className="inline-flex items-center gap-2.5 group mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 border border-white/10 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 border border-primary/10 flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform">
                   <img src={logo} alt="HireMind AI" className="w-6 h-6 object-contain" />
                 </div>
-                <span className="text-2xl font-extrabold text-white tracking-tight font-heading">
+                <span className="text-2xl font-extrabold text-primary tracking-tight font-heading">
                   HireMind<span className="text-primary">.AI</span>
                 </span>
               </Link>
-              <h1 className="text-2xl font-bold text-white tracking-tight mb-1.5">Create your account</h1>
+              <h1 className="text-2xl font-bold text-primary tracking-tight mb-1.5">Create your account</h1>
               <p className="text-slate-400 text-sm">Create your Master Profile and start generating job-tailored resumes</p>
             </div>
 
@@ -221,7 +226,7 @@ export default function Signup() {
                       if (error) dispatch(clearError());
                     }}
                     placeholder="Enter your full name"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-200"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-primary/[0.04] border border-primary/[0.08] text-primary placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-200"
                   />
                 </div>
               </div>
@@ -242,7 +247,7 @@ export default function Signup() {
                       if (error) dispatch(clearError());
                     }}
                     placeholder="you@company.com"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-200"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-primary/[0.04] border border-primary/[0.08] text-primary placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-200"
                   />
                 </div>
               </div>
@@ -263,12 +268,12 @@ export default function Signup() {
                       if (error) dispatch(clearError());
                     }}
                     placeholder="Minimum 6 characters"
-                    className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-200"
+                    className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-primary/[0.04] border border-primary/[0.08] text-primary placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-200"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-white transition-colors"
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-primary transition-colors"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -279,14 +284,13 @@ export default function Signup() {
                   <div className="pt-1.5 space-y-1">
                     <div className="flex items-center justify-between text-[11px]">
                       <span className="text-slate-400">Password strength:</span>
-                      <span className={`font-medium ${
-                        passwordStrength.label === 'Strong' ? 'text-emerald-400' :
-                        passwordStrength.label === 'Good' ? 'text-amber-400' : 'text-red-400'
-                      }`}>
+                      <span className={`font-medium ${passwordStrength.label === 'Strong' ? 'text-emerald-400' :
+                          passwordStrength.label === 'Good' ? 'text-amber-400' : 'text-red-400'
+                        }`}>
                         {passwordStrength.label}
                       </span>
                     </div>
-                    <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-primary/10 rounded-full overflow-hidden">
                       <motion.div
                         className={`h-full ${passwordStrength.color}`}
                         initial={{ width: 0 }}
@@ -305,7 +309,7 @@ export default function Signup() {
                   id="terms"
                   checked={termsAccepted}
                   onChange={(e) => setTermsAccepted(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 rounded bg-white/5 border-white/20 text-primary focus:ring-primary/40 focus:ring-offset-0 transition-colors"
+                  className="mt-0.5 w-4 h-4 rounded bg-primary/5 border-primary/20 text-primary focus:ring-primary/40 focus:ring-offset-0 transition-colors"
                 />
                 <label htmlFor="terms" className="text-xs text-slate-400 leading-relaxed cursor-pointer select-none">
                   I agree to the{' '}
@@ -342,11 +346,11 @@ export default function Signup() {
                 disabled={loading}
                 whileHover={{ scale: loading ? 1 : 1.01 }}
                 whileTap={{ scale: loading ? 1 : 0.99 }}
-                className="w-full mt-2 py-3 px-4 rounded-xl bg-gradient-to-r from-primary via-primary to-accent text-white font-semibold text-sm shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed group"
+                className="w-full mt-2 py-3 px-4 rounded-xl bg-gradient-to-r from-primary via-primary to-accent text-primary font-semibold text-sm shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed group"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
                     <span>Creating account...</span>
                   </>
                 ) : (
@@ -361,7 +365,7 @@ export default function Signup() {
             {/* Divider */}
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/[0.08]"></div>
+                <div className="w-full border-t border-primary/[0.08]"></div>
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-[#080D1E] px-3 text-slate-500 font-medium">Or register with</span>
@@ -385,7 +389,7 @@ export default function Signup() {
             </p>
 
             {/* Security Guarantee */}
-            <div className="mt-6 pt-4 border-t border-white/[0.06] flex items-center justify-center gap-2 text-[11px] text-slate-500">
+            <div className="mt-6 pt-4 border-t border-primary/[0.06] flex items-center justify-center gap-2 text-[11px] text-slate-500">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
               <span>Instant free access • No credit card required</span>
             </div>

@@ -1,27 +1,27 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FileText, 
-  Download, 
-  Sparkles, 
-  Eye, 
-  Save, 
-  Trash2, 
-  Plus, 
-  X, 
-  RotateCcw, 
-  CheckCircle2, 
-  Layers, 
-  User, 
-  Briefcase, 
-  GraduationCap, 
-  Code2, 
-  Award, 
-  Languages as LanguagesIcon, 
-  Palette, 
-  ZoomIn, 
-  ZoomOut, 
+import {
+  FileText,
+  Download,
+  Sparkles,
+  Eye,
+  Save,
+  Trash2,
+  Plus,
+  X,
+  RotateCcw,
+  CheckCircle2,
+  Layers,
+  User,
+  Briefcase,
+  GraduationCap,
+  Code2,
+  Award,
+  Languages as LanguagesIcon,
+  Palette,
+  ZoomIn,
+  ZoomOut,
   Maximize2,
   FileCode,
   ShieldCheck,
@@ -62,14 +62,16 @@ import {
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { toast } from 'sonner';
-import { 
-  ModernTemplate, 
-  MinimalTemplate, 
-  ExecutiveTemplate, 
+import {
+  ModernTemplate,
+  MinimalTemplate,
+  ExecutiveTemplate,
   CreativeTemplate,
   TechSingleColumnTemplate
 } from '@/components/builder/ResumeTemplates';
 import WordTemplateStudio from '@/components/builder/WordTemplateStudio';
+import XyzQuantifierModal from '@/components/builder/XyzQuantifierModal';
+import AtsHeatmapViewer from '@/components/builder/AtsHeatmapViewer';
 import {
   getResumeData,
   saveResumeData,
@@ -124,7 +126,7 @@ export default function ResumeBuilder() {
       loadGoogleFont(activeFont);
     }
   }, [fontFamily, fontList]);
-  
+
   // Customization Sliders
   const [fontSizeNum, setFontSizeNum] = useState(10.5);
   const [lineHeight, setLineHeight] = useState(1.45);
@@ -136,6 +138,8 @@ export default function ResumeBuilder() {
   const [headerLayout, setHeaderLayout] = useState('left');
   const [showAvatar, setShowAvatar] = useState(true);
   const [hiddenSections, setHiddenSections] = useState([]);
+  const [viewMode, setViewMode] = useState('visual'); // 'visual' | 'ats-raw'
+  const [xyzModal, setXyzModal] = useState({ isOpen: false, expIdx: null, bulletIdx: null, text: '' });
 
   // Template Manager & Custom Templates State
   const [templateTab, setTemplateTab] = useState('presets'); // 'presets' | 'custom'
@@ -698,6 +702,22 @@ export default function ResumeBuilder() {
     setAiModal(prev => ({ ...prev, isOpen: false }));
   };
 
+  const handleOpenXyzQuantifier = (expIndex, bulletIndex) => {
+    const text = resumeData.experience[expIndex]?.bullets?.[bulletIndex] || '';
+    setXyzModal({
+      isOpen: true,
+      expIdx: expIndex,
+      bulletIdx: bulletIndex,
+      text
+    });
+  };
+
+  const handleApplyXyzFormula = (enhancedText) => {
+    if (xyzModal.expIdx !== null && xyzModal.bulletIdx !== null) {
+      handleUpdateExpBullet(xyzModal.expIdx, xyzModal.bulletIdx, enhancedText);
+    }
+  };
+
   // Exports
   const handleExportPDF = async () => {
     if (!previewRef.current) return;
@@ -1064,17 +1084,17 @@ ${(resumeData.skills || []).join(', ')}
 
   return (
     <div className="min-h-screen bg-[#030712] text-slate-100 flex flex-col font-sans">
-      
+
       {/* ── LAYER 1: ULTRA-MINIMAL TOP BAR ─────────────────────────────── */}
-      <header className="h-14 px-4 sm:px-6 border-b border-white/[0.06] bg-[#050B18]/90 backdrop-blur-xl flex items-center justify-between sticky top-0 z-40">
-        
+      <header className="h-14 px-4 sm:px-6 border-b border-primary/[0.06] bg-[#050B18]/90 backdrop-blur-xl flex items-center justify-between sticky top-0 z-40">
+
         {/* Left: Branding & Status */}
         <div className="flex items-center gap-3">
           <Link to="/dashboard" className="flex items-center gap-2 group">
             <div className="w-7 h-7 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center text-primary">
               <FileText className="w-4 h-4" />
             </div>
-            <h1 className="text-xs sm:text-sm font-bold text-white tracking-tight group-hover:text-primary transition-colors">
+            <h1 className="text-xs sm:text-sm font-bold text-primary tracking-tight group-hover:text-primary transition-colors">
               AI Resume Studio
             </h1>
           </Link>
@@ -1086,9 +1106,9 @@ ${(resumeData.skills || []).join(', ')}
 
         {/* Right: ATS Score Badge, Import, Export */}
         <div className="flex items-center gap-2.5">
-          
+
           {/* Live ATS Pill */}
-          <div 
+          <div
             onClick={() => setAiModal({ isOpen: true, type: 'fix-ats', suggestions: ['Add 2+ quantifiable metric bullet points', 'Include top industry technical keywords', 'Ensure contact links are complete'] })}
             className="cursor-pointer px-2.5 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-xs font-semibold text-emerald-400 flex items-center gap-1 transition-all"
             title="Click to view ATS recommendations"
@@ -1111,7 +1131,7 @@ ${(resumeData.skills || []).join(', ')}
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isImporting}
-            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-slate-200 hover:text-white transition-all flex items-center gap-1.5 border border-white/10 disabled:opacity-50"
+            className="px-3 py-1.5 rounded-lg bg-primary/5 hover:bg-primary/10 text-xs text-slate-200 hover:text-primary transition-all flex items-center gap-1.5 border border-primary/10 disabled:opacity-50"
           >
             {isImporting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
             <span className="hidden sm:inline">{isImporting ? 'Importing...' : 'Import'}</span>
@@ -1122,7 +1142,7 @@ ${(resumeData.skills || []).join(', ')}
             <button
               type="button"
               onClick={() => setShowExportMenu(!showExportMenu)}
-              className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-xs font-semibold shadow-sm transition-all flex items-center gap-1.5"
+              className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary text-xs font-semibold shadow-sm transition-all flex items-center gap-1.5"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Export</span>
@@ -1130,12 +1150,12 @@ ${(resumeData.skills || []).join(', ')}
             </button>
 
             {showExportMenu && (
-              <div className="absolute right-0 mt-1.5 w-44 bg-[#0A1024] border border-white/10 rounded-xl shadow-2xl p-1 z-50">
+              <div className="absolute right-0 mt-1.5 w-44 bg-[#0A1024] border border-primary/10 rounded-xl shadow-2xl p-1 z-50">
                 <button
                   type="button"
                   onClick={() => { setShowExportMenu(false); handleExportPDF(); }}
                   disabled={isExporting}
-                  className="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-white/10 flex items-center justify-between transition-colors"
+                  className="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-primary/10 flex items-center justify-between transition-colors"
                 >
                   <span className="font-medium">Download PDF</span>
                   <span className="text-[10px] text-primary">.pdf</span>
@@ -1144,7 +1164,7 @@ ${(resumeData.skills || []).join(', ')}
                   type="button"
                   onClick={() => { setShowExportMenu(false); handleExportDOCX(); }}
                   disabled={isExporting}
-                  className="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-white/10 flex items-center justify-between transition-colors"
+                  className="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-primary/10 flex items-center justify-between transition-colors"
                 >
                   <span className="font-medium">Download Word</span>
                   <span className="text-[10px] text-blue-400">.docx</span>
@@ -1152,7 +1172,7 @@ ${(resumeData.skills || []).join(', ')}
                 <button
                   type="button"
                   onClick={() => { setShowExportMenu(false); handleExportJSON(); }}
-                  className="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-white/10 flex items-center justify-between transition-colors"
+                  className="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-primary/10 flex items-center justify-between transition-colors"
                 >
                   <span className="font-medium">Export JSON</span>
                   <span className="text-[10px] text-amber-400">.json</span>
@@ -1160,7 +1180,7 @@ ${(resumeData.skills || []).join(', ')}
                 <button
                   type="button"
                   onClick={() => { setShowExportMenu(false); handleExportText(); }}
-                  className="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-white/10 flex items-center justify-between transition-colors"
+                  className="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-primary/10 flex items-center justify-between transition-colors"
                 >
                   <span className="font-medium">Plain Text</span>
                   <span className="text-[10px] text-slate-400">.txt</span>
@@ -1173,20 +1193,20 @@ ${(resumeData.skills || []).join(', ')}
 
       {/* ── LAYER 2: 30/70 SPLIT WORKSPACE ─────────────────────────────── */}
       <div className="flex-1 max-w-[1720px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-5 p-3 sm:p-5 items-start">
-        
+
         {/* ── LEFT COLUMN: VERTICAL NAVIGATION & COMPACT SECTION EDITOR (~30%) ── */}
         <div className="lg:col-span-4 xl:col-span-4 space-y-4">
-          
+
           {/* Vertical Section Nav & AI Tools Card */}
-          <div className="bg-[#070D1F] border border-white/[0.08] rounded-2xl p-4 shadow-xl space-y-4">
-            
+          <div className="bg-[#070D1F] border border-primary/[0.08] rounded-2xl p-4 shadow-xl space-y-4">
+
             {/* 1. Resume Sections */}
             <div>
               <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2 px-1 flex items-center justify-between">
                 <span>Resume Sections</span>
                 <span className="text-[10px] text-slate-500 lowercase">({navItems.length} active)</span>
               </div>
-              
+
               <div className="space-y-1">
                 {navItems.map(item => {
                   const Icon = item.icon;
@@ -1195,20 +1215,19 @@ ${(resumeData.skills || []).join(', ')}
                     <div
                       key={item.id}
                       onClick={() => setActiveSection(item.id)}
-                      className={`group w-full px-3 py-2 rounded-xl text-xs font-medium flex items-center justify-between transition-all cursor-pointer ${
-                        isActive
-                          ? 'bg-primary text-white shadow-md shadow-primary/20'
-                          : 'text-slate-300 hover:bg-white/5 hover:text-white'
-                      }`}
+                      className={`group w-full px-3 py-2 rounded-xl text-xs font-medium flex items-center justify-between transition-all cursor-pointer ${isActive
+                          ? 'bg-primary text-primary shadow-md shadow-primary/20'
+                          : 'text-slate-300 hover:bg-primary/5 hover:text-primary'
+                        }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-white' : 'bg-slate-600'}`}></span>
+                        <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-primary' : 'bg-slate-600'}`}></span>
                         <span>{item.label}</span>
                       </div>
-                      
+
                       <div className="flex items-center gap-1.5">
                         {typeof item.count === 'number' && item.count > 0 && (
-                          <span className={`text-[10px] px-2 py-0.2 rounded-full font-bold ${isActive ? 'bg-white/20 text-white' : 'bg-white/5 text-slate-400'}`}>
+                          <span className={`text-[10px] px-2 py-0.2 rounded-full font-bold ${isActive ? 'bg-primary/20 text-primary' : 'bg-primary/5 text-slate-400'}`}>
                             {item.count}
                           </span>
                         )}
@@ -1244,7 +1263,7 @@ ${(resumeData.skills || []).join(', ')}
                 <button
                   type="button"
                   onClick={() => setIsAddSectionModalOpen(true)}
-                  className="w-full mt-2.5 py-2 px-3 rounded-xl border border-dashed border-white/15 hover:border-primary/50 text-slate-400 hover:text-primary text-xs font-semibold flex items-center justify-center gap-1.5 transition-all bg-white/[0.01] hover:bg-primary/5"
+                  className="w-full mt-2.5 py-2 px-3 rounded-xl border border-dashed border-primary/15 hover:border-primary/50 text-slate-400 hover:text-primary text-xs font-semibold flex items-center justify-center gap-1.5 transition-all bg-primary/[0.01] hover:bg-primary/5"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add Section</span>
@@ -1253,7 +1272,7 @@ ${(resumeData.skills || []).join(', ')}
             </div>
 
             {/* Divider */}
-            <div className="border-t border-white/[0.06] pt-3">
+            <div className="border-t border-primary/[0.06] pt-3">
               <div className="text-[11px] font-bold uppercase tracking-wider text-amber-400/90 mb-2 px-1 flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                 <span>AI Power Tools</span>
@@ -1270,7 +1289,7 @@ ${(resumeData.skills || []).join(', ')}
                       'Re-order skills prioritizing high-demand cloud and AI tooling keywords.'
                     ]
                   })}
-                  className="w-full px-3 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-amber-500/10 border border-transparent hover:border-amber-500/20 flex items-center gap-2 transition-all text-left"
+                  className="w-full px-3 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-primary hover:bg-amber-500/10 border border-transparent hover:border-amber-500/20 flex items-center gap-2 transition-all text-left"
                 >
                   <span className="text-amber-400">✦</span>
                   <span>Improve Resume</span>
@@ -1284,7 +1303,7 @@ ${(resumeData.skills || []).join(', ')}
                     jdText: '',
                     suggestions: []
                   })}
-                  className="w-full px-3 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-blue-500/10 border border-transparent hover:border-blue-500/20 flex items-center gap-2 transition-all text-left"
+                  className="w-full px-3 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-primary hover:bg-blue-500/10 border border-transparent hover:border-blue-500/20 flex items-center gap-2 transition-all text-left"
                 >
                   <span className="text-blue-400">✦</span>
                   <span>Match Job Description</span>
@@ -1301,7 +1320,7 @@ ${(resumeData.skills || []).join(', ')}
                       'Keep typography single or clean two-column for 99% ATS parsing rate.'
                     ]
                   })}
-                  className="w-full px-3 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20 flex items-center gap-2 transition-all text-left"
+                  className="w-full px-3 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-primary hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20 flex items-center gap-2 transition-all text-left"
                 >
                   <span className="text-emerald-400">✦</span>
                   <span>Fix ATS Issues</span>
@@ -1310,9 +1329,9 @@ ${(resumeData.skills || []).join(', ')}
             </div>
 
             {/* Master sync link */}
-            <div className="border-t border-white/[0.06] pt-3 flex items-center justify-between text-xs">
-              <Link 
-                to="/career-profile" 
+            <div className="border-t border-primary/[0.06] pt-3 flex items-center justify-between text-xs">
+              <Link
+                to="/career-profile"
                 className="text-primary hover:underline text-[11px] font-medium flex items-center gap-1"
               >
                 <span>Master Career Vault</span>
@@ -1324,7 +1343,7 @@ ${(resumeData.skills || []).join(', ')}
                   setResumeData(convertMasterToResume(getMasterCareerProfile()));
                   toast.success('Synced from Master Career Profile!');
                 }}
-                className="text-slate-400 hover:text-white text-[11px] flex items-center gap-1"
+                className="text-slate-400 hover:text-primary text-[11px] flex items-center gap-1"
               >
                 <RefreshCw className="w-3 h-3" />
                 <span>Sync</span>
@@ -1334,11 +1353,11 @@ ${(resumeData.skills || []).join(', ')}
           </div>
 
           {/* ── CONTEXTUAL ACTIVE SECTION EDITOR CARD ── */}
-          <div className="bg-[#070D1F] border border-white/[0.08] rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
-            
+          <div className="bg-[#070D1F] border border-primary/[0.08] rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
+
             {/* Header of the Active Section */}
-            <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
-              <h2 className="text-sm font-bold text-white capitalize flex items-center gap-2">
+            <div className="flex items-center justify-between border-b border-primary/[0.06] pb-3">
+              <h2 className="text-sm font-bold text-primary capitalize flex items-center gap-2">
                 <span>{activeCustomSection ? activeCustomSection.title : activeSection}</span>
               </h2>
 
@@ -1404,7 +1423,7 @@ ${(resumeData.skills || []).join(', ')}
             {/* 1. DESIGN & TEMPLATES SECTION */}
             {activeSection === 'design' && (
               <div className="space-y-4 text-xs">
-                
+
                 {/* Template Studio Header & Sub-Tabs */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
@@ -1413,7 +1432,7 @@ ${(resumeData.skills || []).join(', ')}
                       <button
                         type="button"
                         onClick={handleOpenNewTemplateModal}
-                        className="px-2 py-1 rounded-lg bg-primary hover:bg-primary/90 text-white font-semibold text-[11px] flex items-center gap-1 shadow-sm transition-all"
+                        className="px-2 py-1 rounded-lg bg-primary hover:bg-primary/90 text-primary font-semibold text-[11px] flex items-center gap-1 shadow-sm transition-all"
                         title="Create a new template"
                       >
                         <Plus className="w-3 h-3" />
@@ -1422,7 +1441,7 @@ ${(resumeData.skills || []).join(', ')}
                       <button
                         type="button"
                         onClick={() => setIsSaveCurrentModalOpen(true)}
-                        className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white text-[11px] flex items-center gap-1 transition-all border border-white/10"
+                        className="px-2 py-1 rounded-lg bg-primary/10 hover:bg-primary/15 text-slate-200 hover:text-primary text-[11px] flex items-center gap-1 transition-all border border-primary/10"
                         title="Save current resume design as a new template"
                       >
                         <Save className="w-3 h-3 text-amber-400" />
@@ -1432,32 +1451,29 @@ ${(resumeData.skills || []).join(', ')}
                   </div>
 
                   {/* Sub-tab Switcher: Presets vs Custom Templates */}
-                  <div className="flex bg-[#050816] p-1 rounded-xl border border-white/10 mb-3">
+                  <div className="flex bg-[#050816] p-1 rounded-xl border border-primary/10 mb-3">
                     <button
                       type="button"
                       onClick={() => setTemplateTab('presets')}
-                      className={`flex-1 py-1 rounded-lg text-xs font-semibold transition-all ${
-                        templateTab === 'presets'
-                          ? 'bg-primary text-white shadow-sm'
+                      className={`flex-1 py-1 rounded-lg text-xs font-semibold transition-all ${templateTab === 'presets'
+                          ? 'bg-primary text-primary shadow-sm'
                           : 'text-slate-400 hover:text-slate-200'
-                      }`}
+                        }`}
                     >
                       Presets (5)
                     </button>
                     <button
                       type="button"
                       onClick={() => setTemplateTab('custom')}
-                      className={`flex-1 py-1 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
-                        templateTab === 'custom'
-                          ? 'bg-primary text-white shadow-sm'
+                      className={`flex-1 py-1 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${templateTab === 'custom'
+                          ? 'bg-primary text-primary shadow-sm'
                           : 'text-slate-400 hover:text-slate-200'
-                      }`}
+                        }`}
                     >
                       <span>My Templates</span>
                       {customTemplates.length > 0 && (
-                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                          templateTab === 'custom' ? 'bg-white/20 text-white' : 'bg-white/10 text-slate-400'
-                        }`}>
+                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${templateTab === 'custom' ? 'bg-primary/20 text-primary' : 'bg-primary/10 text-slate-400'
+                          }`}>
                           {customTemplates.length}
                         </span>
                       )}
@@ -1473,21 +1489,20 @@ ${(resumeData.skills || []).join(', ')}
                           <div
                             key={tpl.id}
                             onClick={() => handleApplyTemplate(tpl)}
-                            className={`p-2.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between group ${
-                              isSelected
-                                ? 'bg-primary/15 border-primary text-white'
-                                : 'bg-white/[0.02] border-white/[0.08] text-slate-300 hover:bg-white/[0.05]'
-                            }`}
+                            className={`p-2.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between group ${isSelected
+                                ? 'bg-primary/15 border-primary text-primary'
+                                : 'bg-primary/[0.02] border-primary/[0.08] text-slate-300 hover:bg-primary/[0.05]'
+                              }`}
                           >
                             <div className="flex items-center gap-2.5">
-                              <span 
-                                className="w-3 h-3 rounded-full shrink-0 border border-white/20 shadow-sm"
+                              <span
+                                className="w-3 h-3 rounded-full shrink-0 border border-primary/20 shadow-sm"
                                 style={{ backgroundColor: tpl.accentColor || '#4F8CFF' }}
                               />
                               <div>
                                 <div className="font-bold flex items-center gap-1.5">
                                   <span>{tpl.name}</span>
-                                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-white/10 text-slate-300 uppercase font-mono">
+                                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-primary/10 text-slate-300 uppercase font-mono">
                                     {tpl.baseTemplate}
                                   </span>
                                 </div>
@@ -1505,14 +1520,14 @@ ${(resumeData.skills || []).join(', ')}
                   {templateTab === 'custom' && (
                     <div className="space-y-2">
                       {customTemplates.length === 0 ? (
-                        <div className="text-center py-6 px-4 bg-white/[0.02] border border-dashed border-white/15 rounded-xl space-y-2.5">
+                        <div className="text-center py-6 px-4 bg-primary/[0.02] border border-dashed border-primary/15 rounded-xl space-y-2.5">
                           <Paintbrush className="w-7 h-7 text-slate-500 mx-auto" />
                           <p className="text-slate-400 text-xs">No custom templates yet.</p>
                           <div className="flex flex-col sm:flex-row gap-2 justify-center pt-1">
                             <button
                               type="button"
                               onClick={handleOpenNewTemplateModal}
-                              className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white font-semibold text-xs flex items-center justify-center gap-1"
+                              className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary font-semibold text-xs flex items-center justify-center gap-1"
                             >
                               <Plus className="w-3.5 h-3.5" />
                               <span>Create Template</span>
@@ -1520,7 +1535,7 @@ ${(resumeData.skills || []).join(', ')}
                             <button
                               type="button"
                               onClick={() => setIsSaveCurrentModalOpen(true)}
-                              className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 text-xs flex items-center justify-center gap-1"
+                              className="px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/15 text-slate-200 text-xs flex items-center justify-center gap-1"
                             >
                               <Save className="w-3.5 h-3.5 text-amber-400" />
                               <span>Save Current Style</span>
@@ -1535,15 +1550,14 @@ ${(resumeData.skills || []).join(', ')}
                               <div
                                 key={tpl.id}
                                 onClick={() => handleApplyTemplate(tpl)}
-                                className={`p-2.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between group ${
-                                  isSelected
-                                    ? 'bg-primary/15 border-primary text-white'
-                                    : 'bg-white/[0.02] border-white/[0.08] text-slate-300 hover:bg-white/[0.05]'
-                                }`}
+                                className={`p-2.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between group ${isSelected
+                                    ? 'bg-primary/15 border-primary text-primary'
+                                    : 'bg-primary/[0.02] border-primary/[0.08] text-slate-300 hover:bg-primary/[0.05]'
+                                  }`}
                               >
                                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                  <span 
-                                    className="w-3 h-3 rounded-full shrink-0 border border-white/20 shadow-sm"
+                                  <span
+                                    className="w-3 h-3 rounded-full shrink-0 border border-primary/20 shadow-sm"
                                     style={{ backgroundColor: tpl.accentColor || '#4F8CFF' }}
                                   />
                                   <div className="min-w-0 flex-1 pr-2">
@@ -1562,7 +1576,7 @@ ${(resumeData.skills || []).join(', ')}
                                   <button
                                     type="button"
                                     onClick={(e) => handleOpenEditTemplate(tpl, e)}
-                                    className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/10 opacity-70 group-hover:opacity-100 transition-opacity"
+                                    className="p-1 rounded text-slate-400 hover:text-primary hover:bg-primary/10 opacity-70 group-hover:opacity-100 transition-opacity"
                                     title="Edit template settings"
                                   >
                                     <Edit3 className="w-3 h-3" />
@@ -1570,7 +1584,7 @@ ${(resumeData.skills || []).join(', ')}
                                   <button
                                     type="button"
                                     onClick={(e) => handleDuplicateCustomTemplate(tpl, e)}
-                                    className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/10 opacity-70 group-hover:opacity-100 transition-opacity"
+                                    className="p-1 rounded text-slate-400 hover:text-primary hover:bg-primary/10 opacity-70 group-hover:opacity-100 transition-opacity"
                                     title="Duplicate template"
                                   >
                                     <Copy className="w-3 h-3" />
@@ -1594,16 +1608,16 @@ ${(resumeData.skills || []).join(', ')}
                 </div>
 
                 {/* Theme Accent Color */}
-                <div className="pt-3 border-t border-white/[0.06] space-y-2">
+                <div className="pt-3 border-t border-primary/[0.06] space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-slate-300 font-bold block">Theme Accent Color</label>
                     <span className="text-[11px] font-mono text-slate-400 font-medium">{accentColor.toUpperCase()}</span>
                   </div>
-                  
+
                   <div className="flex items-center gap-2.5">
                     {/* Color Swatch Box / Tile */}
-                    <label 
-                      className="relative w-10 h-10 rounded-xl cursor-pointer shadow-md border border-white/20 transition-transform hover:scale-105 shrink-0 flex items-center justify-center overflow-hidden"
+                    <label
+                      className="relative w-10 h-10 rounded-xl cursor-pointer shadow-md border border-primary/20 transition-transform hover:scale-105 shrink-0 flex items-center justify-center overflow-hidden"
                       style={{ backgroundColor: accentColor }}
                       title="Click to pick color"
                     >
@@ -1627,7 +1641,7 @@ ${(resumeData.skills || []).join(', ')}
                         }}
                         placeholder="4F8CFF"
                         maxLength={6}
-                        className="w-full pl-6 pr-3 py-2 bg-[#050816] border border-white/10 rounded-xl text-white text-xs font-mono tracking-wider uppercase focus:outline-none focus:border-primary"
+                        className="w-full pl-6 pr-3 py-2 bg-[#050816] border border-primary/10 rounded-xl text-primary text-xs font-mono tracking-wider uppercase focus:outline-none focus:border-primary"
                       />
                     </div>
                   </div>
@@ -1639,11 +1653,10 @@ ${(resumeData.skills || []).join(', ')}
                         key={idx}
                         type="button"
                         onClick={() => setAccentColor(pc.hex)}
-                        className={`w-5 h-5 rounded-full border transition-transform hover:scale-110 ${
-                          accentColor.toLowerCase() === pc.hex.toLowerCase()
-                            ? 'border-white scale-110 shadow-md ring-2 ring-primary/40'
-                            : 'border-white/20'
-                        }`}
+                        className={`w-5 h-5 rounded-full border transition-transform hover:scale-110 ${accentColor.toLowerCase() === pc.hex.toLowerCase()
+                            ? 'border-primary scale-110 shadow-md ring-2 ring-primary/40'
+                            : 'border-primary/20'
+                          }`}
                         style={{ backgroundColor: pc.hex }}
                         title={pc.label}
                       />
@@ -1652,20 +1665,20 @@ ${(resumeData.skills || []).join(', ')}
                 </div>
 
                 {/* Typography Font (Backend-Driven Categorized) */}
-                <div className="pt-3 border-t border-white/[0.06]">
+                <div className="pt-3 border-t border-primary/[0.06]">
                   <label className="text-slate-300 font-bold block mb-1.5">Typography Font</label>
                   <select
                     value={fontFamily}
                     onChange={(e) => setFontFamily(e.target.value)}
-                    className="w-full bg-[#050816] border border-white/10 rounded-xl p-2 text-slate-200 text-xs focus:outline-none focus:border-primary"
+                    className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2 text-slate-200 text-xs focus:outline-none focus:border-primary"
                   >
                     {['sans-serif', 'serif', 'handwriting', 'monospace'].map(cat => {
                       const catFonts = fontList.filter(f => (f.category || '').toLowerCase() === cat);
                       if (catFonts.length === 0) return null;
-                      const catLabel = cat === 'sans-serif' ? 'Sans-Serif (ATS Preferred)' 
-                        : cat === 'serif' ? 'Serif (Executive)' 
-                        : cat === 'handwriting' ? 'Handwriting & Script' 
-                        : 'Monospace & Tech';
+                      const catLabel = cat === 'sans-serif' ? 'Sans-Serif (ATS Preferred)'
+                        : cat === 'serif' ? 'Serif (Executive)'
+                          : cat === 'handwriting' ? 'Handwriting & Script'
+                            : 'Monospace & Tech';
                       return (
                         <optgroup key={cat} label={catLabel} className="bg-[#0B1228] text-primary font-bold">
                           {catFonts.map(f => (
@@ -1680,7 +1693,7 @@ ${(resumeData.skills || []).join(', ')}
                 </div>
 
                 {/* Fine-Tuning Spacing & Geometry */}
-                <div className="pt-3 border-t border-white/[0.06] space-y-3">
+                <div className="pt-3 border-t border-primary/[0.06] space-y-3">
                   <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
                     <span>Layout & Spacing Metrics</span>
                   </div>
@@ -1757,7 +1770,7 @@ ${(resumeData.skills || []).join(', ')}
                       <select
                         value={headerLayout}
                         onChange={(e) => setHeaderLayout(e.target.value)}
-                        className="w-full bg-[#050816] border border-white/10 rounded-lg p-1.5 text-white text-xs focus:outline-none focus:border-primary"
+                        className="w-full bg-[#050816] border border-primary/10 rounded-lg p-1.5 text-primary text-xs focus:outline-none focus:border-primary"
                       >
                         <option value="left">Left Aligned</option>
                         <option value="center">Centered</option>
@@ -1769,7 +1782,7 @@ ${(resumeData.skills || []).join(', ')}
                       <select
                         value={bulletStyle}
                         onChange={(e) => setBulletStyle(e.target.value)}
-                        className="w-full bg-[#050816] border border-white/10 rounded-lg p-1.5 text-white text-xs focus:outline-none focus:border-primary"
+                        className="w-full bg-[#050816] border border-primary/10 rounded-lg p-1.5 text-primary text-xs focus:outline-none focus:border-primary"
                       >
                         <option value="disc">Disc (•)</option>
                         <option value="square">Square (▪)</option>
@@ -1793,7 +1806,7 @@ ${(resumeData.skills || []).join(', ')}
                     value={resumeData.personalInfo?.fullName || ''}
                     onChange={(e) => handleUpdatePersonalInfo('fullName', e.target.value)}
                     placeholder="e.g. Alex Chen"
-                    className="w-full bg-[#050816] border border-white/10 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-primary"
+                    className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2.5 text-primary text-xs focus:outline-none focus:border-primary"
                   />
                 </div>
                 <div>
@@ -1803,7 +1816,7 @@ ${(resumeData.skills || []).join(', ')}
                     value={resumeData.personalInfo?.title || ''}
                     onChange={(e) => handleUpdatePersonalInfo('title', e.target.value)}
                     placeholder="e.g. Senior Full-Stack AI Engineer"
-                    className="w-full bg-[#050816] border border-white/10 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-primary"
+                    className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2.5 text-primary text-xs focus:outline-none focus:border-primary"
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -1814,7 +1827,7 @@ ${(resumeData.skills || []).join(', ')}
                       value={resumeData.personalInfo?.email || ''}
                       onChange={(e) => handleUpdatePersonalInfo('email', e.target.value)}
                       placeholder="alex@example.com"
-                      className="w-full bg-[#050816] border border-white/10 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-primary"
+                      className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2.5 text-primary text-xs focus:outline-none focus:border-primary"
                     />
                   </div>
                   <div>
@@ -1824,7 +1837,7 @@ ${(resumeData.skills || []).join(', ')}
                       value={resumeData.personalInfo?.phone || ''}
                       onChange={(e) => handleUpdatePersonalInfo('phone', e.target.value)}
                       placeholder="+1 (555) 019-2834"
-                      className="w-full bg-[#050816] border border-white/10 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-primary"
+                      className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2.5 text-primary text-xs focus:outline-none focus:border-primary"
                     />
                   </div>
                 </div>
@@ -1836,7 +1849,7 @@ ${(resumeData.skills || []).join(', ')}
                       value={resumeData.personalInfo?.location || ''}
                       onChange={(e) => handleUpdatePersonalInfo('location', e.target.value)}
                       placeholder="San Francisco, CA"
-                      className="w-full bg-[#050816] border border-white/10 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-primary"
+                      className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2.5 text-primary text-xs focus:outline-none focus:border-primary"
                     />
                   </div>
                   <div>
@@ -1846,7 +1859,7 @@ ${(resumeData.skills || []).join(', ')}
                       value={resumeData.personalInfo?.linkedin || ''}
                       onChange={(e) => handleUpdatePersonalInfo('linkedin', e.target.value)}
                       placeholder="linkedin.com/in/alex"
-                      className="w-full bg-[#050816] border border-white/10 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-primary"
+                      className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2.5 text-primary text-xs focus:outline-none focus:border-primary"
                     />
                   </div>
                 </div>
@@ -1857,7 +1870,7 @@ ${(resumeData.skills || []).join(', ')}
                     value={resumeData.personalInfo?.github || ''}
                     onChange={(e) => handleUpdatePersonalInfo('github', e.target.value)}
                     placeholder="github.com/alexchen"
-                    className="w-full bg-[#050816] border border-white/10 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-primary"
+                    className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2.5 text-primary text-xs focus:outline-none focus:border-primary"
                   />
                 </div>
               </div>
@@ -1889,7 +1902,7 @@ ${(resumeData.skills || []).join(', ')}
                   value={resumeData.summary || ''}
                   onChange={(e) => setResumeData(prev => ({ ...prev, summary: e.target.value }))}
                   placeholder="Write a compelling 2-3 sentence overview highlighting your core strengths, achievements, and technical expertise..."
-                  className="w-full bg-[#050816] border border-white/10 rounded-xl p-3 text-white text-xs leading-relaxed focus:outline-none focus:border-primary"
+                  className="w-full bg-[#050816] border border-primary/10 rounded-xl p-3 text-primary text-xs leading-relaxed focus:outline-none focus:border-primary"
                 />
               </div>
             )}
@@ -1910,7 +1923,7 @@ ${(resumeData.skills || []).join(', ')}
                   </div>
                 ) : (
                   (resumeData.experience || []).map((exp, expIdx) => (
-                    <div key={exp.id || expIdx} className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.08] space-y-3">
+                    <div key={exp.id || expIdx} className="p-3.5 rounded-xl bg-primary/[0.02] border border-primary/[0.08] space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-slate-200">Role #{expIdx + 1}</span>
                         <button
@@ -1929,14 +1942,14 @@ ${(resumeData.skills || []).join(', ')}
                           value={exp.position || ''}
                           onChange={(e) => handleUpdateExperience(expIdx, 'position', e.target.value)}
                           placeholder="Job Title (e.g. Senior Software Engineer)"
-                          className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                          className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
                         />
                         <input
                           type="text"
                           value={exp.company || ''}
                           onChange={(e) => handleUpdateExperience(expIdx, 'company', e.target.value)}
                           placeholder="Company (e.g. Stripe)"
-                          className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                          className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
                         />
                       </div>
 
@@ -1946,14 +1959,14 @@ ${(resumeData.skills || []).join(', ')}
                           value={exp.startDate || ''}
                           onChange={(e) => handleUpdateExperience(expIdx, 'startDate', e.target.value)}
                           placeholder="Start Date (e.g. 2022)"
-                          className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                          className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
                         />
                         <input
                           type="text"
                           value={exp.endDate || ''}
                           onChange={(e) => handleUpdateExperience(expIdx, 'endDate', e.target.value)}
                           placeholder="End Date (or Present)"
-                          className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                          className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
                         />
                       </div>
 
@@ -1969,7 +1982,7 @@ ${(resumeData.skills || []).join(', ')}
                                 value={bullet}
                                 onChange={(e) => handleUpdateExpBullet(expIdx, bIdx, e.target.value)}
                                 placeholder="Describe impact with numbers..."
-                                className="flex-1 bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary leading-relaxed"
+                                className="flex-1 bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary leading-relaxed"
                               />
                               <button
                                 type="button"
@@ -1979,16 +1992,24 @@ ${(resumeData.skills || []).join(', ')}
                                 <X className="w-3.5 h-3.5" />
                               </button>
                             </div>
-                            
-                            {/* Inline AI Improve button */}
-                            <div className="pl-4">
+
+                            {/* Inline AI Improve buttons */}
+                            <div className="pl-4 flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenXyzQuantifier(expIdx, bIdx)}
+                                className="text-[10px] text-orange-600 dark:text-orange-400 font-bold inline-flex items-center gap-1 bg-orange-500/10 hover:bg-orange-500/20 px-2 py-0.5 rounded-lg border border-orange-500/30 transition-all shadow-2xs"
+                                title="Apply Google XYZ formula: Accomplished [X], as measured by [Y], by doing [Z]"
+                              >
+                                <Sparkles className="w-2.5 h-2.5 text-orange-500" />
+                                <span>XYZ Impact Formula</span>
+                              </button>
                               <button
                                 type="button"
                                 onClick={() => handleOpenAiBullet(expIdx, bIdx)}
-                                className="text-[10px] text-amber-400/90 hover:text-amber-300 font-semibold inline-flex items-center gap-1 bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/20 transition-colors"
+                                className="text-[10px] text-muted-foreground hover:text-foreground font-medium inline-flex items-center gap-1 bg-surface-2/60 hover:bg-surface-2 px-2 py-0.5 rounded-lg border border-border transition-colors"
                               >
-                                <Sparkles className="w-2.5 h-2.5" />
-                                <span>Improve with Metrics</span>
+                                <span>AI Polish</span>
                               </button>
                             </div>
                           </div>
@@ -2012,7 +2033,7 @@ ${(resumeData.skills || []).join(', ')}
             {activeSection === 'education' && (
               <div className="space-y-4 text-xs">
                 {(resumeData.education || []).map((edu, eduIdx) => (
-                  <div key={edu.id || eduIdx} className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.08] space-y-2.5">
+                  <div key={edu.id || eduIdx} className="p-3.5 rounded-xl bg-primary/[0.02] border border-primary/[0.08] space-y-2.5">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-200">Education #{eduIdx + 1}</span>
                       <button
@@ -2029,7 +2050,7 @@ ${(resumeData.skills || []).join(', ')}
                       value={edu.institution || ''}
                       onChange={(e) => handleUpdateEducation(eduIdx, 'institution', e.target.value)}
                       placeholder="University / College (e.g. Stanford University)"
-                      className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                      className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
                     />
 
                     <input
@@ -2037,7 +2058,7 @@ ${(resumeData.skills || []).join(', ')}
                       value={edu.degree || ''}
                       onChange={(e) => handleUpdateEducation(eduIdx, 'degree', e.target.value)}
                       placeholder="Degree & Major (e.g. B.S. in Computer Science)"
-                      className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                      className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
                     />
 
                     <div className="grid grid-cols-2 gap-2">
@@ -2046,14 +2067,14 @@ ${(resumeData.skills || []).join(', ')}
                         value={edu.startYear || ''}
                         onChange={(e) => handleUpdateEducation(eduIdx, 'startYear', e.target.value)}
                         placeholder="Start Year (2018)"
-                        className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                        className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
                       />
                       <input
                         type="text"
                         value={edu.endYear || ''}
                         onChange={(e) => handleUpdateEducation(eduIdx, 'endYear', e.target.value)}
                         placeholder="Grad Year (2022)"
-                        className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                        className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
                       />
                     </div>
                   </div>
@@ -2071,12 +2092,12 @@ ${(resumeData.skills || []).join(', ')}
                     onChange={(e) => setSkillInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddSkill(); } }}
                     placeholder="Add skill (e.g. TypeScript, PyTorch, Docker)..."
-                    className="flex-1 bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                    className="flex-1 bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
                   />
                   <button
                     type="button"
                     onClick={handleAddSkill}
-                    className="px-3 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold text-xs"
+                    className="px-3 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary font-bold text-xs"
                   >
                     Add
                   </button>
@@ -2086,7 +2107,7 @@ ${(resumeData.skills || []).join(', ')}
                   {(resumeData.skills || []).map((skill, sIdx) => (
                     <span
                       key={sIdx}
-                      className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-slate-200 text-xs flex items-center gap-1.5 hover:border-primary/40 transition-colors"
+                      className="px-2.5 py-1 rounded-lg bg-primary/5 border border-primary/10 text-slate-200 text-xs flex items-center gap-1.5 hover:border-primary/40 transition-colors"
                     >
                       <span>{skill}</span>
                       <button
@@ -2106,7 +2127,7 @@ ${(resumeData.skills || []).join(', ')}
             {activeSection === 'projects' && (
               <div className="space-y-4 text-xs">
                 {(resumeData.projects || []).map((proj, pIdx) => (
-                  <div key={proj.id || pIdx} className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.08] space-y-2">
+                  <div key={proj.id || pIdx} className="p-3.5 rounded-xl bg-primary/[0.02] border border-primary/[0.08] space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-200">Project #{pIdx + 1}</span>
                       <button
@@ -2123,7 +2144,7 @@ ${(resumeData.skills || []).join(', ')}
                       value={proj.name || ''}
                       onChange={(e) => handleUpdateProject(pIdx, 'name', e.target.value)}
                       placeholder="Project Name"
-                      className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                      className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
                     />
 
                     <input
@@ -2131,7 +2152,7 @@ ${(resumeData.skills || []).join(', ')}
                       value={proj.technologies || ''}
                       onChange={(e) => handleUpdateProject(pIdx, 'technologies', e.target.value)}
                       placeholder="Technologies (e.g. Next.js, FastAPI, PostgreSQL)"
-                      className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                      className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
                     />
 
                     <textarea
@@ -2139,7 +2160,7 @@ ${(resumeData.skills || []).join(', ')}
                       value={proj.description || ''}
                       onChange={(e) => handleUpdateProject(pIdx, 'description', e.target.value)}
                       placeholder="Brief description of outcomes and technical highlights..."
-                      className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                      className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
                     />
                   </div>
                 ))}
@@ -2157,7 +2178,7 @@ ${(resumeData.skills || []).join(', ')}
                   <Plus className="w-3 h-3" /> Add Certificate
                 </button>
                 {(resumeData.certifications || []).map((c, cIdx) => (
-                  <div key={cIdx} className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.08] space-y-2">
+                  <div key={cIdx} className="p-3 rounded-xl bg-primary/[0.02] border border-primary/[0.08] space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="font-bold text-slate-300">Cert #{cIdx + 1}</span>
                       <button onClick={() => handleRemoveCertification(cIdx)} className="text-slate-500 hover:text-red-400">
@@ -2169,7 +2190,7 @@ ${(resumeData.skills || []).join(', ')}
                       value={c.name || ''}
                       onChange={(e) => handleUpdateCertification(cIdx, 'name', e.target.value)}
                       placeholder="Certificate Name (e.g. AWS Certified Solutions Architect)"
-                      className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                      className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
                     />
                     <div className="grid grid-cols-2 gap-2">
                       <input
@@ -2177,14 +2198,14 @@ ${(resumeData.skills || []).join(', ')}
                         value={c.issuer || ''}
                         onChange={(e) => handleUpdateCertification(cIdx, 'issuer', e.target.value)}
                         placeholder="Issuer (e.g. Amazon)"
-                        className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                        className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
                       />
                       <input
                         type="text"
                         value={c.year || ''}
                         onChange={(e) => handleUpdateCertification(cIdx, 'year', e.target.value)}
                         placeholder="Year (2023)"
-                        className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                        className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
                       />
                     </div>
                   </div>
@@ -2209,14 +2230,14 @@ ${(resumeData.skills || []).join(', ')}
                       value={l.language || ''}
                       onChange={(e) => handleUpdateLanguage(lIdx, 'language', e.target.value)}
                       placeholder="Language (e.g. English)"
-                      className="flex-1 bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                      className="flex-1 bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
                     />
                     <input
                       type="text"
                       value={l.proficiency || ''}
                       onChange={(e) => handleUpdateLanguage(lIdx, 'proficiency', e.target.value)}
                       placeholder="Proficiency (Native / Fluent)"
-                      className="w-32 bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                      className="w-32 bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
                     />
                     <button onClick={() => handleRemoveLanguage(lIdx)} className="text-slate-500 hover:text-red-400">
                       <Trash2 className="w-3.5 h-3.5" />
@@ -2236,7 +2257,7 @@ ${(resumeData.skills || []).join(', ')}
                     value={activeCustomSection.title || ''}
                     onChange={(e) => handleUpdateCustomSection(activeCustomSection.id, 'title', e.target.value)}
                     placeholder="Section Title"
-                    className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs font-bold focus:outline-none focus:border-primary"
+                    className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs font-bold focus:outline-none focus:border-primary"
                   />
                 </div>
 
@@ -2248,7 +2269,7 @@ ${(resumeData.skills || []).join(', ')}
                       value={activeCustomSection.content || ''}
                       onChange={(e) => handleUpdateCustomSection(activeCustomSection.id, 'content', e.target.value)}
                       placeholder="Write details for this section..."
-                      className="w-full bg-[#050816] border border-white/10 rounded-lg p-2.5 text-white text-xs leading-relaxed focus:outline-none focus:border-primary"
+                      className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2.5 text-primary text-xs leading-relaxed focus:outline-none focus:border-primary"
                     />
                   </div>
                 ) : (
@@ -2262,7 +2283,7 @@ ${(resumeData.skills || []).join(', ')}
                           value={item}
                           onChange={(e) => handleUpdateCustomBullet(activeCustomSection.id, itIdx, e.target.value)}
                           placeholder="Add accomplishment, publication, or detail..."
-                          className="flex-1 bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                          className="flex-1 bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
                         />
                         <button
                           type="button"
@@ -2289,66 +2310,127 @@ ${(resumeData.skills || []).join(', ')}
 
         </div>
 
-        {/* ── RIGHT COLUMN: A4 RESUME LIVE CANVAS PREVIEW (~70%) ── */}
-        <div className="lg:col-span-8 xl:col-span-8 flex flex-col items-center">
-          
-          {/* Paper Canvas Frame */}
-          <div 
-            ref={viewerContainerRef}
-            className="w-full bg-[#050A18]/80 border border-white/[0.08] rounded-3xl p-4 sm:p-6 overflow-x-auto overflow-y-auto max-h-[calc(100vh-130px)] flex justify-center custom-scrollbar shadow-2xl relative"
-          >
-            <div
-              style={{
-                width: '794px',
-                minHeight: '1123px',
-                transform: `scale(${zoomLevel / 100})`,
-                transformOrigin: 'top center',
-                transition: 'transform 0.1s ease-out',
-                marginBottom: `${(zoomLevel / 100 - 1) * 1123}px`
-              }}
-              className="shrink-0 shadow-2xl rounded-sm overflow-hidden bg-white"
-            >
-              <div ref={previewRef} className="w-[794px] bg-white min-h-[1123px]">
-                {renderActiveTemplate()}
-              </div>
+        {/* ── RIGHT COLUMN: A4 RESUME LIVE CANVAS / ATS HEATMAP PREVIEW (~70%) ── */}
+        <div className="lg:col-span-8 xl:col-span-8 flex flex-col items-center w-full">
+
+          {/* View Mode Switcher Header */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between w-full mb-3 gap-2 px-1">
+            <div className="flex items-center bg-card p-1 rounded-xl border border-border/80 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setViewMode('visual')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  viewMode === 'visual'
+                    ? 'bg-primary text-primary-foreground shadow-2xs'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Visual Canvas</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('ats-raw')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  viewMode === 'ats-raw'
+                    ? 'bg-primary text-primary-foreground shadow-2xs'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                <span>Live ATS Heatmap & Parser</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1.5 self-end sm:self-auto">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleExportText}
+                className="text-xs h-8"
+                title="Download ATS-Safe Plain Text (.txt)"
+              >
+                <Download className="w-3 h-3 mr-1" /> .TXT
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleExportJSON}
+                className="text-xs h-8"
+                title="Download JSON Resume (.json)"
+              >
+                <FileCode className="w-3 h-3 mr-1 text-amber-500" /> .JSON
+              </Button>
             </div>
           </div>
 
-          {/* Minimalist Floating Zoom & Canvas Controls */}
-          <div className="mt-3 bg-[#0A1024]/90 backdrop-blur-md border border-white/10 px-4 py-1.5 rounded-full flex items-center gap-3 text-xs text-slate-300 shadow-xl">
-            <button
-              onClick={() => setZoomLevel(prev => Math.max(40, prev - 10))}
-              className="hover:text-white font-bold px-1"
-              title="Zoom Out"
-            >
-              −
-            </button>
-            <span className="font-mono text-[11px] w-9 text-center text-slate-400">{zoomLevel}%</span>
-            <button
-              onClick={() => setZoomLevel(prev => Math.min(130, prev + 10))}
-              className="hover:text-white font-bold px-1"
-              title="Zoom In"
-            >
-              +
-            </button>
-            <span className="w-px h-3 bg-white/10"></span>
-            <button
-              onClick={handleFitWidth}
-              className="hover:text-white font-medium text-[11px]"
-              title="Fit to Container"
-            >
-              Fit
-            </button>
-            <span className="w-px h-3 bg-white/10"></span>
-            <button
-              onClick={() => setIsFullscreenPreview(true)}
-              className="hover:text-white"
-              title="Fullscreen Preview"
-            >
-              <Maximize className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          {viewMode === 'ats-raw' ? (
+            <AtsHeatmapViewer
+              resumeData={resumeData}
+              onExportText={handleExportText}
+              onExportJSON={handleExportJSON}
+              onExportPDF={handleExportPDF}
+            />
+          ) : (
+            <>
+              {/* Paper Canvas Frame */}
+              <div
+                ref={viewerContainerRef}
+                className="w-full bg-card/60 border border-border/70 rounded-3xl p-4 sm:p-6 overflow-x-auto overflow-y-auto max-h-[calc(100vh-160px)] flex justify-center custom-scrollbar shadow-xl relative"
+              >
+                <div
+                  style={{
+                    width: '794px',
+                    minHeight: '1123px',
+                    transform: `scale(${zoomLevel / 100})`,
+                    transformOrigin: 'top center',
+                    transition: 'transform 0.1s ease-out',
+                    marginBottom: `${(zoomLevel / 100 - 1) * 1123}px`
+                  }}
+                  className="shrink-0 shadow-2xl rounded-sm overflow-hidden bg-white"
+                >
+                  <div ref={previewRef} className="w-[794px] bg-white min-h-[1123px]">
+                    {renderActiveTemplate()}
+                  </div>
+                </div>
+              </div>
 
+              {/* Minimalist Floating Zoom & Canvas Controls */}
+              <div className="mt-3 bg-card/90 backdrop-blur-md border border-border/80 px-4 py-1.5 rounded-full flex items-center gap-3 text-xs text-muted-foreground shadow-lg">
+                <button
+                  onClick={() => setZoomLevel(prev => Math.max(40, prev - 10))}
+                  className="hover:text-foreground font-bold px-1"
+                  title="Zoom Out"
+                >
+                  −
+                </button>
+                <span className="font-mono text-[11px] w-9 text-center text-foreground font-medium">{zoomLevel}%</span>
+                <button
+                  onClick={() => setZoomLevel(prev => Math.min(130, prev + 10))}
+                  className="hover:text-foreground font-bold px-1"
+                  title="Zoom In"
+                >
+                  +
+                </button>
+                <span className="w-px h-3 bg-border"></span>
+                <button
+                  onClick={handleFitWidth}
+                  className="hover:text-foreground font-medium text-[11px]"
+                  title="Fit to Container"
+                >
+                  Fit
+                </button>
+                <span className="w-px h-3 bg-border"></span>
+                <button
+                  onClick={() => setIsFullscreenPreview(true)}
+                  className="hover:text-foreground"
+                  title="Fullscreen Preview"
+                >
+                  <Maximize className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
       </div>
@@ -2361,16 +2443,16 @@ ${(resumeData.skills || []).join(', ')}
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-[#0B1228] border border-white/10 rounded-2xl p-5 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
+              className="bg-[#0B1228] border border-primary/10 rounded-2xl p-5 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
             >
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <div className="flex items-center gap-2 text-white font-bold text-sm">
+              <div className="flex items-center justify-between border-b border-primary/10 pb-3">
+                <div className="flex items-center gap-2 text-primary font-bold text-sm">
                   <Plus className="w-4 h-4 text-primary" />
                   <span>Add or Restore Section</span>
                 </div>
                 <button
                   onClick={() => setIsAddSectionModalOpen(false)}
-                  className="text-slate-400 hover:text-white"
+                  className="text-slate-400 hover:text-primary"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -2388,16 +2470,16 @@ ${(resumeData.skills || []).join(', ')}
                       return (
                         <div
                           key={sec.id}
-                          className="p-2.5 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-between"
+                          className="p-2.5 rounded-xl bg-primary/[0.03] border border-primary/10 flex items-center justify-between"
                         >
-                          <div className="flex items-center gap-2 text-xs text-white">
+                          <div className="flex items-center gap-2 text-xs text-primary">
                             <Icon className="w-3.5 h-3.5 text-primary" />
                             <span>{sec.label}</span>
                           </div>
                           <button
                             type="button"
                             onClick={() => handleToggleHideSection(sec.id)}
-                            className="px-2.5 py-1 rounded-lg bg-primary text-white text-[11px] font-semibold hover:bg-primary/90 transition-all flex items-center gap-1"
+                            className="px-2.5 py-1 rounded-lg bg-primary text-primary text-[11px] font-semibold hover:bg-primary/90 transition-all flex items-center gap-1"
                           >
                             <Plus className="w-3 h-3" />
                             <span>Restore</span>
@@ -2410,7 +2492,7 @@ ${(resumeData.skills || []).join(', ')}
               )}
 
               {/* 2. Quick Preset Additions */}
-              <div className="space-y-2 pt-2 border-t border-white/[0.06]">
+              <div className="space-y-2 pt-2 border-t border-primary/[0.06]">
                 <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                   Popular Sections
                 </div>
@@ -2422,7 +2504,7 @@ ${(resumeData.skills || []).join(', ')}
                         key={pIdx}
                         type="button"
                         onClick={() => handleAddCustomSection(preset.title, preset.style)}
-                        className="p-2.5 rounded-xl bg-white/[0.03] hover:bg-primary/15 border border-white/10 hover:border-primary/40 text-left transition-all group"
+                        className="p-2.5 rounded-xl bg-primary/[0.03] hover:bg-primary/15 border border-primary/10 hover:border-primary/40 text-left transition-all group"
                       >
                         <div className="flex items-center gap-2 text-xs font-bold text-slate-200 group-hover:text-primary">
                           <Icon className="w-3.5 h-3.5 text-slate-400 group-hover:text-primary" />
@@ -2436,7 +2518,7 @@ ${(resumeData.skills || []).join(', ')}
               </div>
 
               {/* 3. Create Custom Section */}
-              <div className="space-y-2.5 pt-2 border-t border-white/[0.06]">
+              <div className="space-y-2.5 pt-2 border-t border-primary/[0.06]">
                 <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                   Create Custom Section
                 </div>
@@ -2445,29 +2527,27 @@ ${(resumeData.skills || []).join(', ')}
                   value={newCustomTitle}
                   onChange={(e) => setNewCustomTitle(e.target.value)}
                   placeholder="e.g. Leadership, Patents, Hackathons..."
-                  className="w-full bg-[#050816] border border-white/10 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-primary"
+                  className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2.5 text-primary text-xs focus:outline-none focus:border-primary"
                 />
 
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => setNewCustomStyle('bullets')}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                      newCustomStyle === 'bullets'
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all ${newCustomStyle === 'bullets'
                         ? 'bg-primary/20 border-primary text-primary'
-                        : 'bg-white/[0.02] border-white/10 text-slate-400'
-                    }`}
+                        : 'bg-primary/[0.02] border-primary/10 text-slate-400'
+                      }`}
                   >
                     Bullet List
                   </button>
                   <button
                     type="button"
                     onClick={() => setNewCustomStyle('paragraph')}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-                      newCustomStyle === 'paragraph'
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all ${newCustomStyle === 'paragraph'
                         ? 'bg-primary/20 border-primary text-primary'
-                        : 'bg-white/[0.02] border-white/10 text-slate-400'
-                    }`}
+                        : 'bg-primary/[0.02] border-primary/10 text-slate-400'
+                      }`}
                   >
                     Paragraph Text
                   </button>
@@ -2477,7 +2557,7 @@ ${(resumeData.skills || []).join(', ')}
                   type="button"
                   onClick={() => handleAddCustomSection(newCustomTitle, newCustomStyle)}
                   disabled={!newCustomTitle.trim()}
-                  className="w-full py-2 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-xs shadow-md disabled:opacity-40 transition-all flex items-center justify-center gap-1.5"
+                  className="w-full py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary font-bold text-xs shadow-md disabled:opacity-40 transition-all flex items-center justify-center gap-1.5"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Create Section</span>
@@ -2497,25 +2577,25 @@ ${(resumeData.skills || []).join(', ')}
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-[#0B1228] border border-white/10 rounded-2xl p-5 max-w-md w-full shadow-2xl space-y-4"
+              className="bg-[#0B1228] border border-primary/10 rounded-2xl p-5 max-w-md w-full shadow-2xl space-y-4"
             >
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <div className="flex items-center gap-2 text-white font-bold text-sm">
+              <div className="flex items-center justify-between border-b border-primary/10 pb-3">
+                <div className="flex items-center gap-2 text-primary font-bold text-sm">
                   <Save className="w-4 h-4 text-amber-400" />
                   <span>Save Style as New Template</span>
                 </div>
                 <button
                   onClick={() => setIsSaveCurrentModalOpen(false)}
-                  className="text-slate-400 hover:text-white"
+                  className="text-slate-400 hover:text-primary"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/10 space-y-2 text-xs">
+              <div className="p-3 rounded-xl bg-primary/[0.02] border border-primary/10 space-y-2 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400">Current Base Layout:</span>
-                  <span className="font-bold text-white uppercase font-mono">{selectedTemplate}</span>
+                  <span className="font-bold text-primary uppercase font-mono">{selectedTemplate}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400">Accent Color:</span>
@@ -2538,7 +2618,7 @@ ${(resumeData.skills || []).join(', ')}
                     value={saveCurrentTemplateName}
                     onChange={(e) => setSaveCurrentTemplateName(e.target.value)}
                     placeholder="e.g. Google Principal Minimal, Fintech Dark"
-                    className="w-full bg-[#050816] border border-white/10 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-primary"
+                    className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2.5 text-primary text-xs focus:outline-none focus:border-primary"
                   />
                 </div>
 
@@ -2549,7 +2629,7 @@ ${(resumeData.skills || []).join(', ')}
                     value={saveCurrentTemplateDesc}
                     onChange={(e) => setSaveCurrentTemplateDesc(e.target.value)}
                     placeholder="e.g. Optimized for FAANG engineering management"
-                    className="w-full bg-[#050816] border border-white/10 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-primary"
+                    className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2.5 text-primary text-xs focus:outline-none focus:border-primary"
                   />
                 </div>
 
@@ -2557,7 +2637,7 @@ ${(resumeData.skills || []).join(', ')}
                   type="button"
                   onClick={handleSaveCurrentAsTemplate}
                   disabled={!saveCurrentTemplateName.trim()}
-                  className="w-full py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-xs shadow-md disabled:opacity-40 transition-all flex items-center justify-center gap-1.5"
+                  className="w-full py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary font-bold text-xs shadow-md disabled:opacity-40 transition-all flex items-center justify-center gap-1.5"
                 >
                   <Save className="w-3.5 h-3.5" />
                   <span>Save & Add to Templates</span>
@@ -2586,10 +2666,10 @@ ${(resumeData.skills || []).join(', ')}
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-[#0B1228] border border-white/10 rounded-2xl p-5 max-w-lg w-full shadow-2xl space-y-4"
+              className="bg-[#0B1228] border border-primary/10 rounded-2xl p-5 max-w-lg w-full shadow-2xl space-y-4"
             >
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <div className="flex items-center gap-2 text-white font-bold text-sm">
+              <div className="flex items-center justify-between border-b border-primary/10 pb-3">
+                <div className="flex items-center gap-2 text-primary font-bold text-sm">
                   <Sparkles className="w-4 h-4 text-amber-400" />
                   <span>
                     {aiModal.type === 'bullet' && 'AI Bullet Enhancer'}
@@ -2600,7 +2680,7 @@ ${(resumeData.skills || []).join(', ')}
                 </div>
                 <button
                   onClick={() => setAiModal(prev => ({ ...prev, isOpen: false }))}
-                  className="text-slate-400 hover:text-white"
+                  className="text-slate-400 hover:text-primary"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -2614,7 +2694,7 @@ ${(resumeData.skills || []).join(', ')}
                     value={aiModal.jdText}
                     onChange={(e) => setAiModal(prev => ({ ...prev, jdText: e.target.value }))}
                     placeholder="Paste job requirements here..."
-                    className="w-full bg-[#050816] border border-white/10 rounded-xl p-3 text-white text-xs focus:outline-none focus:border-primary"
+                    className="w-full bg-[#050816] border border-primary/10 rounded-xl p-3 text-primary text-xs focus:outline-none focus:border-primary"
                   />
                   <button
                     type="button"
@@ -2629,7 +2709,7 @@ ${(resumeData.skills || []).join(', ')}
                         ]
                       }));
                     }}
-                    className="w-full py-2 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold"
+                    className="w-full py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary font-bold"
                   >
                     Analyze & Align Resume
                   </button>
@@ -2645,9 +2725,9 @@ ${(resumeData.skills || []).join(', ')}
                   <div
                     key={idx}
                     onClick={() => handleApplyAiSuggestion(sug)}
-                    className="p-3 rounded-xl bg-white/[0.03] hover:bg-amber-500/10 border border-white/10 hover:border-amber-500/30 cursor-pointer text-xs text-slate-200 transition-all flex items-start justify-between gap-3 group"
+                    className="p-3 rounded-xl bg-primary/[0.03] hover:bg-amber-500/10 border border-primary/10 hover:border-amber-500/30 cursor-pointer text-xs text-slate-200 transition-all flex items-start justify-between gap-3 group"
                   >
-                    <p className="leading-relaxed group-hover:text-white">{sug}</p>
+                    <p className="leading-relaxed group-hover:text-primary">{sug}</p>
                     <CheckCheck className="w-4 h-4 text-amber-400 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                 ))}
@@ -2660,20 +2740,20 @@ ${(resumeData.skills || []).join(', ')}
       {/* ── FULLSCREEN PREVIEW MODAL ────────────────────────────────────── */}
       {isFullscreenPreview && (
         <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col p-4 sm:p-6 overflow-y-auto">
-          <div className="flex items-center justify-between pb-4 max-w-5xl mx-auto w-full border-b border-white/10">
-            <h2 className="text-sm font-bold text-white">Full-Screen Resume Canvas</h2>
+          <div className="flex items-center justify-between pb-4 max-w-5xl mx-auto w-full border-b border-border/60">
+            <h2 className="text-sm font-bold text-foreground">Full-Screen Resume Canvas</h2>
             <div className="flex items-center gap-3">
-              <button
-                type="button"
+              <Button
+                size="sm"
+                variant="default"
                 onClick={handleExportPDF}
-                className="px-3.5 py-1.5 rounded-xl bg-primary text-white text-xs font-semibold flex items-center gap-1.5"
               >
-                <Download className="w-3.5 h-3.5" /> Download PDF
-              </button>
+                <Download className="w-3.5 h-3.5 mr-1" /> Download PDF
+              </Button>
               <button
                 type="button"
                 onClick={() => setIsFullscreenPreview(false)}
-                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white"
+                className="p-1.5 rounded-lg bg-surface-2 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Minimize2 className="w-4 h-4" />
               </button>
@@ -2681,12 +2761,20 @@ ${(resumeData.skills || []).join(', ')}
           </div>
 
           <div className="flex-1 flex justify-center items-start pt-6 pb-12 overflow-y-auto">
-            <div className="w-[794px] bg-white min-h-[1123px] shadow-2xl rounded-sm">
+            <div className="w-[794px] bg-white min-h-[1123px] shadow-2xl rounded-sm overflow-hidden">
               {renderActiveTemplate()}
             </div>
           </div>
         </div>
       )}
+
+      {/* ── LAYER 3C: GOOGLE XYZ QUANTIFIER FORMULA MODAL ──────────────── */}
+      <XyzQuantifierModal
+        isOpen={xyzModal.isOpen}
+        onClose={() => setXyzModal(prev => ({ ...prev, isOpen: false }))}
+        initialText={xyzModal.text}
+        onApply={handleApplyXyzFormula}
+      />
 
     </div>
   );

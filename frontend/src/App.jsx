@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Outlet, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
@@ -24,10 +24,8 @@ import JdAnalyzer from './pages/JdAnalyzer';
 import ResumeBuilder from './pages/ResumeBuilder';
 import CareerVault from './pages/CareerVault';
 import CareerAdvisor from './pages/CareerAdvisor';
-import JobApplications from './pages/JobApplications';
 import OnboardingWizard from './pages/OnboardingWizard';
 
-import Dashboard from './pages/workspace/Dashboard';
 import ResumeStudio from './pages/workspace/ResumeStudio';
 import JDTailor from './pages/workspace/JDTailor';
 import InterviewQuestionBank from './pages/workspace/InterviewQuestionBank';
@@ -93,19 +91,11 @@ function App() {
                   </ProtectedRoute>
                 }
               >
-                {/* 1. Dashboard */}
-                <Route path="/dashboard" element={<Dashboard />} />
+                {/* Fallbacks & Defaults */}
+                <Route path="/dashboard" element={<Navigate to="/resume-studio" replace />} />
                 <Route path="/result/:id" element={<AtsResult />} />
 
-                {/* 2. My Career */}
-                <Route path="/profile" element={<CareerVault />} />
-                <Route path="/profile/edit" element={<CareerVault />} />
-                <Route path="/career-profile" element={<CareerVault />} />
-                <Route path="/career/advisor" element={<CareerAdvisor />} />
-                <Route path="/career/skills" element={<CareerIntelligence />} />
-                <Route path="/career/goals" element={<CareerVault />} />
-
-                {/* 3. Resume */}
+                {/* 1. Resume Studio */}
                 <Route path="/resumes" element={<ResumeStudio />} />
                 <Route path="/resumes/new" element={<ResumeBuilder />} />
                 <Route path="/resumes/:id" element={<ResumeBuilder />} />
@@ -122,20 +112,15 @@ function App() {
                 <Route path="/ats" element={<AtsAnalyzer />} />
                 <Route path="/ats/:analysisId" element={<AtsResult />} />
 
-                {/* 4. JD Match */}
+                {/* 2. JD Match */}
                 <Route path="/jd-match" element={<JdAnalyzer />} />
                 <Route path="/jd-match/new" element={<JdAnalyzer />} />
                 <Route path="/jd-match/:id" element={<JdAnalyzer />} />
                 <Route path="/jd-analyzer" element={<JdAnalyzer />} />
                 <Route path="/jd-matcher" element={<JdAnalyzer />} />
-                <Route path="/jobs/analyzer" element={<JdAnalyzer />} />
+                <Route path="/jd-tailor" element={<JDTailor />} />
 
-                {/* 5. Applications */}
-                <Route path="/applications" element={<JobApplications />} />
-                <Route path="/applications/new" element={<JobApplications />} />
-                <Route path="/applications/:id" element={<JobApplications />} />
-
-                {/* 6. Interview Hub */}
+                {/* 3. Interview Coach */}
                 <Route path="/interviews" element={<InterviewHub />} />
                 <Route path="/interview" element={<InterviewHub />} />
                 <Route path="/interview-hub" element={<InterviewHub />} />
@@ -146,19 +131,25 @@ function App() {
                 <Route path="/interview/questions" element={<InterviewQuestionBank />} />
                 <Route path="/interviews/reports" element={<InterviewReports />} />
                 <Route path="/interview/reports" element={<InterviewReports />} />
-                <Route path="/interviews/reports/:reportId" element={<InterviewReport />} />
                 <Route path="/interview/reports/:reportId" element={<InterviewReport />} />
                 <Route path="/interview/project" element={<ProjectPreparation />} />
 
-                {/* 7. Career Vault & Documents */}
+                {/* 4. Portfolio / Career Vault */}
+                <Route path="/portfolio" element={<CareerVault />} />
+                <Route path="/profile" element={<CareerVault />} />
+                <Route path="/profile/edit" element={<CareerVault />} />
+                <Route path="/career-profile" element={<CareerVault />} />
+                <Route path="/career-vault" element={<CareerVault />} />
                 <Route path="/vault" element={<CareerVault />} />
                 <Route path="/vault/documents" element={<DocumentsPage />} />
-                <Route path="/career-vault" element={<CareerVault />} />
                 <Route path="/documents" element={<DocumentsPage />} />
                 <Route path="/documents/cover-letter" element={<CoverLetterPage />} />
                 <Route path="/cover-letter" element={<CoverLetterPage />} />
+                <Route path="/career/advisor" element={<CareerAdvisor />} />
+                <Route path="/career/skills" element={<CareerIntelligence />} />
+                <Route path="/career/goals" element={<CareerVault />} />
 
-                {/* 8. Onboarding & Settings */}
+                {/* 5. Onboarding & Settings */}
                 <Route path="/onboarding" element={<OnboardingWizard />} />
                 <Route path="/settings" element={<SettingsPage />} />
               </Route>

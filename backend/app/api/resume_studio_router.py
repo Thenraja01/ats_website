@@ -24,7 +24,7 @@ studio_router = APIRouter(prefix="/studio", tags=["Resume Studio"])
 
 TEMPLATES = [
     {"id": "modern", "name": "Modern", "description": "Clean two-column layout with accent headings."},
-    {"id": "minimal", "name": "Minimal", "description": "Single column, generous whitespace, timeless."},
+    {"id": "minimal", "name": "Minimal", "description": "Single column, generous primaryspace, timeless."},
     {"id": "professional", "name": "Professional", "description": "Balanced classic layout for corporate roles."},
     {"id": "technical", "name": "Technical", "description": "Skill-first layout built for engineering roles."},
     {"id": "executive", "name": "Executive", "description": "Leadership-forward layout with a strong summary."},

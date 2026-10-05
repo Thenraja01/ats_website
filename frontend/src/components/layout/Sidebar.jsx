@@ -18,7 +18,7 @@ import {
 function Brand() {
   return (
     <div className="flex items-center gap-2.5 px-2">
-      <div className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent text-white shadow-md">
+      <div className="flex size-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent text-primary shadow-md">
         <span className="font-heading text-sm font-bold">H</span>
       </div>
       <div>

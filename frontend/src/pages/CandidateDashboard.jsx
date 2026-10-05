@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FileText, Clock, TrendingUp, Loader2, Plus, History, 
+import {
+  FileText, Clock, TrendingUp, Loader2, Plus, History,
   BarChart3, ArrowUpRight, X, RefreshCw, Upload, Trash2,
-  Briefcase, CheckCircle2, Star, ExternalLink, File, 
+  Briefcase, CheckCircle2, Star, ExternalLink, File,
   Download, Copy, Sparkles, User, ShieldCheck
 } from 'lucide-react';
 import { resumeAPI, candidateAPI } from '../services/api';
@@ -12,10 +12,10 @@ import { getApiErrorMessage } from '../utils';
 import { GlassCard, Badge, GlowButton } from '../components/ui/GlassCard';
 import { staggerContainer, fadeInUp } from '../constants/theme';
 import { toast } from 'sonner';
-import { 
-  getMasterCareerProfile, 
-  calculateProfileScore, 
-  SYNC_EVENT_NAME 
+import {
+  getMasterCareerProfile,
+  calculateProfileScore,
+  SYNC_EVENT_NAME
 } from '../services/careerProfileSync';
 
 export default function CandidateDashboard() {
@@ -140,7 +140,7 @@ export default function CandidateDashboard() {
 
   const handleDownloadLetter = () => {
     const element = document.createElement("a");
-    const file = new Blob([generatedLetter], {type: 'text/plain'});
+    const file = new Blob([generatedLetter], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
     element.download = `Cover-Letter-${jobTitleForLetter.replace(/\s+/g, '-')}.txt`;
     document.body.appendChild(element);
@@ -176,7 +176,7 @@ export default function CandidateDashboard() {
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="glass rounded-2xl p-8 max-w-md text-center border-red-500/20">
           <X className="w-12 h-12 text-red-400 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-white mb-2">Failed to Load</h2>
+          <h2 className="text-xl font-bold text-primary mb-2">Failed to Load</h2>
           <p className="text-slate-400 mb-6">{error}</p>
           <GlowButton onClick={fetchData}><RefreshCw className="w-4 h-4" /> Retry</GlowButton>
         </div>
@@ -185,7 +185,7 @@ export default function CandidateDashboard() {
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="max-w-6xl mx-auto"
       variants={staggerContainer}
       initial="hidden"
@@ -194,11 +194,11 @@ export default function CandidateDashboard() {
       {/* Header */}
       <motion.div variants={fadeInUp} className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white font-heading mb-1">Candidate Portal</h1>
+          <h1 className="text-3xl font-bold text-primary font-heading mb-1">Candidate Portal</h1>
           <p className="text-slate-400 text-sm">Manage your resumes, track ATS scores, and monitor job applications.</p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <button onClick={fetchData} className="p-2.5 rounded-xl glass text-slate-400 hover:text-white transition-all">
+          <button onClick={fetchData} className="p-2.5 rounded-xl glass text-slate-400 hover:text-primary transition-all">
             <RefreshCw className="w-4 h-4" />
           </button>
           <Link
@@ -209,13 +209,13 @@ export default function CandidateDashboard() {
           </Link>
           <Link
             to="/jobs"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white hover:bg-white/10 text-sm font-semibold hover:scale-105 active:scale-95 transition-all"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/5 border border-primary/10 text-slate-300 hover:text-primary hover:bg-primary/10 text-sm font-semibold hover:scale-105 active:scale-95 transition-all"
           >
             <Briefcase className="w-4 h-4" /> Browse Jobs
           </Link>
           <Link
             to="/upload"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-accent text-white text-sm font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-accent text-primary text-sm font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all"
           >
             <Plus className="w-4 h-4" /> New Analysis
           </Link>
@@ -223,23 +223,22 @@ export default function CandidateDashboard() {
       </motion.div>
 
       {/* Master Career Profile Readiness Banner */}
-      <motion.div variants={fadeInUp} className="mb-8 p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-[#0C142E] via-[#0A1026] to-[#0D1838] border border-white/[0.08] shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+      <motion.div variants={fadeInUp} className="mb-8 p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-[#0C142E] via-[#0A1026] to-[#0D1838] border border-primary/[0.08] shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-5">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-2xl bg-primary/20 text-primary flex items-center justify-center font-bold text-base font-heading shrink-0 shadow-inner">
             {profileScore}%
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-white">Master Career Profile Readiness</h3>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                profileScore >= 80 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'
-              }`}>
+              <h3 className="text-sm font-bold text-primary">Master Career Profile Readiness</h3>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${profileScore >= 80 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'
+                }`}>
                 {profileScore >= 80 ? 'Verified & Ready' : 'Setup Incomplete'}
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-1 max-w-xl">
-              {profileScore >= 80 
-                ? 'Your verified profile is active as the single source of truth for all AI resume tailoring and JD matching.' 
+              {profileScore >= 80
+                ? 'Your verified profile is active as the single source of truth for all AI resume tailoring and JD matching.'
                 : 'Complete your initial profile setup wizard to unlock 100% accurate, zero-hallucination AI resume generation.'}
             </p>
           </div>
@@ -248,14 +247,14 @@ export default function CandidateDashboard() {
         <div className="flex items-center gap-2.5 shrink-0">
           <Link
             to="/onboarding"
-            className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all"
+            className="px-4 py-2 rounded-xl bg-primary/5 hover:bg-primary/10 border border-primary/10 text-slate-200 hover:text-primary text-xs font-semibold flex items-center gap-1.5 transition-all"
           >
             <Sparkles className="w-3.5 h-3.5 text-accent" />
             <span>Setup Wizard</span>
           </Link>
           <Link
             to="/career-profile"
-            className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold shadow-md shadow-primary/25 hover:bg-primary/90 flex items-center gap-1.5 transition-all"
+            className="px-4 py-2 rounded-xl bg-primary text-primary text-xs font-semibold shadow-md shadow-primary/25 hover:bg-primary/90 flex items-center gap-1.5 transition-all"
           >
             <User className="w-3.5 h-3.5" />
             <span>Edit Profile</span>
@@ -275,19 +274,19 @@ export default function CandidateDashboard() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1, duration: 0.4 }}
-            className="glass rounded-2xl !p-6 border-white/[0.06]"
+            className="glass rounded-2xl !p-6 border-primary/[0.06]"
           >
             <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center mb-3`}>
               <stat.icon className={`w-5 h-5 ${stat.color}`} />
             </div>
             <p className="text-slate-400 text-xs mb-1">{stat.label}</p>
-            <p className="text-3xl font-bold text-white">{stat.value}</p>
+            <p className="text-3xl font-bold text-primary">{stat.value}</p>
           </motion.div>
         ))}
       </motion.div>
 
       {/* Navigation Tabs */}
-      <motion.div variants={fadeInUp} className="flex flex-wrap gap-2 mb-6 glass rounded-xl p-1 w-fit border border-white/[0.06]">
+      <motion.div variants={fadeInUp} className="flex flex-wrap gap-2 mb-6 glass rounded-xl p-1 w-fit border border-primary/[0.06]">
         {[
           { id: 'analyses', label: 'ATS Scans', icon: BarChart3 },
           { id: 'resumes', label: `Resume Locker (${resumes.length})`, icon: FileText },
@@ -297,9 +296,8 @@ export default function CandidateDashboard() {
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              activeTab === t.id ? 'bg-primary/20 text-primary shadow-sm' : 'text-slate-400 hover:text-white'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === t.id ? 'bg-primary/20 text-primary shadow-sm' : 'text-slate-400 hover:text-primary'
+              }`}
           >
             <t.icon className="w-4 h-4" />
             {t.label}
@@ -311,30 +309,30 @@ export default function CandidateDashboard() {
       {activeTab === 'analyses' && (
         <motion.div variants={fadeInUp}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Recent Analyses</h2>
+            <h2 className="text-lg font-semibold text-primary">Recent Analyses</h2>
             {analyses.length > 5 && (
               <Link to="/candidate/analyses" className="text-sm text-primary hover:text-accent transition-colors">View All History</Link>
             )}
           </div>
 
           {analyses.length === 0 ? (
-            <div className="glass rounded-2xl p-12 text-center border-white/[0.06]">
+            <div className="glass rounded-2xl p-12 text-center border-primary/[0.06]">
               <History className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-white mb-2">No analyses yet</h3>
+              <h3 className="text-lg font-semibold text-primary mb-2">No analyses yet</h3>
               <p className="text-slate-400 text-sm mb-6">Upload your first resume and job description to get started.</p>
               <Link
                 to="/upload"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-accent text-white text-sm font-semibold shadow-lg shadow-primary/25"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-accent text-primary text-sm font-semibold shadow-lg shadow-primary/25"
               >
                 <Plus className="w-4 h-4" /> Analyze Resume
               </Link>
             </div>
           ) : (
-            <div className="glass rounded-2xl overflow-hidden border-white/[0.06]">
+            <div className="glass rounded-2xl overflow-hidden border-primary/[0.06]">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="border-b border-white/[0.06]">
+                    <tr className="border-b border-primary/[0.06]">
                       <th className="p-4 text-xs font-medium text-slate-500 uppercase tracking-wider">Date</th>
                       <th className="p-4 text-xs font-medium text-slate-500 uppercase tracking-wider">Score</th>
                       <th className="p-4 text-xs font-medium text-slate-500 uppercase tracking-wider">Eligible</th>
@@ -342,21 +340,20 @@ export default function CandidateDashboard() {
                       <th className="p-4 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/[0.06]">
+                  <tbody className="divide-y divide-primary/[0.06]">
                     {analyses.map((item, i) => (
                       <tr
                         key={item.id}
                         onClick={() => navigate(`/result/${item.id}`)}
-                        className="hover:bg-white/[0.02] transition-colors cursor-pointer"
+                        className="hover:bg-primary/[0.02] transition-colors cursor-pointer"
                       >
                         <td className="p-4 text-sm text-slate-300">{formatDate(item.created_at)}</td>
                         <td className="p-4">
                           <div className="flex items-center gap-2">
-                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold ${
-                              item.ats_score >= 80 ? 'bg-emerald-500/15 text-emerald-400' :
-                              item.ats_score >= 60 ? 'bg-amber-500/15 text-amber-400' :
-                              'bg-red-500/15 text-red-400'
-                            }`}>
+                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold ${item.ats_score >= 80 ? 'bg-emerald-500/15 text-emerald-400' :
+                                item.ats_score >= 60 ? 'bg-amber-500/15 text-amber-400' :
+                                  'bg-red-500/15 text-red-400'
+                              }`}>
                               {item.ats_score}
                             </div>
                           </div>
@@ -377,7 +374,7 @@ export default function CandidateDashboard() {
                           </div>
                         </td>
                         <td className="p-4 text-right">
-                          <button className="p-2 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-all">
+                          <button className="p-2 rounded-lg hover:bg-primary/5 text-slate-400 hover:text-primary transition-all">
                             <ArrowUpRight className="w-4 h-4" />
                           </button>
                         </td>
@@ -395,7 +392,7 @@ export default function CandidateDashboard() {
       {activeTab === 'resumes' && (
         <motion.div variants={fadeInUp} className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-white">Resume Locker</h2>
+            <h2 className="text-lg font-semibold text-primary">Resume Locker</h2>
             <div className="relative">
               <input
                 type="file"
@@ -407,9 +404,8 @@ export default function CandidateDashboard() {
               />
               <label
                 htmlFor="locker-file-upload"
-                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/20 border border-primary/30 hover:border-primary text-primary hover:text-white text-xs font-semibold cursor-pointer transition-all ${
-                  uploadingResume ? 'opacity-50 pointer-events-none' : ''
-                }`}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/20 border border-primary/30 hover:border-primary text-primary hover:text-primary text-xs font-semibold cursor-pointer transition-all ${uploadingResume ? 'opacity-50 pointer-events-none' : ''
+                  }`}
               >
                 {uploadingResume ? (
                   <>
@@ -425,9 +421,9 @@ export default function CandidateDashboard() {
           </div>
 
           {resumes.length === 0 ? (
-            <div className="glass rounded-2xl p-12 text-center border-white/[0.06]">
+            <div className="glass rounded-2xl p-12 text-center border-primary/[0.06]">
               <FileText className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-white mb-2">Locker is empty</h3>
+              <h3 className="text-lg font-semibold text-primary mb-2">Locker is empty</h3>
               <p className="text-slate-400 text-sm">Upload resumes here so you can reuse them to apply for jobs matching your compatibility.</p>
             </div>
           ) : (
@@ -439,7 +435,7 @@ export default function CandidateDashboard() {
                       <FileText className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-white truncate max-w-[200px] sm:max-w-[300px]" title={r.original_filename}>
+                      <p className="text-sm font-semibold text-primary truncate max-w-[200px] sm:max-w-[300px]" title={r.original_filename}>
                         {r.original_filename}
                       </p>
                       <p className="text-xs text-slate-500 mt-1">Uploaded {formatDate(r.created_at)}</p>
@@ -447,7 +443,7 @@ export default function CandidateDashboard() {
                   </div>
                   <button
                     onClick={() => handleDeleteResume(r.id)}
-                    className="p-2 rounded-lg bg-white/5 hover:bg-red-500/10 text-slate-400 hover:text-red-400 transition-all border border-white/5 hover:border-red-500/20"
+                    className="p-2 rounded-lg bg-primary/5 hover:bg-red-500/10 text-slate-400 hover:text-red-400 transition-all border border-primary/5 hover:border-red-500/20"
                     title="Remove from locker"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -463,28 +459,28 @@ export default function CandidateDashboard() {
       {activeTab === 'applications' && (
         <motion.div variants={fadeInUp}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">Submitted Job Applications</h2>
+            <h2 className="text-lg font-semibold text-primary">Submitted Job Applications</h2>
             <span className="text-xs text-slate-500">{applications.length} applied</span>
           </div>
 
           {applications.length === 0 ? (
-            <div className="glass rounded-2xl p-12 text-center border-white/[0.06]">
+            <div className="glass rounded-2xl p-12 text-center border-primary/[0.06]">
               <Briefcase className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-white mb-2">No active applications</h3>
+              <h3 className="text-lg font-semibold text-primary mb-2">No active applications</h3>
               <p className="text-slate-400 text-sm mb-6">You haven&apos;t applied to any job listings yet.</p>
               <Link
                 to="/jobs"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-accent text-white text-sm font-semibold shadow-lg shadow-primary/25"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-accent text-primary text-sm font-semibold shadow-lg shadow-primary/25"
               >
                 Browse open jobs <ArrowUpRight className="w-4 h-4" />
               </Link>
             </div>
           ) : (
-            <div className="glass rounded-2xl overflow-hidden border-white/[0.06]">
+            <div className="glass rounded-2xl overflow-hidden border-primary/[0.06]">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="border-b border-white/[0.06]">
+                    <tr className="border-b border-primary/[0.06]">
                       <th className="p-4 text-xs font-medium text-slate-500 uppercase tracking-wider">Job Title</th>
                       <th className="p-4 text-xs font-medium text-slate-500 uppercase tracking-wider">Match Score</th>
                       <th className="p-4 text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
@@ -492,29 +488,27 @@ export default function CandidateDashboard() {
                       <th className="p-4 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">Details</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/[0.06]">
+                  <tbody className="divide-y divide-primary/[0.06]">
                     {applications.map((app) => (
-                      <tr key={app.id} className="hover:bg-white/[0.02] transition-colors">
+                      <tr key={app.id} className="hover:bg-primary/[0.02] transition-colors">
                         <td className="p-4">
-                          <p className="text-sm font-medium text-white">{app.job_title || 'Position Application'}</p>
+                          <p className="text-sm font-medium text-primary">{app.job_title || 'Position Application'}</p>
                           <p className="text-xs text-slate-500">ID: {app.id.slice(-6)}</p>
                         </td>
                         <td className="p-4">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${
-                            app.ats_score >= 80 ? 'bg-emerald-500/15 text-emerald-400' :
-                            app.ats_score >= 60 ? 'bg-amber-500/15 text-amber-400' :
-                            'bg-red-500/15 text-red-400'
-                          }`}>
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${app.ats_score >= 80 ? 'bg-emerald-500/15 text-emerald-400' :
+                              app.ats_score >= 60 ? 'bg-amber-500/15 text-amber-400' :
+                                'bg-red-500/15 text-red-400'
+                            }`}>
                             {app.ats_score}
                           </div>
                         </td>
                         <td className="p-4">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium capitalize ${
-                            app.status === 'hired' ? 'bg-accent/20 text-accent border border-accent/30' :
-                            app.status === 'shortlisted' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                            app.status === 'rejected' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                            'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                          }`}>
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium capitalize ${app.status === 'hired' ? 'bg-accent/20 text-accent border border-accent/30' :
+                              app.status === 'shortlisted' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                                app.status === 'rejected' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                                  'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                            }`}>
                             {app.status}
                           </span>
                         </td>
@@ -525,7 +519,7 @@ export default function CandidateDashboard() {
                           {app.analysis_id ? (
                             <button
                               onClick={() => navigate(`/result/${app.analysis_id}`)}
-                              className="p-2 rounded-lg hover:bg-white/5 text-slate-400 hover:text-white transition-all"
+                              className="p-2 rounded-lg hover:bg-primary/5 text-slate-400 hover:text-primary transition-all"
                               title="View match analysis"
                             >
                               <ExternalLink className="w-4 h-4" />
@@ -549,8 +543,8 @@ export default function CandidateDashboard() {
         <motion.div variants={fadeInUp} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Input Panel */}
           <div className="lg:col-span-1 space-y-4">
-            <h2 className="text-lg font-semibold text-white">Generate Cover Letter</h2>
-            
+            <h2 className="text-lg font-semibold text-primary">Generate Cover Letter</h2>
+
             <div className="space-y-3">
               <div>
                 <label className="text-xs text-slate-400 block mb-1 font-medium">Select Resume</label>
@@ -560,7 +554,7 @@ export default function CandidateDashboard() {
                   <select
                     value={selectedResumeForLetter}
                     onChange={(e) => setSelectedResumeForLetter(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl bg-[#0f172a] border border-white/15 text-slate-300 focus:outline-none focus:border-primary/40 transition-all text-xs cursor-pointer"
+                    className="w-full px-3 py-2.5 rounded-xl bg-[#0f172a] border border-primary/15 text-slate-300 focus:outline-none focus:border-primary/40 transition-all text-xs cursor-pointer"
                   >
                     {resumes.map(r => (
                       <option key={r.id} value={r.id}>{r.original_filename}</option>
@@ -576,7 +570,7 @@ export default function CandidateDashboard() {
                   placeholder="e.g. Senior Frontend Engineer"
                   value={jobTitleForLetter}
                   onChange={(e) => setJobTitleForLetter(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/40 transition-all text-xs"
+                  className="w-full px-3 py-2.5 rounded-xl bg-primary/5 border border-primary/10 text-primary placeholder-slate-500 focus:outline-none focus:border-primary/40 transition-all text-xs"
                 />
               </div>
 
@@ -587,7 +581,7 @@ export default function CandidateDashboard() {
                   placeholder="Paste the job description or requirement details here to tailor the cover letter..."
                   value={jdForLetter}
                   onChange={(e) => setJdForLetter(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-primary/40 transition-all text-xs resize-none"
+                  className="w-full px-3 py-2.5 rounded-xl bg-primary/5 border border-primary/10 text-primary placeholder-slate-500 focus:outline-none focus:border-primary/40 transition-all text-xs resize-none"
                 />
               </div>
 
@@ -612,7 +606,7 @@ export default function CandidateDashboard() {
           {/* Output Panel */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold text-white">Generated Cover Letter</h2>
+              <h2 className="text-lg font-semibold text-primary">Generated Cover Letter</h2>
               {generatedLetter && (
                 <div className="flex gap-2">
                   <button
@@ -620,13 +614,13 @@ export default function CandidateDashboard() {
                       navigator.clipboard.writeText(generatedLetter);
                       toast.success('Copied to clipboard!');
                     }}
-                    className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-colors text-xs font-semibold"
+                    className="px-3 py-1.5 rounded-lg bg-primary/5 border border-primary/10 text-slate-400 hover:text-primary transition-colors text-xs font-semibold"
                   >
                     Copy text
                   </button>
                   <button
                     onClick={handleDownloadLetter}
-                    className="px-3 py-1.5 rounded-lg bg-primary/20 border border-primary/30 text-primary hover:text-white transition-colors text-xs font-semibold"
+                    className="px-3 py-1.5 rounded-lg bg-primary/20 border border-primary/30 text-primary hover:text-primary transition-colors text-xs font-semibold"
                   >
                     Download .txt
                   </button>
@@ -634,7 +628,7 @@ export default function CandidateDashboard() {
               )}
             </div>
 
-            <div className="glass rounded-2xl p-6 border border-white/[0.06] min-h-[350px] flex flex-col justify-start relative">
+            <div className="glass rounded-2xl p-6 border border-primary/[0.06] min-h-[350px] flex flex-col justify-start relative">
               {generatingLetter ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#050816]/40 backdrop-blur-sm rounded-2xl">
                   <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -643,7 +637,7 @@ export default function CandidateDashboard() {
               ) : null}
 
               {generatedLetter ? (
-                <pre className="text-slate-300 text-xs font-sans whitespace-pre-wrap leading-relaxed">
+                <pre className="text-slate-300 text-xs font-sans primaryspace-pre-wrap leading-relaxed">
                   {generatedLetter}
                 </pre>
               ) : !generatingLetter ? (

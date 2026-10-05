@@ -1,37 +1,37 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FileText, 
-  Save, 
-  X, 
-  Plus, 
-  Trash2, 
-  Copy, 
-  ChevronDown, 
-  ChevronUp, 
-  Sliders, 
-  Type, 
-  AlignLeft, 
-  AlignCenter, 
-  AlignRight, 
-  AlignJustify, 
-  Bold, 
-  Italic, 
-  Underline, 
-  Strikethrough, 
-  List, 
-  ListOrdered, 
-  Palette, 
-  Columns, 
-  Maximize2, 
-  Minimize2, 
-  Sparkles, 
-  ArrowUp, 
-  ArrowDown, 
-  Check, 
-  Download, 
-  Eye, 
-  RotateCcw, 
+import {
+  FileText,
+  Save,
+  X,
+  Plus,
+  Trash2,
+  Copy,
+  ChevronDown,
+  ChevronUp,
+  Sliders,
+  Type,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  Bold,
+  Italic,
+  Underline,
+  Strikethrough,
+  List,
+  ListOrdered,
+  Palette,
+  Columns,
+  Maximize2,
+  Minimize2,
+  Sparkles,
+  ArrowUp,
+  ArrowDown,
+  Check,
+  Download,
+  Eye,
+  RotateCcw,
   RefreshCw,
   LayoutTemplate,
   Briefcase,
@@ -366,25 +366,25 @@ export default function WordTemplateStudio({
 
   return (
     <div className="fixed inset-0 z-50 bg-[#1E1E1E] text-slate-100 flex flex-col font-sans overflow-hidden select-none">
-      
+
       {/* ── 1. MS WORD TOP TITLE BAR ────────────────────────────────────── */}
-      <div className="bg-[#102A43] border-b border-[#243E56] px-3 py-1.5 flex items-center justify-between text-xs text-white shadow-sm">
+      <div className="bg-[#102A43] border-b border-[#243E56] px-3 py-1.5 flex items-center justify-between text-xs text-primary shadow-sm">
         {/* Left: App Logo & Quick Access */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 font-semibold">
-            <div className="w-6 h-6 rounded bg-[#185ABD] text-white flex items-center justify-center font-bold text-xs shadow">
+            <div className="w-6 h-6 rounded bg-[#185ABD] text-primary flex items-center justify-center font-bold text-xs shadow">
               W
             </div>
-            <span className="text-white font-bold tracking-tight text-sm hidden sm:inline">Word Resume Studio</span>
+            <span className="text-primary font-bold tracking-tight text-sm hidden sm:inline">Word Resume Studio</span>
           </div>
 
-          <div className="hidden md:flex items-center gap-1 pl-3 border-l border-white/15">
+          <div className="hidden md:flex items-center gap-1 pl-3 border-l border-primary/15">
             <input
               type="text"
               value={templateName}
               onChange={(e) => setTemplateName(e.target.value)}
               placeholder="Template Name..."
-              className="bg-[#0B1D3A] border border-white/20 rounded px-2.5 py-0.5 text-xs text-white focus:outline-none focus:border-blue-400 w-56 font-medium"
+              className="bg-[#0B1D3A] border border-primary/20 rounded px-2.5 py-0.5 text-xs text-primary focus:outline-none focus:border-blue-400 w-56 font-medium"
               title="Click to rename template"
             />
           </div>
@@ -401,7 +401,7 @@ export default function WordTemplateStudio({
           <button
             type="button"
             onClick={handleSaveAndApply}
-            className="px-3 py-1 rounded bg-[#185ABD] hover:bg-[#154E9E] text-white font-semibold text-xs flex items-center gap-1.5 shadow transition-all border border-blue-400/40"
+            className="px-3 py-1 rounded bg-[#185ABD] hover:bg-[#154E9E] text-primary font-semibold text-xs flex items-center gap-1.5 shadow transition-all border border-blue-400/40"
           >
             <Save className="w-3.5 h-3.5" />
             <span>Save & Use Template</span>
@@ -409,7 +409,7 @@ export default function WordTemplateStudio({
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded hover:bg-white/10 text-slate-300 hover:text-white"
+            className="p-1 rounded hover:bg-primary/10 text-slate-300 hover:text-primary"
             title="Close Editor"
           >
             <X className="w-4 h-4" />
@@ -419,7 +419,7 @@ export default function WordTemplateStudio({
 
       {/* ── 2. MS WORD RIBBON TABS & TOOLBAR ─────────────────────────────── */}
       <div className="bg-[#2B2B2B] border-b border-[#3D3D3D] flex flex-col shadow-md">
-        
+
         {/* Ribbon Tab Header List */}
         <div className="flex items-center gap-1 px-3 pt-1 border-b border-[#3A3A3A] text-xs">
           {[
@@ -432,11 +432,10 @@ export default function WordTemplateStudio({
               key={tab.id}
               type="button"
               onClick={() => setActiveRibbonTab(tab.id)}
-              className={`px-3 py-1.5 rounded-t font-semibold transition-colors ${
-                activeRibbonTab === tab.id
-                  ? 'bg-[#383838] text-white border-b-2 border-[#185ABD]'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5'
-              }`}
+              className={`px-3 py-1.5 rounded-t font-semibold transition-colors ${activeRibbonTab === tab.id
+                  ? 'bg-[#383838] text-primary border-b-2 border-[#185ABD]'
+                  : 'text-slate-300 hover:text-primary hover:bg-primary/5'
+                }`}
             >
               {tab.label}
             </button>
@@ -445,7 +444,7 @@ export default function WordTemplateStudio({
 
         {/* Ribbon Content Bar based on active tab */}
         <div className="p-2 px-3 flex flex-wrap items-center gap-4 text-xs overflow-x-auto min-h-[52px]">
-          
+
           {/* TAB 1: HOME (Typography, Formatting, Paragraph) */}
           {activeRibbonTab === 'home' && (
             <>
@@ -454,19 +453,19 @@ export default function WordTemplateStudio({
                 <select
                   value={styling.fontFamily}
                   onChange={(e) => updateStyle('fontFamily', e.target.value)}
-                  className="bg-[#1C1C1C] text-white border border-[#444] rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-400 w-48 font-medium"
+                  className="bg-[#1C1C1C] text-primary border border-[#444] rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-400 w-48 font-medium"
                 >
                   {['sans-serif', 'serif', 'handwriting', 'monospace'].map(cat => {
                     const catFonts = fontList.filter(f => (f.category || '').toLowerCase() === cat);
                     if (catFonts.length === 0) return null;
-                    const catLabel = cat === 'sans-serif' ? 'Sans-Serif (ATS Preferred)' 
-                      : cat === 'serif' ? 'Serif (Executive)' 
-                      : cat === 'handwriting' ? 'Handwriting & Script' 
-                      : 'Monospace & Tech';
+                    const catLabel = cat === 'sans-serif' ? 'Sans-Serif (ATS Preferred)'
+                      : cat === 'serif' ? 'Serif (Executive)'
+                        : cat === 'handwriting' ? 'Handwriting & Script'
+                          : 'Monospace & Tech';
                     return (
                       <optgroup key={cat} label={catLabel} className="bg-[#2B2B2B] text-blue-300 font-bold">
                         {catFonts.map(f => (
-                          <option key={f.id} value={f.id} className="bg-[#1C1C1C] text-white font-normal">
+                          <option key={f.id} value={f.id} className="bg-[#1C1C1C] text-primary font-normal">
                             {f.name}
                           </option>
                         ))}
@@ -478,7 +477,7 @@ export default function WordTemplateStudio({
                 <select
                   value={styling.fontSizePt}
                   onChange={(e) => updateStyle('fontSizePt', parseFloat(e.target.value))}
-                  className="bg-[#1C1C1C] text-white border border-[#444] rounded px-1.5 py-1 text-xs focus:outline-none focus:border-blue-400 w-16"
+                  className="bg-[#1C1C1C] text-primary border border-[#444] rounded px-1.5 py-1 text-xs focus:outline-none focus:border-blue-400 w-16"
                   title="Body Font Size"
                 >
                   {[9, 9.5, 10, 10.5, 11, 11.5, 12, 13, 14].map(sz => (
@@ -490,7 +489,7 @@ export default function WordTemplateStudio({
                   <button
                     type="button"
                     onClick={() => updateStyle('fontSizePt', Math.min(14, styling.fontSizePt + 0.5))}
-                    className="p-1 hover:bg-white/10 rounded font-bold text-xs text-slate-300 hover:text-white"
+                    className="p-1 hover:bg-primary/10 rounded font-bold text-xs text-slate-300 hover:text-primary"
                     title="Grow Font Size"
                   >
                     A^
@@ -498,7 +497,7 @@ export default function WordTemplateStudio({
                   <button
                     type="button"
                     onClick={() => updateStyle('fontSizePt', Math.max(8.5, styling.fontSizePt - 0.5))}
-                    className="p-1 hover:bg-white/10 rounded font-bold text-[10px] text-slate-300 hover:text-white"
+                    className="p-1 hover:bg-primary/10 rounded font-bold text-[10px] text-slate-300 hover:text-primary"
                     title="Shrink Font Size"
                   >
                     Av
@@ -511,9 +510,8 @@ export default function WordTemplateStudio({
                 <button
                   type="button"
                   onClick={() => updateStyle('isBoldHeadings', !styling.isBoldHeadings)}
-                  className={`p-1.5 rounded transition-all ${
-                    styling.isBoldHeadings ? 'bg-[#185ABD] text-white' : 'hover:bg-white/10 text-slate-300'
-                  }`}
+                  className={`p-1.5 rounded transition-all ${styling.isBoldHeadings ? 'bg-[#185ABD] text-primary' : 'hover:bg-primary/10 text-slate-300'
+                    }`}
                   title="Bold Section Headings"
                 >
                   <Bold className="w-3.5 h-3.5" />
@@ -521,9 +519,8 @@ export default function WordTemplateStudio({
                 <button
                   type="button"
                   onClick={() => updateStyle('isUppercaseHeadings', !styling.isUppercaseHeadings)}
-                  className={`px-1.5 py-1 rounded text-[11px] font-bold transition-all ${
-                    styling.isUppercaseHeadings ? 'bg-[#185ABD] text-white' : 'hover:bg-white/10 text-slate-300'
-                  }`}
+                  className={`px-1.5 py-1 rounded text-[11px] font-bold transition-all ${styling.isUppercaseHeadings ? 'bg-[#185ABD] text-primary' : 'hover:bg-primary/10 text-slate-300'
+                    }`}
                   title="UPPERCASE / Title Case Headings"
                 >
                   AA
@@ -535,9 +532,8 @@ export default function WordTemplateStudio({
                 <button
                   type="button"
                   onClick={() => updateStyle('headerLayout', 'left')}
-                  className={`p-1.5 rounded transition-all ${
-                    styling.headerLayout === 'left' ? 'bg-[#185ABD] text-white' : 'hover:bg-white/10 text-slate-300'
-                  }`}
+                  className={`p-1.5 rounded transition-all ${styling.headerLayout === 'left' ? 'bg-[#185ABD] text-primary' : 'hover:bg-primary/10 text-slate-300'
+                    }`}
                   title="Align Header Left"
                 >
                   <AlignLeft className="w-3.5 h-3.5" />
@@ -545,9 +541,8 @@ export default function WordTemplateStudio({
                 <button
                   type="button"
                   onClick={() => updateStyle('headerLayout', 'center')}
-                  className={`p-1.5 rounded transition-all ${
-                    styling.headerLayout === 'center' ? 'bg-[#185ABD] text-white' : 'hover:bg-white/10 text-slate-300'
-                  }`}
+                  className={`p-1.5 rounded transition-all ${styling.headerLayout === 'center' ? 'bg-[#185ABD] text-primary' : 'hover:bg-primary/10 text-slate-300'
+                    }`}
                   title="Align Header Center"
                 >
                   <AlignCenter className="w-3.5 h-3.5" />
@@ -555,9 +550,8 @@ export default function WordTemplateStudio({
                 <button
                   type="button"
                   onClick={() => updateStyle('headerLayout', 'split')}
-                  className={`p-1.5 rounded transition-all ${
-                    styling.headerLayout === 'split' ? 'bg-[#185ABD] text-white' : 'hover:bg-white/10 text-slate-300'
-                  }`}
+                  className={`p-1.5 rounded transition-all ${styling.headerLayout === 'split' ? 'bg-[#185ABD] text-primary' : 'hover:bg-primary/10 text-slate-300'
+                    }`}
                   title="Split Modern Header"
                 >
                   <AlignJustify className="w-3.5 h-3.5" />
@@ -571,7 +565,7 @@ export default function WordTemplateStudio({
                   <select
                     value={styling.bulletStyle}
                     onChange={(e) => updateStyle('bulletStyle', e.target.value)}
-                    className="bg-[#1C1C1C] text-white border border-[#444] rounded px-1.5 py-1 text-xs focus:outline-none"
+                    className="bg-[#1C1C1C] text-primary border border-[#444] rounded px-1.5 py-1 text-xs focus:outline-none"
                   >
                     <option value="disc">Disc (•)</option>
                     <option value="square">Square (▪)</option>
@@ -585,7 +579,7 @@ export default function WordTemplateStudio({
                   <select
                     value={styling.lineHeight}
                     onChange={(e) => updateStyle('lineHeight', parseFloat(e.target.value))}
-                    className="bg-[#1C1C1C] text-white border border-[#444] rounded px-1.5 py-1 text-xs focus:outline-none"
+                    className="bg-[#1C1C1C] text-primary border border-[#444] rounded px-1.5 py-1 text-xs focus:outline-none"
                   >
                     <option value={1.2}>1.2 (Tight)</option>
                     <option value={1.35}>1.35 (Compact)</option>
@@ -603,11 +597,10 @@ export default function WordTemplateStudio({
                     key={hs.id}
                     type="button"
                     onClick={() => updateStyle('headingStyle', hs.id)}
-                    className={`px-2 py-1 rounded text-[11px] font-medium transition-all ${
-                      styling.headingStyle === hs.id
-                        ? 'bg-[#185ABD] text-white shadow-sm'
-                        : 'bg-[#1C1C1C] text-slate-300 hover:bg-white/10'
-                    }`}
+                    className={`px-2 py-1 rounded text-[11px] font-medium transition-all ${styling.headingStyle === hs.id
+                        ? 'bg-[#185ABD] text-primary shadow-sm'
+                        : 'bg-[#1C1C1C] text-slate-300 hover:bg-primary/10'
+                      }`}
                     title={hs.desc}
                   >
                     {hs.name}
@@ -626,27 +619,24 @@ export default function WordTemplateStudio({
                 <button
                   type="button"
                   onClick={() => updateStyle('pageMargins', 20)}
-                  className={`px-2.5 py-1 rounded text-xs ${
-                    styling.pageMargins === 20 ? 'bg-[#185ABD] text-white' : 'bg-[#1C1C1C] text-slate-300'
-                  }`}
+                  className={`px-2.5 py-1 rounded text-xs ${styling.pageMargins === 20 ? 'bg-[#185ABD] text-primary' : 'bg-[#1C1C1C] text-slate-300'
+                    }`}
                 >
                   Narrow (0.5")
                 </button>
                 <button
                   type="button"
                   onClick={() => updateStyle('pageMargins', 32)}
-                  className={`px-2.5 py-1 rounded text-xs ${
-                    styling.pageMargins === 32 ? 'bg-[#185ABD] text-white' : 'bg-[#1C1C1C] text-slate-300'
-                  }`}
+                  className={`px-2.5 py-1 rounded text-xs ${styling.pageMargins === 32 ? 'bg-[#185ABD] text-primary' : 'bg-[#1C1C1C] text-slate-300'
+                    }`}
                 >
                   Normal (0.85")
                 </button>
                 <button
                   type="button"
                   onClick={() => updateStyle('pageMargins', 44)}
-                  className={`px-2.5 py-1 rounded text-xs ${
-                    styling.pageMargins === 44 ? 'bg-[#185ABD] text-white' : 'bg-[#1C1C1C] text-slate-300'
-                  }`}
+                  className={`px-2.5 py-1 rounded text-xs ${styling.pageMargins === 44 ? 'bg-[#185ABD] text-primary' : 'bg-[#1C1C1C] text-slate-300'
+                    }`}
                 >
                   Wide (1.15")
                 </button>
@@ -658,18 +648,16 @@ export default function WordTemplateStudio({
                 <button
                   type="button"
                   onClick={() => updateStyle('columnLayout', '1-col')}
-                  className={`px-2.5 py-1 rounded text-xs ${
-                    styling.columnLayout === '1-col' ? 'bg-[#185ABD] text-white' : 'bg-[#1C1C1C] text-slate-300'
-                  }`}
+                  className={`px-2.5 py-1 rounded text-xs ${styling.columnLayout === '1-col' ? 'bg-[#185ABD] text-primary' : 'bg-[#1C1C1C] text-slate-300'
+                    }`}
                 >
                   Single Column (High ATS)
                 </button>
                 <button
                   type="button"
                   onClick={() => updateStyle('columnLayout', '2-col-left')}
-                  className={`px-2.5 py-1 rounded text-xs ${
-                    styling.columnLayout === '2-col-left' ? 'bg-[#185ABD] text-white' : 'bg-[#1C1C1C] text-slate-300'
-                  }`}
+                  className={`px-2.5 py-1 rounded text-xs ${styling.columnLayout === '2-col-left' ? 'bg-[#185ABD] text-primary' : 'bg-[#1C1C1C] text-slate-300'
+                    }`}
                 >
                   2-Column (Sidebar Left)
                 </button>
@@ -698,35 +686,35 @@ export default function WordTemplateStudio({
               <button
                 type="button"
                 onClick={() => handleAddSection('experience')}
-                className="px-2.5 py-1 rounded bg-[#185ABD] hover:bg-blue-600 text-white font-medium flex items-center gap-1 shadow-sm"
+                className="px-2.5 py-1 rounded bg-[#185ABD] hover:bg-blue-600 text-primary font-medium flex items-center gap-1 shadow-sm"
               >
                 <Briefcase className="w-3.5 h-3.5" /> + Experience Block
               </button>
               <button
                 type="button"
                 onClick={() => handleAddSection('education')}
-                className="px-2.5 py-1 rounded bg-[#1C1C1C] hover:bg-white/10 text-white font-medium flex items-center gap-1 border border-white/10"
+                className="px-2.5 py-1 rounded bg-[#1C1C1C] hover:bg-primary/10 text-primary font-medium flex items-center gap-1 border border-primary/10"
               >
                 <GraduationCap className="w-3.5 h-3.5 text-blue-400" /> + Education
               </button>
               <button
                 type="button"
                 onClick={() => handleAddSection('skills')}
-                className="px-2.5 py-1 rounded bg-[#1C1C1C] hover:bg-white/10 text-white font-medium flex items-center gap-1 border border-white/10"
+                className="px-2.5 py-1 rounded bg-[#1C1C1C] hover:bg-primary/10 text-primary font-medium flex items-center gap-1 border border-primary/10"
               >
                 <Award className="w-3.5 h-3.5 text-emerald-400" /> + Skills Grid
               </button>
               <button
                 type="button"
                 onClick={() => handleAddSection('projects')}
-                className="px-2.5 py-1 rounded bg-[#1C1C1C] hover:bg-white/10 text-white font-medium flex items-center gap-1 border border-white/10"
+                className="px-2.5 py-1 rounded bg-[#1C1C1C] hover:bg-primary/10 text-primary font-medium flex items-center gap-1 border border-primary/10"
               >
                 <Code2 className="w-3.5 h-3.5 text-purple-400" /> + Project Card
               </button>
               <button
                 type="button"
                 onClick={() => handleAddSection('custom')}
-                className="px-2.5 py-1 rounded bg-[#1C1C1C] hover:bg-white/10 text-white font-medium flex items-center gap-1 border border-white/10"
+                className="px-2.5 py-1 rounded bg-[#1C1C1C] hover:bg-primary/10 text-primary font-medium flex items-center gap-1 border border-primary/10"
               >
                 <Plus className="w-3.5 h-3.5 text-amber-400" /> + Custom Paragraph
               </button>
@@ -743,11 +731,10 @@ export default function WordTemplateStudio({
                     key={idx}
                     type="button"
                     onClick={() => updateStyle('accentColor', tp.hex)}
-                    className={`w-6 h-6 rounded-full border transition-transform hover:scale-110 shadow-sm ${
-                      styling.accentColor.toLowerCase() === tp.hex.toLowerCase()
-                        ? 'border-white scale-110 ring-2 ring-blue-400'
-                        : 'border-white/20'
-                    }`}
+                    className={`w-6 h-6 rounded-full border transition-transform hover:scale-110 shadow-sm ${styling.accentColor.toLowerCase() === tp.hex.toLowerCase()
+                        ? 'border-primary scale-110 ring-2 ring-blue-400'
+                        : 'border-primary/20'
+                      }`}
                     style={{ backgroundColor: tp.hex }}
                     title={tp.name}
                   />
@@ -757,8 +744,8 @@ export default function WordTemplateStudio({
               {/* Custom Hex Color Picker */}
               <div className="flex items-center gap-2">
                 <span className="text-slate-400">Custom Color:</span>
-                <label 
-                  className="w-7 h-7 rounded border border-white/30 cursor-pointer flex items-center justify-center overflow-hidden shadow"
+                <label
+                  className="w-7 h-7 rounded border border-primary/30 cursor-pointer flex items-center justify-center overflow-hidden shadow"
                   style={{ backgroundColor: styling.accentColor }}
                 >
                   <input
@@ -778,7 +765,7 @@ export default function WordTemplateStudio({
 
       {/* ── 3. WORKSPACE: RULER + A4 MS WORD DOCUMENT CANVAS ─────────────── */}
       <div className="flex-1 bg-[#242424] overflow-y-auto overflow-x-auto flex flex-col items-center py-6 px-4 custom-scrollbar relative">
-        
+
         {/* Authentic MS Word Horizontal Ruler */}
         <div className="w-[794px] h-5 bg-[#333333] border-b border-[#444] rounded-t flex items-center justify-between px-4 text-[9px] font-mono text-slate-400 shadow-sm select-none shrink-0 mb-1">
           <div className="flex items-center gap-6">
@@ -794,7 +781,7 @@ export default function WordTemplateStudio({
           <span className="text-[10px] text-blue-400 font-sans">A4 Page Width: 210mm (794px)</span>
         </div>
 
-        {/* ── A4 WHITE PAPER DOCUMENT (100% MS Word Canvas) ── */}
+        {/* ── A4 primary PAPER DOCUMENT (100% MS Word Canvas) ── */}
         <div
           ref={documentPaperRef}
           style={{
@@ -810,17 +797,16 @@ export default function WordTemplateStudio({
             color: '#111827',
             marginBottom: `${(zoomLevel / 100 - 1) * 1123}px`
           }}
-          className="bg-white shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-sm shrink-0 select-text relative"
+          className="bg-primary shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-sm shrink-0 select-text relative"
         >
 
           {/* ── HEADER BLOCK ── */}
-          <div className={`mb-5 ${
-            styling.headerLayout === 'center' ? 'text-center' : ''
-          }`}>
-            <h1 
+          <div className={`mb-5 ${styling.headerLayout === 'center' ? 'text-center' : ''
+            }`}>
+            <h1
               contentEditable
               suppressContentEditableWarning
-              style={{ 
+              style={{
                 color: styling.accentColor,
                 fontSize: `${styling.titleSizePt || 22}pt`,
                 letterSpacing: '-0.02em',
@@ -831,7 +817,7 @@ export default function WordTemplateStudio({
               {resumeContent.personalInfo.fullName}
             </h1>
 
-            <div 
+            <div
               contentEditable
               suppressContentEditableWarning
               style={{ fontSize: `${styling.fontSizePt + 1.5}pt` }}
@@ -841,9 +827,8 @@ export default function WordTemplateStudio({
             </div>
 
             {/* Contact Row */}
-            <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-slate-600 font-medium ${
-              styling.headerLayout === 'center' ? 'justify-center' : ''
-            }`}>
+            <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-slate-600 font-medium ${styling.headerLayout === 'center' ? 'justify-center' : ''
+              }`}>
               <span>{resumeContent.personalInfo.email}</span>
               <span>•</span>
               <span>{resumeContent.personalInfo.phone}</span>
@@ -855,7 +840,7 @@ export default function WordTemplateStudio({
 
             {/* Optional Header Bottom Divider */}
             {styling.headingStyle === 'underline' && (
-              <div 
+              <div
                 className="h-[2px] w-full mt-3 mb-2"
                 style={{ backgroundColor: styling.accentColor }}
               />
@@ -863,12 +848,11 @@ export default function WordTemplateStudio({
           </div>
 
           {/* ── 2-COLUMN OR 1-COLUMN BODY LAYOUT ── */}
-          <div className={`grid ${
-            styling.columnLayout === '2-col-left' 
-              ? 'grid-cols-12 gap-5' 
+          <div className={`grid ${styling.columnLayout === '2-col-left'
+              ? 'grid-cols-12 gap-5'
               : 'grid-cols-1'
-          }`}>
-            
+            }`}>
+
             {/* Main Content Sections */}
             <div className={styling.columnLayout === '2-col-left' ? 'col-span-12 space-y-4' : 'space-y-4'}>
               {resumeContent.sections.map((section, secIdx) => {
@@ -883,7 +867,7 @@ export default function WordTemplateStudio({
                   >
                     {/* Floating Section Reorder / Delete Tool Handles */}
                     {isHovered && (
-                      <div className="absolute -top-3 right-2 bg-[#185ABD] text-white px-2 py-0.5 rounded shadow flex items-center gap-1.5 text-[10px] z-20 font-sans">
+                      <div className="absolute -top-3 right-2 bg-[#185ABD] text-primary px-2 py-0.5 rounded shadow flex items-center gap-1.5 text-[10px] z-20 font-sans">
                         <span className="font-bold">{section.title}</span>
                         <button
                           type="button"
@@ -918,8 +902,8 @@ export default function WordTemplateStudio({
                     <div className="mb-2">
                       {styling.headingStyle === 'underline' && (
                         <div className="border-b-[1.5px] pb-0.5 flex items-center justify-between" style={{ borderColor: styling.accentColor }}>
-                          <h2 
-                            style={{ 
+                          <h2
+                            style={{
                               color: styling.accentColor,
                               fontSize: `${styling.headingSizePt}pt`,
                               fontWeight: styling.isBoldHeadings ? 700 : 500,
@@ -933,12 +917,12 @@ export default function WordTemplateStudio({
                       )}
 
                       {styling.headingStyle === 'banner' && (
-                        <div 
+                        <div
                           className="px-2.5 py-1 rounded-sm mb-2"
                           style={{ backgroundColor: `${styling.accentColor}18`, borderLeft: `4px solid ${styling.accentColor}` }}
                         >
-                          <h2 
-                            style={{ 
+                          <h2
+                            style={{
                               color: styling.accentColor,
                               fontSize: `${styling.headingSizePt}pt`,
                               fontWeight: 700,
@@ -952,8 +936,8 @@ export default function WordTemplateStudio({
 
                       {styling.headingStyle === 'left-bar' && (
                         <div className="flex items-center gap-2 pl-2 border-l-4" style={{ borderColor: styling.accentColor }}>
-                          <h2 
-                            style={{ 
+                          <h2
+                            style={{
                               color: styling.accentColor,
                               fontSize: `${styling.headingSizePt}pt`,
                               fontWeight: 700,
@@ -966,8 +950,8 @@ export default function WordTemplateStudio({
                       )}
 
                       {styling.headingStyle === 'minimal' && (
-                        <h2 
-                          style={{ 
+                        <h2
+                          style={{
                             color: '#1E293B',
                             fontSize: `${styling.headingSizePt}pt`,
                             fontWeight: 800,
@@ -981,8 +965,8 @@ export default function WordTemplateStudio({
 
                       {styling.headingStyle === 'boxed' && (
                         <div className="border px-2 py-0.5 rounded-sm" style={{ borderColor: styling.accentColor }}>
-                          <h2 
-                            style={{ 
+                          <h2
+                            style={{
                               color: styling.accentColor,
                               fontSize: `${styling.headingSizePt}pt`,
                               fontWeight: 700
@@ -996,7 +980,7 @@ export default function WordTemplateStudio({
 
                     {/* Section Body Content */}
                     {section.type === 'paragraph' && (
-                      <p 
+                      <p
                         contentEditable
                         suppressContentEditableWarning
                         className="text-slate-700 leading-relaxed outline-none focus:bg-blue-50/50 rounded p-1"
@@ -1017,9 +1001,8 @@ export default function WordTemplateStudio({
                               <span style={{ color: styling.accentColor }}>{exp.company}</span>
                               <span className="text-slate-500 italic">{exp.location}</span>
                             </div>
-                            <ul className={`space-y-1 text-slate-700 pl-4 ${
-                              styling.bulletStyle === 'square' ? 'list-square' : styling.bulletStyle === 'disc' ? 'list-disc' : 'list-none'
-                            }`}>
+                            <ul className={`space-y-1 text-slate-700 pl-4 ${styling.bulletStyle === 'square' ? 'list-square' : styling.bulletStyle === 'disc' ? 'list-disc' : 'list-none'
+                              }`}>
                               {exp.bullets.map((b, bIdx) => (
                                 <li key={bIdx} className="leading-snug">
                                   {styling.bulletStyle === 'dash' && <span className="mr-1.5 text-slate-400">–</span>}
@@ -1086,12 +1069,12 @@ export default function WordTemplateStudio({
       </div>
 
       {/* ── 4. MS WORD STATUS BAR (Bottom) ───────────────────────────────── */}
-      <div className="bg-[#185ABD] text-white px-4 py-1 text-xs flex items-center justify-between shadow-inner select-none shrink-0 font-medium">
+      <div className="bg-[#185ABD] text-primary px-4 py-1 text-xs flex items-center justify-between shadow-inner select-none shrink-0 font-medium">
         <div className="flex items-center gap-4">
           <span>Page 1 of 1</span>
           <span>482 words</span>
           <span>English (United States)</span>
-          <span className="hidden sm:inline bg-white/20 px-2 py-0.2 rounded font-mono text-[11px]">
+          <span className="hidden sm:inline bg-primary/20 px-2 py-0.2 rounded font-mono text-[11px]">
             ATS Readiness: 99%
           </span>
         </div>
@@ -1101,7 +1084,7 @@ export default function WordTemplateStudio({
           <button
             type="button"
             onClick={() => setZoomLevel(prev => Math.max(50, prev - 10))}
-            className="hover:bg-white/20 px-1 rounded font-bold"
+            className="hover:bg-primary/20 px-1 rounded font-bold"
           >
             −
           </button>
@@ -1111,13 +1094,13 @@ export default function WordTemplateStudio({
             max="140"
             value={zoomLevel}
             onChange={(e) => setZoomLevel(parseInt(e.target.value))}
-            className="w-24 accent-white cursor-pointer"
+            className="w-24 accent-primary cursor-pointer"
           />
           <span className="w-10 font-mono text-right">{zoomLevel}%</span>
           <button
             type="button"
             onClick={() => setZoomLevel(prev => Math.min(140, prev + 10))}
-            className="hover:bg-white/20 px-1 rounded font-bold"
+            className="hover:bg-primary/20 px-1 rounded font-bold"
           >
             +
           </button>

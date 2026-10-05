@@ -80,7 +80,7 @@ export default function DocumentsPage() {
           <Badge
             key={c}
             variant={category === c ? 'default' : 'outline'}
-            className={cn('cursor-pointer px-3 py-1 text-xs', category === c ? 'bg-primary text-white' : 'text-muted-foreground hover:text-foreground')}
+            className={cn('cursor-pointer px-3 py-1 text-xs', category === c ? 'bg-primary text-primary' : 'text-muted-foreground hover:text-foreground')}
             onClick={() => setCategory(c)}
           >
             {c}

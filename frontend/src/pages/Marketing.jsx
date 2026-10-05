@@ -45,10 +45,10 @@ export default function Marketing() {
           The intelligent Applicant Tracking System that uses Llama 3 AI to analyze resumes, match candidates, and automate recruitment workflows.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link to="/upload" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-primary to-accent text-white font-semibold text-lg shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all">
+          <Link to="/upload" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-primary to-accent text-primary font-semibold text-lg shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all">
             Try Free Analysis <ArrowRight className="w-5 h-5" />
           </Link>
-          <Link to="/signup" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl glass text-white font-semibold text-lg hover:bg-white/10 hover:scale-105 active:scale-95 transition-all">
+          <Link to="/signup" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl glass text-primary font-semibold text-lg hover:bg-primary/10 hover:scale-105 active:scale-95 transition-all">
             Create Account <Zap className="w-5 h-5" />
           </Link>
         </div>
@@ -58,9 +58,9 @@ export default function Marketing() {
       <RevealOnScroll>
         <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20">
           {stats.map((stat) => (
-            <div key={stat.label} className="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06] text-center hover:bg-white/[0.05] hover:border-primary/30 transition-all duration-300">
+            <div key={stat.label} className="p-6 rounded-2xl bg-primary/[0.03] border border-primary/[0.06] text-center hover:bg-primary/[0.05] hover:border-primary/30 transition-all duration-300">
               <stat.icon className="w-8 h-8 text-primary mx-auto mb-3" />
-              <h3 className="text-3xl font-bold text-white">{stat.value}</h3>
+              <h3 className="text-3xl font-bold text-primary">{stat.value}</h3>
               <p className="text-slate-400 text-sm mt-1">{stat.label}</p>
             </div>
           ))}
@@ -70,7 +70,7 @@ export default function Marketing() {
       {/* Features */}
       <RevealOnScroll>
         <section className="mb-20">
-          <h2 className="text-3xl font-bold text-white text-center mb-12 font-heading">Everything You Need to Hire Better</h2>
+          <h2 className="text-3xl font-bold text-primary text-center mb-12 font-heading">Everything You Need to Hire Better</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {features.map((f, i) => (
               <motion.div
@@ -79,11 +79,11 @@ export default function Marketing() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
               >
-                <TiltCard className="group p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.05] hover:border-primary/30 transition-all duration-300" tiltDegree={5}>
+                <TiltCard className="group p-6 rounded-2xl bg-primary/[0.03] border border-primary/[0.06] hover:bg-primary/[0.05] hover:border-primary/30 transition-all duration-300" tiltDegree={5}>
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                     <f.icon className="w-6 h-6 text-primary" />
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">{f.title}</h3>
+                  <h3 className="text-xl font-bold text-primary mb-2">{f.title}</h3>
                   <p className="text-slate-400 text-sm">{f.desc}</p>
                 </TiltCard>
               </motion.div>
@@ -95,7 +95,7 @@ export default function Marketing() {
       {/* How it works */}
       <RevealOnScroll>
         <section className="mb-20">
-          <h2 className="text-3xl font-bold text-white text-center mb-12 font-heading">How It Works</h2>
+          <h2 className="text-3xl font-bold text-primary text-center mb-12 font-heading">How It Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {steps.map((s, i) => (
               <motion.div
@@ -108,7 +108,7 @@ export default function Marketing() {
                 <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                   <span className="text-2xl font-bold text-primary">{s.step}</span>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">{s.title}</h3>
+                <h3 className="text-xl font-bold text-primary mb-2">{s.title}</h3>
                 <p className="text-slate-400">{s.desc}</p>
               </motion.div>
             ))}
@@ -119,9 +119,9 @@ export default function Marketing() {
       {/* CTA */}
       <RevealOnScroll>
         <section className="text-center py-16 mb-12 rounded-3xl bg-gradient-to-br from-primary/5 via-accent/5 to-primary/5 border border-primary/10">
-          <h2 className="text-3xl font-bold text-white mb-4 font-heading">Ready to Transform Your Hiring?</h2>
+          <h2 className="text-3xl font-bold text-primary mb-4 font-heading">Ready to Transform Your Hiring?</h2>
           <p className="text-slate-400 mb-8 max-w-xl mx-auto">Join thousands of companies using HireMind AI to find the best talent faster.</p>
-          <Link to="/signup" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-primary to-accent text-white font-semibold text-lg shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all">
+          <Link to="/signup" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-primary to-accent text-primary font-semibold text-lg shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all">
             Get Started Free <ArrowRight className="w-5 h-5" />
           </Link>
         </section>

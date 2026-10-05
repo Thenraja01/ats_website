@@ -166,7 +166,7 @@ export default function CoverLetterPage() {
               </CardHeader>
               <CardContent>
                 <CopyBlock text={letter}>
-                  <pre className="max-h-[520px] overflow-y-auto rounded-xl border border-border bg-background/60 p-5 font-sans text-sm leading-relaxed text-foreground whitespace-pre-wrap">
+                  <pre className="max-h-[520px] overflow-y-auto rounded-xl border border-border bg-background/60 p-5 font-sans text-sm leading-relaxed text-foreground primaryspace-pre-wrap">
                     {letter}
                   </pre>
                 </CopyBlock>

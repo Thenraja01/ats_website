@@ -15,7 +15,6 @@ from app.api.dashboard_router import dashboard_router
 from app.api.resume_router import resume_router
 from app.api.resume_studio_router import studio_router
 from app.api.jd_router import jd_router
-from app.api.applications_router import applications_router
 from app.api.interview_router import interview_router
 from app.api.career_router import career_router
 from app.api.documents_router import documents_router
@@ -103,7 +102,6 @@ app.include_router(dashboard_router, prefix=settings.API_V1_STR)
 app.include_router(resume_router, prefix=settings.API_V1_STR)
 app.include_router(studio_router, prefix=settings.API_V1_STR)
 app.include_router(jd_router, prefix=settings.API_V1_STR)
-app.include_router(applications_router, prefix=settings.API_V1_STR)
 app.include_router(interview_router, prefix=settings.API_V1_STR)
 app.include_router(career_router, prefix=settings.API_V1_STR)
 app.include_router(documents_router, prefix=settings.API_V1_STR)

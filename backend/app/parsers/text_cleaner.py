@@ -22,7 +22,7 @@ class TextCleaner:
         # Remove special characters but keep common ones
         text = re.sub(r"[^\w\s\.\-\+/#@()]", " ", text, flags=re.UNICODE)
 
-        # Normalize whitespace
+        # Normalize primaryspace
         text = re.sub(r"\s+", " ", text)
 
         # Convert to lowercase

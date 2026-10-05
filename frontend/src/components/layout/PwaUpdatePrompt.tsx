@@ -27,14 +27,14 @@ export default function PwaUpdatePrompt() {
           initial={{ opacity: 0, y: 50, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.95 }}
-          className="fixed bottom-6 right-6 z-50 max-w-sm w-full p-5 glass rounded-2xl border border-white/[0.08] shadow-2xl flex flex-col gap-4 text-left"
+          className="fixed bottom-6 right-6 z-50 max-w-sm w-full p-5 glass rounded-2xl border border-primary/[0.08] shadow-2xl flex flex-col gap-4 text-left"
         >
           <div className="flex gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
               <Sparkles className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-white">App Update Available</h4>
+              <h4 className="text-sm font-semibold text-primary">App Update Available</h4>
               <p className="text-xs text-slate-400 mt-1 leading-relaxed">
                 A new version of HireMind AI is available. Reload the application to get the latest features and optimizations.
               </p>
@@ -44,7 +44,7 @@ export default function PwaUpdatePrompt() {
           <div className="flex gap-2 justify-end">
             <button
               onClick={handleClose}
-              className="px-3.5 py-2 text-xs font-semibold text-slate-400 hover:text-white rounded-lg transition-colors"
+              className="px-3.5 py-2 text-xs font-semibold text-slate-400 hover:text-primary rounded-lg transition-colors"
             >
               Dismiss
             </button>

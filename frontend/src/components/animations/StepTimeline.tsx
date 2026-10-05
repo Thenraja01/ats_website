@@ -84,12 +84,12 @@ export default function StepTimeline({ steps, className = '' }: StepTimelineProp
               className={`flex items-center gap-8 ${i % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}
             >
               <div className="flex-1">
-                <div className="glass rounded-2xl p-6 border border-white/[0.06]">
+                <div className="glass rounded-2xl p-6 border border-primary/[0.06]">
                   <div className="flex items-center gap-3 mb-3">
-                    <span className="step-dot w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold">
+                    <span className="step-dot w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary text-sm font-bold">
                       {i + 1}
                     </span>
-                    <h3 className="text-xl font-bold text-white font-heading">{step.title}</h3>
+                    <h3 className="text-xl font-bold text-primary font-heading">{step.title}</h3>
                   </div>
                   <p className="text-slate-400 text-sm leading-relaxed">{step.description}</p>
                 </div>

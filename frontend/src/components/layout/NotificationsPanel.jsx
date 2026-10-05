@@ -28,7 +28,7 @@ export function BellButton({ count, onClick }) {
     >
       <Bell className="size-4" />
       {count > 0 && (
-        <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-white">
+        <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-primary">
           {count > 9 ? '9+' : count}
         </span>
       )}
@@ -51,7 +51,7 @@ export default function NotificationsPanel({ unread, onUnread, disabled }) {
       notificationsAPI
         .unreadCount()
         .then((r) => onUnread?.(r.data.count || 0))
-        .catch(() => {});
+        .catch(() => { });
     }
   }, [disabled, onUnread, open]);
 
@@ -74,7 +74,7 @@ export default function NotificationsPanel({ unread, onUnread, disabled }) {
         >
           <Bell className="size-4" />
           {unread > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-white">
+            <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-primary">
               {unread > 9 ? '9+' : unread}
             </span>
           )}
@@ -111,7 +111,7 @@ export default function NotificationsPanel({ unread, onUnread, disabled }) {
                 setOpen(false);
                 if (n.link) navigate(n.link);
                 else {
-                  notificationsAPI.markRead(n.id).catch(() => {});
+                  notificationsAPI.markRead(n.id).catch(() => { });
                   if (!n.read) onUnread?.(Math.max(0, unread - 1));
                 }
               }}

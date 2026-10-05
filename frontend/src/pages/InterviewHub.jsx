@@ -1,25 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { 
-  getMasterCareerProfile, 
+import {
+  getMasterCareerProfile,
   getApplicationsMemory,
   getInterviewMemory,
   saveInterviewEntry
 } from '../services/careerProfileSync';
-import { 
-  MessageSquare, 
-  Sparkles, 
-  ShieldCheck, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Play, 
-  Send, 
-  BookOpen, 
-  Layers, 
-  Building, 
-  Award, 
-  RefreshCw, 
-  Clock, 
+import {
+  MessageSquare,
+  Sparkles,
+  ShieldCheck,
+  CheckCircle2,
+  AlertTriangle,
+  Play,
+  Send,
+  BookOpen,
+  Layers,
+  Building,
+  Award,
+  RefreshCw,
+  Clock,
   ChevronRight,
   FileCheck,
   Zap,
@@ -103,7 +103,7 @@ export default function InterviewHub() {
         {
           id: 5,
           category: 'Consistency & Truth Verification',
-          question: exp && exp.responsibilities?.[0] 
+          question: exp && exp.responsibilities?.[0]
             ? `Your resume claims: "${exp.responsibilities[0]}". What specific metrics proved this outcome, and what was your exact individual contribution?`
             : `How do you validate the ROI and engineering accuracy of the metrics stated on your application?`,
           resumeContext: `Direct Claim Verification Gate`,
@@ -130,12 +130,12 @@ export default function InterviewHub() {
       // Simulate AI Consistency & Impact evaluator
       const hasNumbers = /\d+/.test(userAnswer);
       const isDetailed = userAnswer.length > 80;
-      
+
       const newEval = {
         questionId: currentQ.id,
         score: hasNumbers && isDetailed ? 94 : 85,
         consistencyStatus: 'Consistent with Career Vault',
-        feedback: isDetailed 
+        feedback: isDetailed
           ? `Excellent detail. Your response matches the verified records in your Career Vault. Clear breakdown of technical decisions and impact.`
           : `Good direction, but consider elaborating more on your specific engineering decisions and quantifiable results.`,
         strengths: [
@@ -167,23 +167,23 @@ export default function InterviewHub() {
   const currentQ = questions[activeQuestionIdx];
   const currentEval = currentQ ? evaluations[currentQ.id] : null;
 
-  const filteredQuestions = category === 'All' 
-    ? questions 
+  const filteredQuestions = category === 'All'
+    ? questions
     : questions.filter(q => q.category === category);
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-6">
-        
+
         {/* Header Hero */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/60 p-6 rounded-2xl border border-slate-800 backdrop-blur-xl shadow-2xl">
           <div>
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-amber-500 to-rose-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
-                <MessageSquare className="w-6 h-6 text-white" />
+                <MessageSquare className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-primary tracking-tight flex items-center gap-2">
                   Interview Hub & Consistency Checker
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30">
                     Job-Specific AI Simulator
@@ -218,7 +218,7 @@ export default function InterviewHub() {
             <button
               onClick={() => generateQuestions(targetApp)}
               disabled={generating}
-              className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white rounded-xl font-medium text-sm flex items-center gap-2 transition-all shadow-lg shadow-amber-500/20"
+              className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-primary rounded-xl font-medium text-sm flex items-center gap-2 transition-all shadow-lg shadow-amber-500/20"
             >
               <RefreshCw className={`w-4 h-4 ${generating ? 'animate-spin' : ''}`} />
               Regenerate Q&A
@@ -233,7 +233,7 @@ export default function InterviewHub() {
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-sm font-semibold text-white flex items-center gap-2">
+              <div className="text-sm font-semibold text-primary flex items-center gap-2">
                 Resume ↔ Interview Consistency Engine
                 <span className="text-[11px] font-normal text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3" /> Zero Fact Mismatch Guarantee
@@ -254,7 +254,7 @@ export default function InterviewHub() {
 
         {/* Main Interface Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
+
           {/* Questions Sidebar */}
           <div className="lg:col-span-4 space-y-3">
             <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
@@ -272,11 +272,10 @@ export default function InterviewHub() {
                       setActiveQuestionIdx(idx);
                       setUserAnswer('');
                     }}
-                    className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
-                      activeQuestionIdx === idx
+                    className={`p-3.5 rounded-xl border transition-all cursor-pointer ${activeQuestionIdx === idx
                         ? 'bg-slate-800/90 border-amber-500/60 shadow-lg shadow-amber-500/10'
                         : 'bg-slate-900/40 border-slate-800/80 hover:bg-slate-800/40 hover:border-slate-700'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between gap-2 mb-1.5">
                       <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
@@ -321,7 +320,7 @@ export default function InterviewHub() {
           <div className="lg:col-span-8 space-y-6">
             {currentQ ? (
               <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 backdrop-blur-xl space-y-6">
-                
+
                 {/* Question Header */}
                 <div className="space-y-3 border-b border-slate-800 pb-5">
                   <div className="flex items-center justify-between gap-2">
@@ -333,7 +332,7 @@ export default function InterviewHub() {
                     </span>
                   </div>
 
-                  <h2 className="text-lg font-bold text-white leading-relaxed">
+                  <h2 className="text-lg font-bold text-primary leading-relaxed">
                     {currentQ.question}
                   </h2>
 
@@ -370,7 +369,7 @@ export default function InterviewHub() {
                     <button
                       onClick={handleEvaluateAnswer}
                       disabled={evaluating || !userAnswer.trim()}
-                      className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 disabled:opacity-50 text-white rounded-xl font-medium text-xs flex items-center gap-2 transition-all shadow-lg shadow-amber-500/20"
+                      className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 disabled:opacity-50 text-primary rounded-xl font-medium text-xs flex items-center gap-2 transition-all shadow-lg shadow-amber-500/20"
                     >
                       {evaluating ? (
                         <>
@@ -393,7 +392,7 @@ export default function InterviewHub() {
                     <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
                       <div className="flex items-center gap-2">
                         <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                        <span className="text-sm font-bold text-white">AI Consistency & Impact Assessment</span>
+                        <span className="text-sm font-bold text-primary">AI Consistency & Impact Assessment</span>
                       </div>
                       <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                         {currentEval.score}/100 Impact Score

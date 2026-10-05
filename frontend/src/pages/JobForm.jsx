@@ -79,7 +79,7 @@ export default function JobForm() {
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="max-w-3xl mx-auto"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -87,12 +87,12 @@ export default function JobForm() {
     >
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors mb-6"
+        className="flex items-center gap-2 text-sm text-slate-400 hover:text-primary transition-colors mb-6"
       >
         <ArrowLeft className="w-4 h-4" /> Back
       </button>
 
-      <h1 className="text-3xl font-bold text-white font-heading mb-2">
+      <h1 className="text-3xl font-bold text-primary font-heading mb-2">
         {isEditing ? 'Edit Job Description' : 'Create Job Description'}
       </h1>
       <p className="text-slate-400 text-sm mb-8">
@@ -108,7 +108,7 @@ export default function JobForm() {
             value={form.title}
             onChange={e => setForm({ ...form, title: e.target.value })}
             placeholder="e.g. Senior Frontend Engineer"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+            className="w-full bg-primary/5 border border-primary/10 rounded-xl px-4 py-3 text-primary placeholder:text-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
             required
           />
         </div>
@@ -146,7 +146,7 @@ export default function JobForm() {
             onChange={e => setForm({ ...form, description: e.target.value })}
             placeholder="Describe the role, responsibilities, and ideal candidate..."
             rows={6}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all resize-none"
+            className="w-full bg-primary/5 border border-primary/10 rounded-xl px-4 py-3 text-primary placeholder:text-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all resize-none"
             required
           />
         </div>
@@ -161,7 +161,7 @@ export default function JobForm() {
               onChange={e => setSkillInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSkill())}
               placeholder="Type a skill and press Enter"
-              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all text-sm"
+              className="flex-1 bg-primary/5 border border-primary/10 rounded-xl px-4 py-2.5 text-primary placeholder:text-slate-500 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all text-sm"
             />
             <button type="button" onClick={addSkill} className="p-2.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-all">
               <Plus className="w-4 h-4" />
@@ -188,7 +188,7 @@ export default function JobForm() {
               value={form.experience_required}
               onChange={e => setForm({ ...form, experience_required: e.target.value })}
               placeholder="e.g. 3-5 years"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 transition-all text-sm"
+              className="w-full bg-primary/5 border border-primary/10 rounded-xl px-4 py-2.5 text-primary placeholder:text-slate-500 focus:outline-none focus:border-primary/50 transition-all text-sm"
             />
           </div>
           <div>
@@ -198,7 +198,7 @@ export default function JobForm() {
               value={form.education_required}
               onChange={e => setForm({ ...form, education_required: e.target.value })}
               placeholder="e.g. Bachelor's in CS"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 transition-all text-sm"
+              className="w-full bg-primary/5 border border-primary/10 rounded-xl px-4 py-2.5 text-primary placeholder:text-slate-500 focus:outline-none focus:border-primary/50 transition-all text-sm"
             />
           </div>
         </div>
@@ -213,7 +213,7 @@ export default function JobForm() {
               onChange={e => setRespInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addResponsibility())}
               placeholder="Add a responsibility"
-              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none transition-all text-sm"
+              className="flex-1 bg-primary/5 border border-primary/10 rounded-xl px-4 py-2.5 text-primary placeholder:text-slate-500 focus:outline-none transition-all text-sm"
             />
             <button type="button" onClick={addResponsibility} className="p-2.5 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-all">
               <Plus className="w-4 h-4" />
@@ -221,7 +221,7 @@ export default function JobForm() {
           </div>
           <ul className="space-y-1.5">
             {form.responsibilities.map((r, i) => (
-              <li key={i} className="flex items-center justify-between px-3 py-2 rounded-lg bg-white/5 text-sm text-slate-300">
+              <li key={i} className="flex items-center justify-between px-3 py-2 rounded-lg bg-primary/5 text-sm text-slate-300">
                 <span>{r}</span>
                 <button type="button" onClick={() => setForm({ ...form, responsibilities: form.responsibilities.filter((_, j) => j !== i) })}>
                   <X className="w-3.5 h-3.5 text-slate-500 hover:text-red-400" />
@@ -237,7 +237,7 @@ export default function JobForm() {
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
             {isEditing ? 'Update Job' : 'Create Job'}
           </GlowButton>
-          <button type="button" onClick={() => navigate(-1)} className="px-5 py-2.5 rounded-xl glass text-sm text-slate-400 hover:text-white transition-all">
+          <button type="button" onClick={() => navigate(-1)} className="px-5 py-2.5 rounded-xl glass text-sm text-slate-400 hover:text-primary transition-all">
             Cancel
           </button>
         </div>
