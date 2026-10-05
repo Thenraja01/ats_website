@@ -1,11 +1,15 @@
-"""Resume router — upload and ATS analysis endpoints."""
+"""Resume router — upload and ATS analysis endpoints.
+
+Spec: HireMind AI — one user type (USER).
+"""
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Request
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
+from app.utils.logger import get_logger
 from app.schemas.resume_schemas import AnalyzeRequest, ATSResult
-from app.parsers.resume_parser import extract_text_from_pdf, extract_text_from_docx
+from app.parsers.resume_parser import extract_text_from_pdf, extract_text_from_docx, extract_structured_resume_data
 from app.core.config import settings
 from app.services.ats_service import run_ats_pipeline
 from app.models.upload_model import UploadRecord
@@ -14,77 +18,136 @@ from app.crud.analysis_crud import AnalysisCRUD
 from app.dependencies.auth_dependency import get_optional_current_user, get_current_user
 from app.models.user_model import User
 from app.utils.validators import sanitize_filename, validate_mime_type
-from app.utils.logger import get_logger
+from fastapi.responses import StreamingResponse
+from app.services.font_service import get_filtered_fonts
+from app.services.docx_export_service import generate_resume_docx
 
 logger = get_logger(__name__)
 
 resume_router = APIRouter(prefix="/resume", tags=["Resume"])
 
-# Daily upload limits by role
-LIMITS = {
-    "guest": 1,
-    "candidate": 3,
-    "recruiter": 999999,
-}
+
+@resume_router.get("/fonts")
+async def get_fonts_metadata(
+    category: Optional[str] = None,
+    search: Optional[str] = None,
+    sort: str = "popularity",
+    limit: int = 60,
+    offset: int = 0
+):
+    """Retrieve backend-driven Google Fonts metadata with category filtering & caching."""
+    return await get_filtered_fonts(
+        category=category,
+        search=search,
+        sort=sort,
+        limit=limit,
+        offset=offset
+    )
 
 
-@resume_router.post("/upload")
-async def upload_resume(
+@resume_router.post("/export-docx")
+async def export_resume_docx(
+    request: Request,
+    payload: Dict[str, Any]
+):
+    """Export structured resume data to a native Microsoft Word (.docx) document."""
+    try:
+        resume_data = payload.get("resumeData", payload)
+        options = payload.get("options", {})
+        stream = generate_resume_docx(resume_data, options)
+        
+        filename = (resume_data.get("personalInfo", {}).get("fullName") or "Resume").replace(" ", "_")
+        filename = f"{filename}.docx"
+
+        return StreamingResponse(
+            stream,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+        )
+    except Exception as e:
+        logger.error(f"DOCX export error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate Word document: {str(e)}")
+
+
+
+@resume_router.post("/parse-structured")
+async def parse_structured_resume(
     request: Request,
     file: UploadFile = File(...),
-    current_user: User = Depends(get_optional_current_user),
+    current_user: Optional[User] = Depends(get_optional_current_user),
 ):
-    """Upload a resume (PDF/DOCX/TXT) and extract text. Rate-limited by role."""
+    """Upload a resume (PDF, DOCX, TXT, JSON) and extract structured Resume Studio JSON."""
     try:
-        # Determine role and identity
-        role = "guest"
-        user_id = None
-        ip_address = request.client.host if request.client else None
-
-        if current_user:
-            role = current_user.role
-            user_id = str(current_user.id)
-
-        limit = LIMITS.get(role, 0)
-
-        # Check upload counts for today
-        start_of_day = datetime.now(timezone.utc).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
-
-        if role == "guest":
-            upload_count = await UploadRecord.find(
-                UploadRecord.ip_address == ip_address,
-                UploadRecord.created_at >= start_of_day,
-            ).count()
-        else:
-            upload_count = await UploadRecord.find(
-                UploadRecord.user_id == user_id,
-                UploadRecord.created_at >= start_of_day,
-            ).count()
-
-        if upload_count >= limit:
-            raise HTTPException(
-                status_code=429,
-                detail=f"Daily upload limit reached for {role}. Limit: {limit}",
-            )
-
-        # Parse the uploaded file
         contents = await file.read()
         filename = file.filename or ""
-
-        # Sanitize filename to prevent path traversal
         filename = sanitize_filename(filename)
 
-        # Validate file size
         if len(contents) > settings.MAX_UPLOAD_SIZE:
             raise HTTPException(
                 status_code=413,
                 detail=f"File too large. Max size: {settings.MAX_UPLOAD_SIZE // (1024*1024)}MB",
             )
 
-        # Validate file content type via magic bytes
-        allowed_mimes = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain"]
+        # JSON file direct parse
+        if filename.endswith(".json"):
+            import json
+            try:
+                data = json.loads(contents.decode("utf-8", errors="ignore"))
+                return {"filename": filename, "structured": data}
+            except Exception as e:
+                raise HTTPException(status_code=400, detail="Invalid JSON file format")
+
+        if filename.endswith(".pdf"):
+            text = extract_text_from_pdf(contents)
+        elif filename.endswith(".docx") or filename.endswith(".doc"):
+            text = extract_text_from_docx(contents)
+        elif filename.endswith(".txt"):
+            text = contents.decode("utf-8", errors="ignore")
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Unsupported format. Supported: .pdf, .docx, .doc, .txt, .json",
+            )
+
+        if not text.strip():
+            raise HTTPException(status_code=400, detail="No readable text found in the document")
+
+        structured = extract_structured_resume_data(text)
+        return {"filename": filename, "extracted_text": text, "structured": structured}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Structured parse error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to parse resume document: {str(e)}")
+
+
+
+@resume_router.post("/upload")
+async def upload_resume(
+    request: Request,
+    file: UploadFile = File(...),
+    current_user: Optional[User] = Depends(get_optional_current_user),
+):
+    """Upload a resume (PDF/DOCX/TXT) and extract text."""
+    try:
+        user_id = str(current_user.id) if current_user else None
+        ip_address = request.client.host if request.client else None
+
+        contents = await file.read()
+        filename = file.filename or ""
+        filename = sanitize_filename(filename)
+
+        if len(contents) > settings.MAX_UPLOAD_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large. Max size: {settings.MAX_UPLOAD_SIZE // (1024*1024)}MB",
+            )
+
+        allowed_mimes = [
+            "application/pdf",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "text/plain",
+        ]
         if not validate_mime_type(contents, allowed_mimes):
             raise HTTPException(
                 status_code=400,
@@ -103,17 +166,14 @@ async def upload_resume(
                 detail="Unsupported file format. Use PDF, DOCX, or TXT.",
             )
 
-        # Record upload
         await UploadRecord(user_id=user_id, ip_address=ip_address).insert()
-
-        logger.info(f"Resume uploaded: {filename} by {role}")
         return {"filename": filename, "extracted_text": text}
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Upload error: {e}")
-        raise HTTPException(status_code=500, detail="An internal error occurred")
+        raise HTTPException(status_code=500, detail="An internal error occurred during resume parsing")
 
 
 @resume_router.post("/analyze", response_model=ATSResult)
@@ -126,15 +186,13 @@ async def analyze_resume(
     try:
         result = run_ats_pipeline(request.resume_text, request.jd_text)
 
-        # Persist analysis result
         user_id = str(current_user.id) if current_user else None
         ip_address = req.client.host if req and req.client else None
-        role = current_user.role if current_user else "guest"
 
         analysis = AnalysisResult(
             user_id=user_id,
             ip_address=ip_address,
-            role=role,
+            role="user",
             resume_text=request.resume_text,
             jd_text=request.jd_text,
             ats_score=result["ats_score"],
@@ -146,14 +204,12 @@ async def analyze_resume(
         )
         await AnalysisCRUD.create(analysis)
 
-        # Attach ID to response for frontend navigation
         result["id"] = str(analysis.id)
-        logger.info(f"Analysis saved: {analysis.id} for {role}")
         return result
 
     except Exception as e:
         logger.error(f"Analysis error: {e}")
-        raise HTTPException(status_code=500, detail="An internal error occurred")
+        raise HTTPException(status_code=500, detail="An internal error occurred during ATS analysis")
 
 
 @resume_router.get("/result/{analysis_id}", response_model=ATSResult)
@@ -161,26 +217,12 @@ async def get_analysis_result(
     analysis_id: str,
     current_user: User = Depends(get_current_user),
 ):
-    """Get a specific analysis result by ID.
-
-    Requires authentication.  A user may only view their own analysis
-    results.  Recruiters may view results tied to applications on jobs
-    they own.
-    """
+    """Get a specific analysis result by ID. Enforces ownership."""
     analysis = await AnalysisCRUD.get_by_id(analysis_id)
     if not analysis:
         raise HTTPException(status_code=404, detail="Analysis not found")
 
-    # Owner can always view
-    if analysis.user_id == str(current_user.id):
-        pass
-    # Recruiters / admins may view via application linkage
-    elif current_user.role in ("recruiter", "organization_admin"):
-        from app.models.application_model import Application
-        app = await Application.find_one(Application.analysis_id == str(analysis.id))
-        if not app:
-            raise HTTPException(status_code=403, detail="Access denied")
-    else:
+    if analysis.user_id != str(current_user.id):
         raise HTTPException(status_code=403, detail="Access denied")
 
     return {
@@ -200,12 +242,7 @@ async def get_analysis_history(
     skip: int = 0,
     limit: int = 20,
 ):
-    """Get the current user's analysis history (candidates only)."""
-    if current_user.role != "candidate":
-        raise HTTPException(
-            status_code=403, detail="Only candidates can access their history"
-        )
-
+    """Get the current user's analysis history."""
     limit = min(limit, 100)
     analyses = await AnalysisCRUD.get_by_user(str(current_user.id), skip, limit)
     return [
@@ -224,10 +261,5 @@ async def get_analysis_history(
 @resume_router.get("/history/stats")
 async def get_analysis_stats(current_user: User = Depends(get_current_user)):
     """Get the current user's analysis statistics."""
-    if current_user.role != "candidate":
-        raise HTTPException(
-            status_code=403, detail="Only candidates can access their stats"
-        )
-
     stats = await AnalysisCRUD.get_user_stats(str(current_user.id))
     return stats

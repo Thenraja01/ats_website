@@ -1,4 +1,8 @@
-"""Security utilities — password hashing and JWT token management."""
+"""Security utilities — password hashing and JWT token management.
+
+Spec: HireMind AI — one user type (USER). No RBAC. All ownership derived
+from the authenticated JWT, never from client-supplied IDs.
+"""
 
 from datetime import datetime, timedelta, timezone
 from jose import jwt
@@ -40,5 +44,9 @@ def create_access_token(data: dict) -> str:
 
 
 def decode_token(token: str) -> dict:
-    """Decode and validate a JWT token."""
+    """Decode and validate a JWT token.
+
+    Returns the payload dict. The caller must verify ownership of any
+    resource against the returned user_id.
+    """
     return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])

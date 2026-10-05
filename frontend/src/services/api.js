@@ -31,77 +31,42 @@ api.interceptors.response.use(
 
 export const authAPI = {
   login: (email, password) => api.post('/auth/login', { email, password }),
-  register: (name, email, password, role = 'candidate', organization_id = null) =>
-    api.post('/auth/register', { name, email, password, role, organization_id }),
-  googleAuth: (credential, role = 'candidate') => api.post('/auth/google', { credential, role }),
+  register: (name, email, password) => api.post('/auth/register', { name, email, password }),
+  verifyOtp: (email, otp) => api.post('/auth/verify-otp', { email, otp }),
   getProfile: () => api.get('/auth/me'),
+};
+
+export const dashboardAPI = {
+  get: () => api.get('/dashboard'),
 };
 
 export const resumeAPI = {
   upload: (formData) => api.post('/resume/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
+  parseStructured: (formData) => api.post('/resume/parse-structured', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
   analyze: (data) => api.post('/resume/analyze', data),
+  getFonts: (params) => api.get('/resume/fonts', { params }),
+  exportDocx: (data) => api.post('/resume/export-docx', data, { responseType: 'blob' }),
   getResult: (id) => api.get(`/resume/result/${id}`),
   getHistory: (skip = 0, limit = 20) => api.get(`/resume/history?skip=${skip}&limit=${limit}`),
   getHistoryStats: () => api.get('/resume/history/stats'),
 };
 
-export const candidateAPI = {
-  getResumes: () => api.get('/candidate/resumes'),
-  uploadResume: (formData) => api.post('/candidate/resumes', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }),
-  deleteResume: (id) => api.delete(`/candidate/resumes/${id}`),
-  getApplications: () => api.get('/candidate/applications'),
-  getApplication: (id) => api.get(`/candidate/applications/${id}`),
-  updateApplicationStatus: (id, status) => api.patch(`/candidate/applications/${id}/status`, { status }),
-  applyToJob: (jobId, resumeId, resumeVersionId) => {
-    const params = new URLSearchParams();
-    if (resumeId) params.set('resume_id', resumeId);
-    if (resumeVersionId) params.set('resume_version_id', resumeVersionId);
-    return api.post(`/candidate/jobs/${jobId}/apply?${params.toString()}`);
-  },
-  generateCoverLetter: (data) => api.post('/candidate/cover-letter', data),
-  browseJobs: (params) => api.get('/recruiter/jobs/browse', { params }),
+export const applicationsAPI = {
+  list: (params) => api.get('/applications', { params }),
+  get: (id) => api.get(`/applications/${id}`),
+  create: (data) => api.post('/applications', data),
+  update: (id, data) => api.put(`/applications/${id}`, data),
+  delete: (id) => api.delete(`/applications/${id}`),
 };
 
-export const publicAPI = {
-  getOrgJobs: (orgId) => api.get(`/public/organizations/${orgId}/jobs`),
-  getJobDetails: (orgId, jobId) => api.get(`/public/organizations/${orgId}/jobs/${jobId}`),
-  applyPublic: (orgId, jobId, formData) => api.post(`/public/organizations/${orgId}/jobs/${jobId}/apply`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }),
-};
-
-export const recruiterAPI = {
-  getJobs: () => api.get('/recruiter/jobs'),
-  getJob: (id) => api.get(`/recruiter/jobs/${id}`),
-  createJob: (data) => api.post('/recruiter/jobs', data),
-  updateJob: (id, data) => api.put(`/recruiter/jobs/${id}`, data),
-  deleteJob: (id) => api.delete(`/recruiter/jobs/${id}`),
-  optimizeJobText: (text) => api.post('/recruiter/jobs/optimize-text', { text }),
-  getApplications: (jobId) => api.get(`/recruiter/jobs/${jobId}/applications`),
-  getAllApplications: () => api.get('/recruiter/applications'),
-  updateApplicationStatus: (id, status) => api.put(`/recruiter/applications/${id}/status`, { status }),
-  getFilteredCandidates: (params) => api.get('/recruiter/candidates/filter', { params }),
-  getJobRankings: (jobId) => api.get(`/recruiter/jobs/${jobId}/rankings`),
-  batchScreen: (jobId, formData) => api.post(`/recruiter/jobs/${jobId}/batch-screen`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }),
-  getAnalytics: () => api.get('/recruiter/analytics'),
-};
-
-export const adminAPI = {
-  getStats: () => api.get('/admin/stats'),
-  getCandidates: () => api.get('/admin/candidates'),
-  getTopCandidates: () => api.get('/admin/top-candidates'),
-  getOrganizations: () => api.get('/admin/organizations'),
-  createOrganization: (data) => api.post('/admin/organizations', data),
-  updateOrganization: (id, data) => api.put(`/admin/organizations/${id}`, data),
-  deleteOrganization: (id) => api.delete(`/admin/organizations/${id}`),
-  getRecruiters: () => api.get('/admin/recruiters'),
-  updateRecruiter: (id, data) => api.put(`/admin/recruiters/${id}`, data),
+export const jdAPI = {
+  analyze: (data) => api.post('/jd/analyze', data),
+  match: (data) => api.post('/jd/match', data),
+  generateCoverLetter: (data) => api.post('/jd/cover-letter', data),
 };
 
 export const careerAPI = {
@@ -129,18 +94,6 @@ export const studioAPI = {
     }),
   tailorAssess: (data) => api.post('/studio/tailor/assess', data),
   tailorCreate: (data) => api.post('/studio/tailor/create', data),
-};
-
-export const jobsAPI = {
-  browse: (params) => api.get('/recruiter/jobs/browse', { params }),
-  analyze: ({ jdText }) => api.post('/studio/analyze-jd', { jd_text: jdText }),
-  match: ({ resumeId, jdText, resumeText }) =>
-    api.post('/studio/match', {
-      resume_id: resumeId,
-      jd_text: jdText,
-      resume_text: resumeText,
-    }),
-  getJob: (id) => api.get(`/recruiter/jobs/${id}`),
 };
 
 export const interviewAPI = {
@@ -195,6 +148,28 @@ export const notificationsAPI = {
 export const intelligenceAPI = {
   overview: () => api.get('/intelligence/overview'),
   activity: () => api.get('/intelligence/activity'),
+};
+
+// Aliases for compatibility with any legacy helper components
+export const candidateAPI = {
+  getResumes: () => studioAPI.listResumes(),
+  uploadResume: (formData) => resumeAPI.upload(formData),
+  deleteResume: (id) => studioAPI.deleteResume(id),
+  getApplications: () => applicationsAPI.list(),
+  getApplication: (id) => applicationsAPI.get(id),
+  updateApplicationStatus: (id, status) => applicationsAPI.update(id, { status }),
+  generateCoverLetter: (data) => jdAPI.generateCoverLetter(data),
+  browseJobs: () => Promise.resolve({ data: [] }),
+};
+
+export const recruiterAPI = {
+  getApplications: () => applicationsAPI.list(),
+  updateApplicationStatus: (id, status) => applicationsAPI.update(id, { status }),
+  batchScreen: () => Promise.resolve({ data: [] }),
+};
+
+export const adminAPI = {
+  getStats: () => dashboardAPI.get(),
 };
 
 export default api;

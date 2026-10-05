@@ -1,15 +1,16 @@
 """Resume Studio router — structured, versioned resumes, ATS re-checks and JD tailoring.
 
+Spec: HireMind AI — one user type (USER).
 Versions are never overwritten: tailoring always clones into a new version.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict
 
-from app.dependencies.role_dependency import require_roles
+from app.dependencies.auth_dependency import get_current_user
 from app.models.user_model import User
 from app.models.career_model import CareerProfile, to_camel
 from app.models.resume_version_model import ResumeVersion, ATSRef, ResumeSection, render_resume_to_text
@@ -101,7 +102,7 @@ async def list_templates():
 
 
 @studio_router.get("/resumes")
-async def list_resumes(user: User = Depends(require_roles(["candidate"]))):
+async def list_resumes(user: User = Depends(get_current_user)):
     resumes = (
         await ResumeVersion.find(ResumeVersion.user_id == str(user.id))
         .sort(-ResumeVersion.created_at)
@@ -111,7 +112,7 @@ async def list_resumes(user: User = Depends(require_roles(["candidate"]))):
 
 
 @studio_router.post("/resumes")
-async def create_resume(payload: ResumeCreate, user: User = Depends(require_roles(["candidate"]))):
+async def create_resume(payload: ResumeCreate, user: User = Depends(get_current_user)):
     sections = [ResumeSection.model_validate(s) for s in payload.sections or []]
     resume = ResumeVersion(
         user_id=str(user.id),
@@ -130,13 +131,13 @@ async def create_resume(payload: ResumeCreate, user: User = Depends(require_role
 
 
 @studio_router.get("/resumes/{resume_id}")
-async def get_resume(resume_id: str, user: User = Depends(require_roles(["candidate"]))):
+async def get_resume(resume_id: str, user: User = Depends(get_current_user)):
     resume = await _owned_resume(resume_id, user)
     return resume.to_api_dict()
 
 
 @studio_router.put("/resumes/{resume_id}")
-async def update_resume(resume_id: str, payload: ResumeUpdate, user: User = Depends(require_roles(["candidate"]))):
+async def update_resume(resume_id: str, payload: ResumeUpdate, user: User = Depends(get_current_user)):
     resume = await _owned_resume(resume_id, user)
     if payload.name is not None:
         resume.name = payload.name
@@ -158,20 +159,20 @@ async def update_resume(resume_id: str, payload: ResumeUpdate, user: User = Depe
         resume.sections = [ResumeSection.model_validate(s) for s in payload.sections]
     if payload.data is not None:
         resume.data = payload.data
-    resume.updated_at = datetime.utcnow()
+    resume.updated_at = datetime.now(timezone.utc)
     await resume.save()
     return resume.to_api_dict()
 
 
 @studio_router.delete("/resumes/{resume_id}")
-async def delete_resume(resume_id: str, user: User = Depends(require_roles(["candidate"]))):
+async def delete_resume(resume_id: str, user: User = Depends(get_current_user)):
     resume = await _owned_resume(resume_id, user)
     await resume.delete()
     return {"message": "Resume deleted"}
 
 
 @studio_router.post("/resumes/{resume_id}/duplicate")
-async def duplicate_resume(resume_id: str, user: User = Depends(require_roles(["candidate"]))):
+async def duplicate_resume(resume_id: str, user: User = Depends(get_current_user)):
     resume = await _owned_resume(resume_id, user)
     latest = (
         await ResumeVersion.find(ResumeVersion.user_id == str(user.id))
@@ -198,7 +199,7 @@ async def duplicate_resume(resume_id: str, user: User = Depends(require_roles(["
 
 
 @studio_router.post("/resumes/{resume_id}/ats")
-async def analyze_resume_ats(resume_id: str, user: User = Depends(require_roles(["candidate"]))):
+async def analyze_resume_ats(resume_id: str, user: User = Depends(get_current_user)):
     resume = await _owned_resume(resume_id, user)
     resume_text = render_resume_to_text(resume)
     if not resume_text.strip():
@@ -211,16 +212,16 @@ async def analyze_resume_ats(resume_id: str, user: User = Depends(require_roles(
         eligible=result["eligible"],
         missing_skills=result["missing_skills"],
         suggestions=result["suggestions"],
-        analyzed_at=datetime.utcnow(),
+        analyzed_at=datetime.now(timezone.utc),
     )
     resume.status = "ready"
-    resume.updated_at = datetime.utcnow()
+    resume.updated_at = datetime.now(timezone.utc)
     await resume.save()
     return resume.to_api_dict()
 
 
 @studio_router.post("/analyze-jd")
-async def analyze_jd_text(payload: dict, user: User = Depends(require_roles(["candidate"]))):
+async def analyze_jd_text(payload: dict, user: User = Depends(get_current_user)):
     jd_text = payload.get("jd_text", "")
     if not jd_text.strip():
         raise HTTPException(status_code=400, detail="Job description is required")
@@ -228,7 +229,7 @@ async def analyze_jd_text(payload: dict, user: User = Depends(require_roles(["ca
 
 
 @studio_router.post("/match")
-async def match_resume(payload: dict, user: User = Depends(require_roles(["candidate"]))):
+async def match_resume(payload: dict, user: User = Depends(get_current_user)):
     """Match a resume version (or raw resume text) against a JD."""
     resume_text = payload.get("resume_text", "")
     resume_id = payload.get("resume_id")
@@ -248,7 +249,7 @@ async def match_resume(payload: dict, user: User = Depends(require_roles(["candi
 
 
 @studio_router.post("/tailor/assess")
-async def assess_tailoring(payload: TailorRequest, user: User = Depends(require_roles(["candidate"]))):
+async def assess_tailoring(payload: TailorRequest, user: User = Depends(get_current_user)):
     """Compare Career Vault + resume against a JD and produce safe vs verification-required changes."""
     jd_text = payload.jd_text
     if not jd_text.strip():
@@ -278,7 +279,7 @@ async def assess_tailoring(payload: TailorRequest, user: User = Depends(require_
 
 
 @studio_router.post("/tailor/create")
-async def create_tailored_version(payload: TailorCreateRequest, user: User = Depends(require_roles(["candidate"]))):
+async def create_tailored_version(payload: TailorCreateRequest, user: User = Depends(get_current_user)):
     """Create a new tailored version from an existing resume. Original is never overwritten."""
     source = await _owned_resume(payload.source_resume_id, user)
     latest = (
@@ -300,7 +301,7 @@ async def create_tailored_version(payload: TailorCreateRequest, user: User = Dep
         jd_text=payload.jd_text,
         status="draft",
         source_resume_id=str(source.id),
-        provenance=[*source.provenance, {"type": "jd_tailor", "job": payload.jd_title, "at": datetime.utcnow().isoformat()}],
+        provenance=[*source.provenance, {"type": "jd_tailor", "job": payload.jd_title, "at": datetime.now(timezone.utc).isoformat()}],
         sections=sections,
         data=payload.data or source.data,
     )
@@ -315,7 +316,7 @@ async def create_tailored_version(payload: TailorCreateRequest, user: User = Dep
             eligible=result["eligible"],
             missing_skills=result["missing_skills"],
             suggestions=result["suggestions"],
-            analyzed_at=datetime.utcnow(),
+            analyzed_at=datetime.now(timezone.utc),
         )
         new_version.status = "ready"
         await new_version.save()

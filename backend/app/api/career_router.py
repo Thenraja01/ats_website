@@ -1,10 +1,15 @@
-"""Career Vault router — single source of truth for career data."""
+"""Career Vault router — single source of truth for user career data.
+
+Spec: HireMind AI — one user type (USER). All data ownership via user_id
+from authenticated JWT. No RBAC, no role checking.
+"""
 
 from fastapi import APIRouter, Depends, HTTPException
 from typing import Optional
+from pydantic import BaseModel
+from datetime import datetime, timezone
 
 from app.dependencies.auth_dependency import get_current_user
-from app.dependencies.role_dependency import require_roles
 from app.models.user_model import User
 from app.models.career_model import CareerProfile, PersonalInfo, VoiceSummary
 
@@ -20,7 +25,7 @@ async def get_or_create_profile(user_id: str) -> CareerProfile:
 
 
 @career_router.get("")
-async def get_profile(user: User = Depends(require_roles(["candidate"]))):
+async def get_profile(user: User = Depends(get_current_user)):
     profile = await get_or_create_profile(str(user.id))
     return profile.to_api_dict()
 
@@ -28,7 +33,7 @@ async def get_profile(user: User = Depends(require_roles(["candidate"]))):
 @career_router.put("")
 async def update_profile(
     payload: dict,
-    user: User = Depends(require_roles(["candidate"])),
+    user: User = Depends(get_current_user),
 ):
     profile = await get_or_create_profile(str(user.id))
 
@@ -50,7 +55,7 @@ async def update_profile(
         if field in payload:
             setattr(profile, field, payload[field])
 
-    profile.updated_at = __import__("datetime").datetime.utcnow()
+    profile.updated_at = datetime.now(timezone.utc)
     await profile.save()
     return profile.to_api_dict()
 
@@ -59,7 +64,7 @@ async def update_profile(
 async def update_section(
     section: str,
     payload: list | dict,
-    user: User = Depends(require_roles(["candidate"])),
+    user: User = Depends(get_current_user),
 ):
     allowed = {
         "personal": "personal_info",
@@ -89,13 +94,13 @@ async def update_section(
     else:
         setattr(profile, target, payload)
 
-    profile.updated_at = __import__("datetime").datetime.utcnow()
+    profile.updated_at = datetime.now(timezone.utc)
     await profile.save()
     return {"ok": True, "section": section, "profile": profile.to_api_dict()}
 
 
 @career_router.get("/completion")
-async def completion(user: User = Depends(require_roles(["candidate"]))):
+async def completion(user: User = Depends(get_current_user)):
     profile = await get_or_create_profile(str(user.id))
 
     def filled(value) -> bool:

@@ -1,49 +1,73 @@
 import {
   LayoutDashboard,
-  FolderOpen,
+  User,
+  Sparkles,
+  Zap,
+  Target,
   FileText,
-  Wand2,
+  Hammer,
   ScanSearch,
+  Wand2,
   Mic2,
-  Library,
   MessagesSquare,
+  Library,
   ClipboardList,
-  FolderUp,
-  Layers,
+  Kanban,
+  FolderOpen,
   Settings,
+  Bell,
 } from 'lucide-react';
 
 export const WORKSPACE_NAV = [
   {
     section: 'Workspace',
     items: [
-      { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, keywords: 'home overview start' },
-      { label: 'Career Vault', href: '/career-vault', icon: FolderOpen, keywords: 'profile skills experience vault foundation' },
-      { label: 'Resume Studio', href: '/resume-studio', icon: FileText, keywords: 'resume builder drafts versions studio' },
-      { label: 'JD Tailor', href: '/resume-studio/jd-tailor', icon: Wand2, keywords: 'customize tailor optimize job description' },
-      { label: 'ATS Analyzer', href: '/ats-analyzer', icon: ScanSearch, keywords: 'resume analysis ats score compatibility' },
+      { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, keywords: 'home overview start metrics' },
+    ],
+  },
+  {
+    section: 'My Career',
+    items: [
+      { label: 'Profile', href: '/profile', icon: User, keywords: 'profile master info experience education foundation' },
+      { label: 'Career Advisor', href: '/career/advisor', icon: Sparkles, keywords: 'ai advisor roadmap guidance path' },
+      { label: 'Skills & Gaps', href: '/career/skills', icon: Zap, keywords: 'skills analysis gap matrix learning' },
+      { label: 'Goals', href: '/career/goals', icon: Target, keywords: 'career goals milestones targets' },
+    ],
+  },
+  {
+    section: 'Resume',
+    items: [
+      { label: 'My Resumes', href: '/resumes', icon: FileText, keywords: 'resumes studio versions drafts' },
+      { label: 'Resume Builder', href: '/resumes/new', icon: Hammer, keywords: 'builder create new resume live preview' },
+      { label: 'Resume Analyzer', href: '/resumes/analyze', icon: ScanSearch, keywords: 'ats analyzer score feedback breakdown' },
+      { label: 'JD Match', href: '/jd-match', icon: Wand2, keywords: 'jd match tailor optimize comparison' },
     ],
   },
   {
     section: 'Interview',
     items: [
-      { label: 'Interview Hub', href: '/interview', icon: Mic2, keywords: 'practice overview prep categories' },
-      { label: 'Question Bank', href: '/interview/questions', icon: Library, keywords: 'questions save bank categories' },
-      { label: 'Mock Interview', href: '/interview/mock', icon: MessagesSquare, keywords: 'mock practice session simulate' },
-      { label: 'Interview Reports', href: '/interview/reports', icon: ClipboardList, keywords: 'reports results feedback scores' },
+      { label: 'Interview Hub', href: '/interviews', icon: Mic2, keywords: 'practice prep readiness categories' },
+      { label: 'Mock Interview', href: '/interviews/mock', icon: MessagesSquare, keywords: 'mock practice simulate ai session' },
+      { label: 'Question Bank', href: '/interviews/questions', icon: Library, keywords: 'questions bank search bookmark' },
+      { label: 'Reports', href: '/interviews/reports', icon: ClipboardList, keywords: 'reports results performance feedback scores' },
     ],
   },
   {
-    section: 'Resources',
+    section: 'Applications',
     items: [
-      { label: 'Documents', href: '/documents', icon: FolderUp, keywords: 'cover letter files upload notes' },
-      { label: 'Resume Versions', href: '/resume-studio', icon: Layers, keywords: 'versions history duplicates resumes' },
+      { label: 'Application Tracker', href: '/applications', icon: Kanban, keywords: 'jobs tracker kanban applied offer status' },
     ],
   },
   {
-    section: 'General',
+    section: 'Career Vault',
     items: [
-      { label: 'Settings', href: '/settings', icon: Settings, keywords: 'preferences appearance account' },
+      { label: 'Documents', href: '/vault/documents', icon: FolderOpen, keywords: 'vault documents certificates offer letters files' },
+    ],
+  },
+  {
+    section: 'Preferences',
+    items: [
+      { label: 'Settings', href: '/settings', icon: Settings, keywords: 'account security preferences appearance' },
     ],
   },
 ];
@@ -51,12 +75,12 @@ export const WORKSPACE_NAV = [
 export const WORKSPACE_NAV_FLAT = WORKSPACE_NAV.flatMap((g) => g.items);
 
 export const WORKSPACE_QUICK_ACTIONS = [
-  { label: 'Create a resume', href: '/resume-studio/new', keywords: 'create resume blank new' },
-  { label: 'Tailor resume to a JD', href: '/resume-studio/jd-tailor', keywords: 'tailor customize jd' },
-  { label: 'Run an ATS check', href: '/ats-analyzer', keywords: 'ats analysis score resume' },
-  { label: 'Practice an interview', href: '/interview', keywords: 'interview hub practice prep' },
-  { label: 'Start a mock interview', href: '/interview/mock', keywords: 'mock interview simulate' },
-  { label: 'Prepare for a project', href: '/interview/project', keywords: 'project questions generate' },
-  { label: 'Browse the question bank', href: '/interview/questions', keywords: 'questions bank save' },
-  { label: 'Update career vault', href: '/career-vault', keywords: 'career profile vault foundation' },
+  { label: 'Update Master Profile', href: '/profile', keywords: 'profile update vault' },
+  { label: 'Create a new Resume', href: '/resumes/new', keywords: 'create resume blank builder' },
+  { label: 'Analyze Resume (ATS)', href: '/resumes/analyze', keywords: 'ats check score resume analyzer' },
+  { label: 'Match Resume with JD', href: '/jd-match', keywords: 'tailor customize jd match' },
+  { label: 'Start Mock Interview', href: '/interviews/mock', keywords: 'mock interview practice simulate' },
+  { label: 'Track Job Application', href: '/applications', keywords: 'application track kanban' },
+  { label: 'View Career Roadmap', href: '/career/advisor', keywords: 'advisor roadmap skills' },
+  { label: 'Upload to Career Vault', href: '/vault/documents', keywords: 'vault documents certificates files' },
 ];

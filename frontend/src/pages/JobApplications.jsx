@@ -1,364 +1,561 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ArrowLeft, Users, Star, ExternalLink, Loader2, 
-  RefreshCw, Check, X, Filter, Sparkles, TrendingUp, Upload, FileText
+  Plus, LayoutGrid, Table as TableIcon, Search, Building2, MapPin, 
+  DollarSign, ExternalLink, Calendar, FileText, Trash2, Edit3, 
+  CheckCircle2, Clock, XCircle, Briefcase, Filter, ChevronRight, Sparkles
 } from 'lucide-react';
-import { recruiterAPI } from '../services/api';
-import { getApiErrorMessage } from '../utils';
-import { GlassCard, Badge, GlowButton } from '../components/ui/GlassCard';
-import { staggerContainer, fadeInUp } from '../constants/theme';
+import { applicationsAPI, studioAPI } from '../services/api';
 import { toast } from 'sonner';
+import { cn } from '../lib/utils';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Textarea } from '../components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from '../components/ui/dialog';
+
+const STATUS_COLUMNS = [
+  { id: 'saved', label: 'Saved', color: 'border-slate-500/30 bg-slate-500/5 text-slate-400' },
+  { id: 'applied', label: 'Applied', color: 'border-blue-500/30 bg-blue-500/5 text-blue-400' },
+  { id: 'screening', label: 'Screening', color: 'border-purple-500/30 bg-purple-500/5 text-purple-400' },
+  { id: 'interview', label: 'Interview', color: 'border-amber-500/30 bg-amber-500/5 text-amber-400' },
+  { id: 'offer', label: 'Offer', color: 'border-emerald-500/30 bg-emerald-500/5 text-emerald-400' },
+  { id: 'rejected', label: 'Rejected', color: 'border-rose-500/30 bg-rose-500/5 text-rose-400' },
+  { id: 'withdrawn', label: 'Withdrawn', color: 'border-zinc-500/30 bg-zinc-500/5 text-zinc-400' },
+];
 
 export default function JobApplications() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [activeSubTab, setActiveSubTab] = useState('list'); // 'list' | 'batch'
+  const [viewMode, setViewMode] = useState('kanban'); // 'kanban' | 'table'
   const [applications, setApplications] = useState([]);
+  const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  // Batch screen states
-  const [batchFiles, setBatchFiles] = useState([]);
-  const [batchResults, setBatchResults] = useState([]);
-  const [batchLoading, setBatchLoading] = useState(false);
+  // Modal State
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingApp, setEditingApp] = useState(null);
+  const [formData, setFormData] = useState({
+    company: '',
+    role: '',
+    jobUrl: '',
+    location: '',
+    salary: '',
+    status: 'applied',
+    resumeVersionId: '',
+    notes: '',
+  });
 
   const fetchApplications = async () => {
-    setLoading(true);
-    setError(null);
     try {
-      const res = await recruiterAPI.getApplications(id);
-      setApplications(res.data);
+      setLoading(true);
+      const [appsRes, resumesRes] = await Promise.all([
+        applicationsAPI.list(),
+        studioAPI.listResumes().catch(() => ({ data: [] })),
+      ]);
+      setApplications(appsRes.data || []);
+      setResumes(resumesRes.data || []);
     } catch (err) {
-      setError(getApiErrorMessage(err, 'Failed to load applications for this job'));
+      toast.error('Failed to load applications');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (id) fetchApplications();
-  }, [id]);
+    fetchApplications();
+  }, []);
 
-  const updateStatus = async (appId, status) => {
+  const handleOpenAdd = () => {
+    setEditingApp(null);
+    setFormData({
+      company: '',
+      role: '',
+      jobUrl: '',
+      location: '',
+      salary: '',
+      status: 'applied',
+      resumeVersionId: resumes[0]?.id || '',
+      notes: '',
+    });
+    setModalOpen(true);
+  };
+
+  const handleOpenEdit = (app) => {
+    setEditingApp(app);
+    setFormData({
+      company: app.company || '',
+      role: app.role || app.job_title || '',
+      jobUrl: app.job_url || '',
+      location: app.location || '',
+      salary: app.salary || '',
+      status: app.status || 'applied',
+      resumeVersionId: app.resume_version_id || '',
+      notes: app.notes || '',
+    });
+    setModalOpen(true);
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    if (!formData.company.trim() || !formData.role.trim()) {
+      toast.error('Company and Role are required');
+      return;
+    }
+
     try {
-      await recruiterAPI.updateApplicationStatus(appId, status);
-      setApplications(prev => prev.map(a => a.id === appId ? { ...a, status } : a));
-      toast.success(`Application updated to ${status}`);
+      if (editingApp) {
+        const res = await applicationsAPI.update(editingApp.id, formData);
+        setApplications((prev) => prev.map((a) => (a.id === editingApp.id ? res.data : a)));
+        toast.success('Application updated');
+      } else {
+        const res = await applicationsAPI.create(formData);
+        setApplications((prev) => [res.data, ...prev]);
+        toast.success('Application tracked successfully');
+      }
+      setModalOpen(false);
+    } catch (err) {
+      toast.error('Failed to save application');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Remove this application from tracking?')) return;
+    try {
+      await applicationsAPI.delete(id);
+      setApplications((prev) => prev.filter((a) => a.id !== id));
+      toast.success('Application removed');
+    } catch (err) {
+      toast.error('Failed to delete application');
+    }
+  };
+
+  const handleStatusChange = async (appId, newStatus) => {
+    try {
+      const res = await applicationsAPI.update(appId, { status: newStatus });
+      setApplications((prev) => prev.map((a) => (a.id === appId ? res.data : a)));
+      toast.success(`Moved to ${newStatus}`);
     } catch (err) {
       toast.error('Failed to update status');
     }
   };
 
-  const handleBatchFileChange = (e) => {
-    if (e.target.files) {
-      setBatchFiles(Array.from(e.target.files));
-    }
-  };
-
-  const handleBatchScreen = async () => {
-    if (batchFiles.length === 0) {
-      toast.error('Please select at least one resume');
-      return;
-    }
-    const formData = new FormData();
-    batchFiles.forEach((file) => {
-      formData.append('files', file);
-    });
-
-    setBatchLoading(true);
-    try {
-      const res = await recruiterAPI.batchScreen(id, formData);
-      setBatchResults(res.data);
-      toast.success('Batch resume screening complete!');
-    } catch (err) {
-      toast.error('Batch screening failed');
-    } finally {
-      setBatchLoading(false);
-    }
-  };
-
-  const filteredApps = applications.filter(a => {
-    return statusFilter === 'all' || a.status === statusFilter;
+  const filteredApps = applications.filter((app) => {
+    const matchSearch =
+      (app.company || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (app.role || app.job_title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (app.location || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchStatus = statusFilter === 'all' || (app.status || 'applied').toLowerCase() === statusFilter.toLowerCase();
+    return matchSearch && matchStatus;
   });
 
-  if (loading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
-    <motion.div 
-      className="max-w-7xl mx-auto"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
-      <button
-        onClick={() => navigate('/recruiter-dashboard')}
-        className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors mb-6"
-      >
-        <ArrowLeft className="w-4 h-4" /> Back to Recruiter Portal
-      </button>
-
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white font-heading mb-1">Applications Workspace</h1>
-          <p className="text-slate-400 text-sm">Review candidate matches or sifting batches dynamically with AI.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            Job Application Tracker
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Organize your career search, track interview stages, and connect resumes used per application.
+          </p>
         </div>
+
         <div className="flex items-center gap-2">
-          <button 
-            onClick={fetchApplications}
-            className="p-2.5 rounded-xl glass text-slate-400 hover:text-white transition-all w-fit"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
+          {/* View Toggle */}
+          <div className="flex rounded-lg border border-border bg-card p-1">
+            <button
+              onClick={() => setViewMode('kanban')}
+              className={cn(
+                'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                viewMode === 'kanban' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <LayoutGrid className="size-3.5" />
+              Kanban
+            </button>
+            <button
+              onClick={() => setViewMode('table')}
+              className={cn(
+                'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                viewMode === 'table' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              <TableIcon className="size-3.5" />
+              Table
+            </button>
+          </div>
+
+          <Button onClick={handleOpenAdd} className="gap-1.5">
+            <Plus className="size-4" />
+            Add Application
+          </Button>
         </div>
       </div>
 
-      {/* Workspace Sub-Tabs */}
-      <div className="flex gap-2 mb-6 glass rounded-xl p-1 w-fit border border-white/[0.06]">
-        <button
-          onClick={() => setActiveSubTab('list')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-            activeSubTab === 'list' ? 'bg-primary/20 text-primary shadow-sm' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          Active Applications ({applications.length})
-        </button>
-        <button
-          onClick={() => setActiveSubTab('batch')}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
-            activeSubTab === 'batch' ? 'bg-primary/20 text-primary shadow-sm' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <Sparkles className="w-4 h-4" /> AI Batch Sifter
-        </button>
+      {/* Metrics Row */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+        {STATUS_COLUMNS.map((col) => {
+          const count = applications.filter((a) => (a.status || 'applied').toLowerCase() === col.id).length;
+          return (
+            <div
+              key={col.id}
+              onClick={() => setStatusFilter(statusFilter === col.id ? 'all' : col.id)}
+              className={cn(
+                'cursor-pointer rounded-xl border p-3 transition-all hover:border-primary/50',
+                statusFilter === col.id ? 'ring-2 ring-primary/50 border-primary' : 'border-border/60 bg-card/60'
+              )}
+            >
+              <p className="text-xs font-medium text-muted-foreground capitalize">{col.label}</p>
+              <p className="mt-1 text-xl font-bold tracking-tight text-foreground">{count}</p>
+            </div>
+          );
+        })}
       </div>
 
-      <AnimatePresence mode="wait">
-        {activeSubTab === 'list' ? (
-          <motion.div key="list" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-            {/* Filter Tabs */}
-            <div className="flex gap-2 mb-6">
-              {['all', 'pending', 'shortlisted', 'rejected', 'hired'].map(s => (
-                <button
-                  key={s}
-                  onClick={() => setStatusFilter(s)}
-                  className={`px-4 py-2 rounded-xl text-xs font-medium capitalize transition-all ${
-                    statusFilter === s 
-                      ? 'bg-primary/20 text-primary border border-primary/20 shadow-sm' 
-                      : 'bg-white/5 text-slate-400 border border-white/10 hover:text-white'
-                  }`}
-                >
-                  {s} ({s === 'all' ? applications.length : applications.filter(a => a.status === s).length})
-                </button>
-              ))}
-            </div>
+      {/* Filter Bar */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search company, title, location..."
+            className="pl-9 h-9"
+          />
+        </div>
 
-            {filteredApps.length === 0 ? (
-              <div className="glass rounded-2xl p-12 text-center border-white/[0.06]">
-                <Users className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-white mb-2">No applications found</h3>
-                <p className="text-slate-400 text-sm">No candidates have applied to this job yet or match this filter.</p>
-              </div>
-            ) : (
-              <div className="glass rounded-2xl overflow-hidden border-white/[0.06]">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="border-b border-white/[0.06]">
-                        <th className="p-4 text-xs font-medium text-slate-500 uppercase tracking-wider">Candidate</th>
-                        <th className="p-4 text-xs font-medium text-slate-500 uppercase tracking-wider">ATS Score</th>
-                        <th className="p-4 text-xs font-medium text-slate-500 uppercase tracking-wider">Eligibility</th>
-                        <th className="p-4 text-xs font-medium text-slate-500 uppercase tracking-wider">Hiring Status</th>
-                        <th className="p-4 text-xs font-medium text-slate-500 uppercase tracking-wider">Applied Date</th>
-                        <th className="p-4 text-xs font-medium text-slate-500 uppercase tracking-wider text-right">View Report</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/[0.06]">
-                      {filteredApps.map((app) => (
-                        <tr key={app.id} className="hover:bg-white/[0.02] transition-colors">
-                          <td className="p-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-accent/50 flex items-center justify-center text-white font-bold text-sm">
-                                {app.candidate_name?.charAt(0) || '?'}
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium text-white">{app.candidate_name || 'Unknown'}</p>
-                                <p className="text-xs text-slate-500">{app.candidate_id?.slice(-6)}</p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex items-center gap-2">
-                              <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold ${
-                                app.ats_score >= 80 ? 'bg-emerald-500/15 text-emerald-400' :
-                                app.ats_score >= 60 ? 'bg-amber-500/15 text-amber-400' :
-                                'bg-red-500/15 text-red-400'
-                              }`}>
-                                {app.ats_score}
-                              </div>
-                              {app.eligible && app.ats_score >= 80 && (
-                                <span className="flex items-center gap-1 text-xs text-emerald-400">
-                                  <Star className="w-3.5 h-3.5 fill-emerald-400" /> Top Match
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <Badge color={app.eligible ? 'success' : 'warning'}>
-                              {app.eligible ? 'Eligible' : 'Needs Review'}
-                            </Badge>
-                          </td>
-                          <td className="p-4">
-                            <select
-                              value={app.status}
-                              onChange={e => updateStatus(app.id, e.target.value)}
-                              className={`text-xs px-2.5 py-1.5 rounded-lg bg-[#0f172a] border font-medium capitalize focus:outline-none transition-all ${
-                                app.status === 'hired' ? 'border-emerald-500/40 text-emerald-400' :
-                                app.status === 'shortlisted' ? 'border-primary/40 text-primary' :
-                                app.status === 'rejected' ? 'border-red-500/40 text-red-400' :
-                                'border-white/10 text-slate-300'
-                              }`}
-                            >
-                              <option value="pending" className="bg-[#0f172a] text-slate-300">Pending</option>
-                              <option value="shortlisted" className="bg-[#0f172a] text-primary">Shortlisted</option>
-                              <option value="rejected" className="bg-[#0f172a] text-red-400">Rejected</option>
-                              <option value="hired" className="bg-[#0f172a] text-emerald-400">Hired</option>
-                            </select>
-                          </td>
-                          <td className="p-4 text-xs text-slate-500">
-                            {app.created_at ? new Date(app.created_at).toLocaleDateString() : 'N/A'}
-                          </td>
-                          <td className="p-4 text-right">
-                            {app.analysis_id ? (
-                              <button
-                                onClick={() => navigate(`/result/${app.analysis_id}`)}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-primary/10 text-slate-300 hover:text-primary transition-all text-xs"
-                              >
-                                <ExternalLink className="w-3.5 h-3.5" /> Full Analysis
-                              </button>
-                            ) : (
-                              <span className="text-xs text-slate-600">No report</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+        {statusFilter !== 'all' && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setStatusFilter('all')}
+            className="text-xs text-muted-foreground"
+          >
+            Clear filter ({statusFilter})
+          </Button>
+        )}
+      </div>
+
+      {/* Kanban View */}
+      {viewMode === 'kanban' ? (
+        <div className="flex gap-4 overflow-x-auto pb-6">
+          {STATUS_COLUMNS.map((col) => {
+            const colApps = filteredApps.filter((a) => (a.status || 'applied').toLowerCase() === col.id);
+            return (
+              <div
+                key={col.id}
+                className="flex w-80 shrink-0 flex-col rounded-xl border border-border/60 bg-muted/20 p-3"
+              >
+                <div className="flex items-center justify-between pb-3 border-b border-border/40">
+                  <div className="flex items-center gap-2">
+                    <span className={cn('size-2.5 rounded-full', col.color.split(' ')[0].replace('border-', 'bg-'))} />
+                    <span className="text-sm font-semibold text-foreground capitalize">{col.label}</span>
+                  </div>
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                    {colApps.length}
+                  </span>
+                </div>
+
+                <div className="mt-3 flex flex-1 flex-col gap-2.5 min-h-[300px]">
+                  {colApps.map((app) => (
+                    <motion.div
+                      key={app.id}
+                      layout
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="group rounded-lg border border-border/80 bg-card p-3.5 shadow-sm transition-all hover:border-primary/50 hover:shadow-md"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h3 className="text-sm font-semibold text-foreground line-clamp-1">{app.role || app.job_title}</h3>
+                          <p className="text-xs font-medium text-muted-foreground flex items-center gap-1 mt-0.5">
+                            <Building2 className="size-3" />
+                            {app.company}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => handleOpenEdit(app)}
+                            className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                          >
+                            <Edit3 className="size-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(app.id)}
+                            className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {(app.location || app.salary) && (
+                        <div className="mt-2.5 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+                          {app.location && (
+                            <span className="flex items-center gap-0.5">
+                              <MapPin className="size-3" />
+                              {app.location}
+                            </span>
+                          )}
+                          {app.salary && (
+                            <span className="flex items-center gap-0.5">
+                              <DollarSign className="size-3" />
+                              {app.salary}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {app.notes && (
+                        <p className="mt-2 text-xs text-muted-foreground/80 line-clamp-2 bg-muted/30 p-1.5 rounded">
+                          {app.notes}
+                        </p>
+                      )}
+
+                      <div className="mt-3 pt-2.5 border-t border-border/40 flex items-center justify-between text-xs">
+                        <select
+                          value={app.status || 'applied'}
+                          onChange={(e) => handleStatusChange(app.id, e.target.value)}
+                          className="text-[11px] rounded border border-border/60 bg-background px-1.5 py-0.5 text-muted-foreground capitalize focus:outline-none"
+                        >
+                          {STATUS_COLUMNS.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              Move: {s.label}
+                            </option>
+                          ))}
+                        </select>
+
+                        {app.job_url && (
+                          <a
+                            href={app.job_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-[11px] text-primary hover:underline"
+                          >
+                            Job Link <ExternalLink className="size-2.5" />
+                          </a>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+
+                  {colApps.length === 0 && (
+                    <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
+                      No jobs in {col.label}
+                    </div>
+                  )}
                 </div>
               </div>
-            )}
-          </motion.div>
-        ) : (
-          <motion.div key="batch" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Uploader Box */}
-              <div className="glass rounded-2xl p-6 border-white/[0.06] flex flex-col h-fit">
-                <h3 className="text-lg font-semibold text-white mb-2">1. Select Resumes</h3>
-                <p className="text-slate-400 text-xs mb-4">Select up to 20 candidate resumes (PDF/DOCX/TXT) to scan concurrently against the active JD requirements.</p>
-                
-                <label className="border-2 border-dashed border-white/10 rounded-2xl p-6 flex flex-col items-center justify-center bg-white/[0.01] hover:bg-white/[0.02] cursor-pointer transition-all mb-4">
-                  <Upload className="w-8 h-8 text-primary mb-2" />
-                  <span className="text-xs text-white font-medium">Click to select files</span>
-                  <input type="file" multiple accept=".pdf,.docx,.txt" onChange={handleBatchFileChange} className="hidden" />
-                </label>
-
-                {batchFiles.length > 0 && (
-                  <div className="space-y-1.5 max-h-40 overflow-y-auto mb-4 bg-white/5 p-2 rounded-xl border border-white/10">
-                    {batchFiles.map((file, index) => (
-                      <div key={index} className="flex items-center gap-2 text-slate-300 text-xs truncate">
-                        <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span className="truncate">{file.name}</span>
+            );
+          })}
+        </div>
+      ) : (
+        /* Table View */
+        <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-border/60 bg-muted/40 text-xs font-semibold text-muted-foreground uppercase">
+                <tr>
+                  <th className="p-3.5">Company & Role</th>
+                  <th className="p-3.5">Location</th>
+                  <th className="p-3.5">Salary</th>
+                  <th className="p-3.5">Status</th>
+                  <th className="p-3.5">Notes</th>
+                  <th className="p-3.5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40">
+                {filteredApps.map((app) => (
+                  <tr key={app.id} className="hover:bg-accent/40 transition-colors">
+                    <td className="p-3.5">
+                      <p className="font-semibold text-foreground">{app.role || app.job_title}</p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <Building2 className="size-3" />
+                        {app.company}
+                      </p>
+                    </td>
+                    <td className="p-3.5 text-xs text-muted-foreground">{app.location || '—'}</td>
+                    <td className="p-3.5 text-xs text-muted-foreground">{app.salary || '—'}</td>
+                    <td className="p-3.5">
+                      <select
+                        value={app.status || 'applied'}
+                        onChange={(e) => handleStatusChange(app.id, e.target.value)}
+                        className="text-xs rounded border border-border/60 bg-background px-2 py-1 capitalize focus:outline-none"
+                      >
+                        {STATUS_COLUMNS.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.label}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="p-3.5 text-xs text-muted-foreground max-w-xs truncate">
+                      {app.notes || '—'}
+                    </td>
+                    <td className="p-3.5 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        {app.job_url && (
+                          <a
+                            href={app.job_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                          >
+                            <ExternalLink className="size-3.5" />
+                          </a>
+                        )}
+                        <button
+                          onClick={() => handleOpenEdit(app)}
+                          className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                        >
+                          <Edit3 className="size-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(app.id)}
+                          className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
                       </div>
-                    ))}
-                  </div>
+                    </td>
+                  </tr>
+                ))}
+                {filteredApps.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-sm text-muted-foreground">
+                      No applications found. Click "Add Application" to start tracking your job search!
+                    </td>
+                  </tr>
                 )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
-                <GlowButton 
-                  onClick={handleBatchScreen} 
-                  disabled={batchFiles.length === 0 || batchLoading}
-                >
-                  {batchLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      Sifting Resumes...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 mr-2" />
-                      Run AI Batch Sifter
-                    </>
-                  )}
-                </GlowButton>
+      {/* Add / Edit Dialog */}
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingApp ? 'Edit Job Application' : 'Track New Application'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSave} className="space-y-4 pt-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-foreground">Company *</label>
+                <Input
+                  value={formData.company}
+                  onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                  placeholder="e.g. Google, Stripe"
+                  required
+                  className="mt-1"
+                />
               </div>
-
-              {/* Leaderboard Results */}
-              <div className="md:col-span-2 glass rounded-2xl p-6 border-white/[0.06]">
-                <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-emerald-400" /> Sifting Match Leaderboard
-                </h3>
-                <p className="text-slate-400 text-xs mb-6">Concurrently analyzed resumes sorted by compatibility match score.</p>
-
-                {batchResults.length === 0 ? (
-                  <div className="p-8 text-center text-slate-500 text-sm border border-dashed border-white/10 rounded-xl">
-                    No results. Select resumes and click "Run AI Batch Sifter" to view the ranking leaderboard.
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {batchResults.map((r, i) => (
-                      <div key={i} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-white/5 border border-white/10 rounded-xl gap-4 hover:border-primary/30 transition-all">
-                        <div className="flex items-center gap-3 truncate">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${
-                            i === 0 ? 'bg-amber-500/20 text-amber-400' :
-                            i === 1 ? 'bg-slate-400/20 text-slate-300' :
-                            i === 2 ? 'bg-amber-700/20 text-amber-600' :
-                            'bg-primary/10 text-primary'
-                          }`}>
-                            #{i + 1}
-                          </div>
-                          <div className="truncate">
-                            <p className="text-sm font-medium text-white truncate">{r.candidate_name}</p>
-                            <p className="text-xs text-slate-500 truncate">{r.filename}</p>
-                          </div>
-                        </div>
-                        
-                        {/* Score Indicator & Badges */}
-                        <div className="flex items-center gap-3 shrink-0">
-                          <div className="flex flex-wrap gap-1 mr-2">
-                            {(r.extracted_skills || []).slice(0, 3).map((s, index) => (
-                              <span key={index} className="px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] rounded">{s}</span>
-                            ))}
-                          </div>
-                          
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${
-                            r.ats_score >= 80 ? 'bg-emerald-500/15 text-emerald-400' :
-                            r.ats_score >= 60 ? 'bg-amber-500/15 text-amber-400' :
-                            'bg-red-500/15 text-red-400'
-                          }`}>
-                            {r.ats_score}
-                          </div>
-                          
-                          <Badge color={r.eligible ? 'success' : 'warning'}>
-                            {r.eligible ? 'Eligible' : 'Needs Review'}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <div>
+                <label className="text-xs font-medium text-foreground">Job Title *</label>
+                <Input
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  placeholder="e.g. AI Engineer"
+                  required
+                  className="mt-1"
+                />
               </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-foreground">Location</label>
+                <Input
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  placeholder="e.g. Remote, San Francisco"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-foreground">Salary / Compensation</label>
+                <Input
+                  value={formData.salary}
+                  onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
+                  placeholder="e.g. $140k - $160k"
+                  className="mt-1"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-foreground">Status</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm capitalize"
+                >
+                  {STATUS_COLUMNS.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-foreground">Job Posting URL</label>
+                <Input
+                  value={formData.jobUrl}
+                  onChange={(e) => setFormData({ ...formData, jobUrl: e.target.value })}
+                  placeholder="https://..."
+                  className="mt-1"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-medium text-foreground">Resume Used</label>
+              <select
+                value={formData.resumeVersionId}
+                onChange={(e) => setFormData({ ...formData, resumeVersionId: e.target.value })}
+                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Select Resume Version</option>
+                {resumes.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name} (v{r.version_number})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="text-xs font-medium text-foreground">Notes / Next Steps</label>
+              <Textarea
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Key dates, referral contact, questions asked..."
+                rows={3}
+                className="mt-1"
+              />
+            </div>
+
+            <DialogFooter className="pt-2">
+              <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                {editingApp ? 'Save Changes' : 'Add to Tracker'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
-

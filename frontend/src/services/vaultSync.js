@@ -4,12 +4,6 @@ import {
   saveMasterCareerProfile,
 } from './careerProfileSync';
 
-/**
- * Bridge between the legacy localStorage Career Vault and HireMind's
- * backend career profile. Pushes/pulls the master profile without
- * duplicating logic — the backend is the durable source of truth.
- */
-
 function normalizeToBackend(master) {
   const m = master || {};
   return {
