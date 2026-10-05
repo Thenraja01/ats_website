@@ -1,12 +1,15 @@
-"""Interview router — question bank, project preparation, and mock interview sessions."""
+"""Interview router — question bank, project preparation, and mock interview sessions.
 
-from datetime import datetime
+Spec: HireMind AI — one user type (USER).
+"""
+
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict
 
-from app.dependencies.role_dependency import require_roles
+from app.dependencies.auth_dependency import get_current_user
 from app.models.user_model import User
 from app.models.career_model import to_camel
 from app.models.interview_model import (
@@ -66,7 +69,7 @@ async def list_questions(
     search: str = Query(""),
     limit: int = Query(100),
     offset: int = Query(0),
-    user: User = Depends(require_roles(["candidate"])),
+    user: User = Depends(get_current_user),
 ):
     await ensure_seeded()
     saved_ids = await _saved_ids_for(str(user.id))
@@ -101,7 +104,7 @@ async def list_questions(
 @interview_router.post("/questions")
 async def create_question(
     payload: dict,
-    user: User = Depends(require_roles(["candidate"])),
+    user: User = Depends(get_current_user),
 ):
     question = payload.get("question", "").strip()
     if not question:
@@ -125,7 +128,7 @@ async def create_question(
 async def toggle_save_question(
     question_id: str,
     payload: dict,
-    user: User = Depends(require_roles(["candidate"])),
+    user: User = Depends(get_current_user),
 ):
     doc = await InterviewQuestion.get(question_id)
     if not doc:
@@ -134,7 +137,6 @@ async def toggle_save_question(
 
     if doc.is_custom and doc.user_id == str(user.id):
         if not want_saved:
-            # Un-saving your own custom question removes it
             await doc.delete()
             return {"message": "Question removed", "saved": False}
         return doc.to_api_dict()
@@ -161,7 +163,7 @@ async def toggle_save_question(
 @interview_router.delete("/questions/{question_id}")
 async def delete_question(
     question_id: str,
-    user: User = Depends(require_roles(["candidate"])),
+    user: User = Depends(get_current_user),
 ):
     doc = await InterviewQuestion.get(question_id)
     if not doc:
@@ -173,7 +175,7 @@ async def delete_question(
 
 
 @interview_router.post("/project-questions")
-async def project_questions(payload: dict, user: User = Depends(require_roles(["candidate"]))):
+async def project_questions(payload: dict, user: User = Depends(get_current_user)):
     project = payload.get("project", {})
     if not project.get("name"):
         raise HTTPException(status_code=400, detail="A project with a name is required")
@@ -181,7 +183,7 @@ async def project_questions(payload: dict, user: User = Depends(require_roles(["
 
 
 @interview_router.post("/sessions")
-async def start_session(payload: dict, user: User = Depends(require_roles(["candidate"]))):
+async def start_session(payload: dict, user: User = Depends(get_current_user)):
     await ensure_seeded()
     session_type = payload.get("session_type", "mock")
     title = payload.get("title", "Mock Interview")
@@ -224,7 +226,7 @@ async def start_session(payload: dict, user: User = Depends(require_roles(["cand
 
 
 @interview_router.get("/sessions")
-async def list_sessions(user: User = Depends(require_roles(["candidate"]))):
+async def list_sessions(user: User = Depends(get_current_user)):
     sessions = (
         await InterviewSession.find(InterviewSession.user_id == str(user.id))
         .sort(-InterviewSession.created_at)
@@ -234,7 +236,7 @@ async def list_sessions(user: User = Depends(require_roles(["candidate"]))):
 
 
 @interview_router.get("/sessions/{session_id}")
-async def get_session(session_id: str, user: User = Depends(require_roles(["candidate"]))):
+async def get_session(session_id: str, user: User = Depends(get_current_user)):
     session = await InterviewSession.get(session_id)
     if not session or session.user_id != str(user.id):
         raise HTTPException(status_code=404, detail="Session not found")
@@ -250,7 +252,7 @@ class AnswerRequest(BaseModel):
 async def answer_question(
     session_id: str,
     payload: AnswerRequest,
-    user: User = Depends(require_roles(["candidate"])),
+    user: User = Depends(get_current_user),
 ):
     session = await InterviewSession.get(session_id)
     if not session or session.user_id != str(user.id):
@@ -264,13 +266,13 @@ async def answer_question(
     qref.feedback = feedback
     session.questions[payload.index] = qref
     session.current_index = min(payload.index + 1, len(session.questions) - 1)
-    session.updated_at = datetime.utcnow()
+    session.updated_at = datetime.now(timezone.utc)
     await session.save()
     return {"feedback": feedback, "nextIndex": session.current_index}
 
 
 @interview_router.post("/sessions/{session_id}/complete")
-async def complete_session(session_id: str, user: User = Depends(require_roles(["candidate"]))):
+async def complete_session(session_id: str, user: User = Depends(get_current_user)):
     session = await InterviewSession.get(session_id)
     if not session or session.user_id != str(user.id):
         raise HTTPException(status_code=404, detail="Session not found")
@@ -311,7 +313,7 @@ async def complete_session(session_id: str, user: User = Depends(require_roles([
         improvements=improvements[:5],
     )
     session.status = "completed"
-    session.updated_at = datetime.utcnow()
+    session.updated_at = datetime.now(timezone.utc)
     await session.save()
 
     from app.models.notification_model import Notification

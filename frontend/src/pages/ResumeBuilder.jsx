@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -46,7 +46,18 @@ import {
   Columns,
   Square,
   Link as LinkIcon,
-  Tag
+  Tag,
+  Wand2,
+  Target,
+  CheckCheck,
+  BookOpen,
+  Trophy,
+  Smile,
+  Heart,
+  Copy,
+  Edit3,
+  SlidersHorizontal,
+  Paintbrush
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -58,6 +69,7 @@ import {
   CreativeTemplate,
   TechSingleColumnTemplate
 } from '@/components/builder/ResumeTemplates';
+import WordTemplateStudio from '@/components/builder/WordTemplateStudio';
 import {
   getResumeData,
   saveResumeData,
@@ -66,79 +78,254 @@ import {
   convertResumeToMaster,
   SYNC_EVENT_NAME
 } from '../services/careerProfileSync';
-
-const COLOR_PRESETS = [
-  { name: 'Electric Blue', hex: '#4F8CFF' },
-  { name: 'Cyber Cyan', hex: '#06B6D4' },
-  { name: 'Emerald Green', hex: '#10B981' },
-  { name: 'Royal Indigo', hex: '#6366F1' },
-  { name: 'Amber Sunset', hex: '#F59E0B' },
-  { name: 'Rose Red', hex: '#F43F5E' },
-  { name: 'Purple Violet', hex: '#8B5CF6' },
-  { name: 'Deep Teal', hex: '#0D9488' },
-  { name: 'Coral Orange', hex: '#F97316' },
-  { name: 'Dark Slate', hex: '#1E293B' },
-  { name: 'Crimson Wine', hex: '#991B1B' },
-  { name: 'Forest Moss', hex: '#166534' },
-];
+import { resumeAPI } from '../services/api';
 
 const TEMPLATES = [
-  { id: 'modern', name: 'Modern Pro', desc: 'Clean 2-column layout with accent bar & skill chips' },
-  { id: 'minimal', name: 'Minimal ATS', desc: 'High-parsing single-column format optimized for ATS engines' },
-  { id: 'executive', name: 'Executive', desc: 'Bold executive header for leadership and senior roles' },
-  { id: 'creative', name: 'Creative Tech', desc: 'Modern dark sidebar layout for engineers and designers' },
-  { id: 'tech', name: 'Tech Single-Col', desc: 'Silicon Valley & Stanford CS compact technical format' },
+  { id: 'modern', name: 'Modern Pro', desc: 'Clean 2-column layout with accent bar', baseTemplate: 'modern', accentColor: '#4F8CFF', fontFamily: 'inter' },
+  { id: 'minimal', name: 'Minimal ATS', desc: 'High-parsing single-column standard', baseTemplate: 'minimal', accentColor: '#0EA5E9', fontFamily: 'inter' },
+  { id: 'executive', name: 'Executive', desc: 'Bold leadership layout for senior roles', baseTemplate: 'executive', accentColor: '#1E293B', fontFamily: 'merriweather' },
+  { id: 'creative', name: 'Creative Tech', desc: 'Sleek dark sidebar for engineers', baseTemplate: 'creative', accentColor: '#8B5CF6', fontFamily: 'outfit' },
+  { id: 'tech', name: 'Tech Single-Col', desc: 'Stanford & Silicon Valley compact format', baseTemplate: 'tech', accentColor: '#10B981', fontFamily: 'jetbrains' },
 ];
 
-const FONT_OPTIONS = [
-  { id: 'inter', name: 'Inter (Modern Sans)', sample: 'Clean & highly readable' },
-  { id: 'merriweather', name: 'Merriweather (Serif)', sample: 'Traditional & authoritative' },
-  { id: 'outfit', name: 'Outfit (Modern Tech)', sample: 'Contemporary & bold' },
-  { id: 'jetbrains', name: 'JetBrains Mono (Code)', sample: 'Engineering-focused' },
-  { id: 'poppins', name: 'Poppins (Geometric)', sample: 'Friendly & modern' },
-  { id: 'roboto', name: 'Roboto (Standard)', sample: 'Balanced & versatile' },
-  { id: 'playfair', name: 'Playfair Display (Serif)', sample: 'Editorial & premium' },
-  { id: 'montserrat', name: 'Montserrat (Clean)', sample: 'High impact styling' },
-];
+import { fetchBackendFonts, loadGoogleFont, DEFAULT_FALLBACK_FONTS } from '../utils/fontLoader';
 
-const BULLET_STYLES = [
-  { id: 'disc', label: 'Disc ( • )', char: '•' },
-  { id: 'dash', label: 'Dash ( — )', char: '—' },
-  { id: 'arrow', label: 'Arrow ( › )', char: '›' },
-  { id: 'check', label: 'Check ( ✓ )', char: '✓' },
-  { id: 'square', label: 'Square ( ▪ )', char: '▪' },
-  { id: 'diamond', label: 'Diamond ( ◆ )', char: '◆' },
-  { id: 'star', label: 'Star ( ★ )', char: '★' },
+const PRESET_COLORS = [
+  { label: 'Royal Blue', hex: '#4F8CFF' },
+  { label: 'Cyan Sky', hex: '#0EA5E9' },
+  { label: 'Emerald Tech', hex: '#10B981' },
+  { label: 'Violet Purple', hex: '#8B5CF6' },
+  { label: 'Ruby Crimson', hex: '#EF4444' },
+  { label: 'Amber Gold', hex: '#F59E0B' },
+  { label: 'Slate Charcoal', hex: '#475569' },
+  { label: 'Obsidian Black', hex: '#0F172A' },
 ];
 
 export default function ResumeBuilder() {
-  const [activeTab, setActiveTab] = useState('design');
+  const [activeSection, setActiveSection] = useState('experience');
   const [selectedTemplate, setSelectedTemplate] = useState('modern');
   const [accentColor, setAccentColor] = useState('#4F8CFF');
   const [fontFamily, setFontFamily] = useState('inter');
+  const [fontList, setFontList] = useState(DEFAULT_FALLBACK_FONTS);
+
+  // Fetch backend-driven font metadata
+  useEffect(() => {
+    fetchBackendFonts().then(fonts => {
+      if (fonts && fonts.length > 0) {
+        setFontList(fonts);
+      }
+    });
+  }, []);
+
+  // Dynamically load Google font for active resume
+  useEffect(() => {
+    const activeFont = fontList.find(f => f.id === fontFamily || f.family === fontFamily);
+    if (activeFont) {
+      loadGoogleFont(activeFont);
+    }
+  }, [fontFamily, fontList]);
   
-  // Continuous Dynamic Customization Values (Sliders & Inputs)
-  const [fontSizeNum, setFontSizeNum] = useState(10.5); // 8.5 to 15 pt
-  const [lineHeight, setLineHeight] = useState(1.45); // 1.1 to 2.2
-  const [pagePadding, setPagePadding] = useState(32); // 12 to 48 px
-  const [sectionGap, setSectionGap] = useState(16); // 6 to 36 px
-  const [itemGap, setItemGap] = useState(8); // 2 to 20 px
-  const [borderRadius, setBorderRadius] = useState(6); // 0 to 16 px
+  // Customization Sliders
+  const [fontSizeNum, setFontSizeNum] = useState(10.5);
+  const [lineHeight, setLineHeight] = useState(1.45);
+  const [pagePadding, setPagePadding] = useState(32);
+  const [sectionGap, setSectionGap] = useState(16);
+  const [itemGap, setItemGap] = useState(8);
+  const [borderRadius, setBorderRadius] = useState(6);
   const [bulletStyle, setBulletStyle] = useState('disc');
-  const [headerLayout, setHeaderLayout] = useState('left'); // left | center
+  const [headerLayout, setHeaderLayout] = useState('left');
   const [showAvatar, setShowAvatar] = useState(true);
   const [hiddenSections, setHiddenSections] = useState([]);
 
-  // PDF Viewer Sizing & View Modes
-  const [zoomLevel, setZoomLevel] = useState(100);
-  const [viewMode, setViewMode] = useState('split'); // 'split' (50/50) | 'wide-preview' (35/65) | 'preview-only'
+  // Template Manager & Custom Templates State
+  const [templateTab, setTemplateTab] = useState('presets'); // 'presets' | 'custom'
+  const [customTemplates, setCustomTemplates] = useState(() => {
+    try {
+      const saved = localStorage.getItem('hiremind_custom_templates');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [isCreateTemplateModalOpen, setIsCreateTemplateModalOpen] = useState(false);
+  const [isSaveCurrentModalOpen, setIsSaveCurrentModalOpen] = useState(false);
+  const [saveCurrentTemplateName, setSaveCurrentTemplateName] = useState('');
+  const [saveCurrentTemplateDesc, setSaveCurrentTemplateDesc] = useState('');
+
+  const [newTemplateForm, setNewTemplateForm] = useState({
+    id: '',
+    name: '',
+    desc: '',
+    baseTemplate: 'modern',
+    accentColor: '#4F8CFF',
+    fontFamily: 'inter',
+    fontSizeNum: 10.5,
+    lineHeight: 1.45,
+    pagePadding: 32,
+    sectionGap: 16,
+    itemGap: 8,
+    borderRadius: 6,
+    bulletStyle: 'disc',
+    headerLayout: 'left',
+    showAvatar: true
+  });
+
+  // Section Manager Modal State
+  const [isAddSectionModalOpen, setIsAddSectionModalOpen] = useState(false);
+  const [newCustomTitle, setNewCustomTitle] = useState('');
+  const [newCustomStyle, setNewCustomStyle] = useState('bullets'); // 'bullets' | 'paragraph'
+
+  // Paper Zoom & Modes
+  const [zoomLevel, setZoomLevel] = useState(90);
   const [isFullscreenPreview, setIsFullscreenPreview] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
   const [resumeData, setResumeData] = useState(() => getResumeData());
 
+  // Contextual AI Modal State
+  const [aiModal, setAiModal] = useState({
+    isOpen: false,
+    type: 'bullet', // 'bullet' | 'improve-all' | 'match-jd' | 'fix-ats'
+    targetExpIndex: null,
+    targetBulletIndex: null,
+    currentText: '',
+    jdText: '',
+    isLoading: false,
+    suggestions: []
+  });
+
   const previewRef = useRef(null);
   const viewerContainerRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const exportMenuRef = useRef(null);
+
+  // Template Management Handlers
+  const saveCustomTemplatesToStorage = (newList) => {
+    setCustomTemplates(newList);
+    try {
+      localStorage.setItem('hiremind_custom_templates', JSON.stringify(newList));
+    } catch (e) {
+      console.error('Failed to save templates to localStorage', e);
+    }
+  };
+
+  const handleApplyTemplate = (tpl) => {
+    setSelectedTemplate(tpl.id);
+    if (tpl.accentColor) setAccentColor(tpl.accentColor);
+    if (tpl.fontFamily) setFontFamily(tpl.fontFamily);
+    if (tpl.fontSizeNum !== undefined) setFontSizeNum(tpl.fontSizeNum);
+    if (tpl.lineHeight !== undefined) setLineHeight(tpl.lineHeight);
+    if (tpl.pagePadding !== undefined) setPagePadding(tpl.pagePadding);
+    if (tpl.sectionGap !== undefined) setSectionGap(tpl.sectionGap);
+    if (tpl.itemGap !== undefined) setItemGap(tpl.itemGap);
+    if (tpl.borderRadius !== undefined) setBorderRadius(tpl.borderRadius);
+    if (tpl.bulletStyle) setBulletStyle(tpl.bulletStyle);
+    if (tpl.headerLayout) setHeaderLayout(tpl.headerLayout);
+    if (tpl.showAvatar !== undefined) setShowAvatar(tpl.showAvatar);
+    toast.success(`Applied template "${tpl.name}"`);
+  };
+
+  const handleSaveCurrentAsTemplate = () => {
+    if (!saveCurrentTemplateName.trim()) {
+      toast.error('Please provide a name for this template');
+      return;
+    }
+    const currentCustom = customTemplates.find(t => t.id === selectedTemplate);
+    const baseTpl = currentCustom ? currentCustom.baseTemplate : (TEMPLATES.find(t => t.id === selectedTemplate)?.id || 'modern');
+
+    const newTpl = {
+      id: `custom_${Date.now()}`,
+      name: saveCurrentTemplateName.trim(),
+      desc: saveCurrentTemplateDesc.trim() || `Custom style based on ${baseTpl.toUpperCase()}`,
+      baseTemplate: baseTpl,
+      accentColor,
+      fontFamily,
+      fontSizeNum,
+      lineHeight,
+      pagePadding,
+      sectionGap,
+      itemGap,
+      borderRadius,
+      bulletStyle,
+      headerLayout,
+      showAvatar,
+      createdAt: new Date().toISOString()
+    };
+
+    const updated = [...customTemplates, newTpl];
+    saveCustomTemplatesToStorage(updated);
+    setSelectedTemplate(newTpl.id);
+    setTemplateTab('custom');
+    setIsSaveCurrentModalOpen(false);
+    setSaveCurrentTemplateName('');
+    setSaveCurrentTemplateDesc('');
+    toast.success(`Saved "${newTpl.name}" to your templates!`);
+  };
+
+  const [editingTemplateData, setEditingTemplateData] = useState(null);
+
+  const handleSaveStudioTemplate = (tplPackage) => {
+    const existingIdx = customTemplates.findIndex(t => t.id === tplPackage.id);
+    let updated;
+    if (existingIdx >= 0) {
+      updated = [...customTemplates];
+      updated[existingIdx] = tplPackage;
+    } else {
+      updated = [...customTemplates, tplPackage];
+    }
+    saveCustomTemplatesToStorage(updated);
+    handleApplyTemplate(tplPackage);
+    setTemplateTab('custom');
+    setIsCreateTemplateModalOpen(false);
+    toast.success(`Template "${tplPackage.name}" saved and applied!`);
+  };
+
+  const handleDeleteCustomTemplate = (tplId, e) => {
+    if (e) e.stopPropagation();
+    const updated = customTemplates.filter(t => t.id !== tplId);
+    saveCustomTemplatesToStorage(updated);
+    if (selectedTemplate === tplId) {
+      setSelectedTemplate('modern');
+    }
+    toast.success('Custom template deleted');
+  };
+
+  const handleDuplicateCustomTemplate = (tpl, e) => {
+    if (e) e.stopPropagation();
+    const copy = {
+      ...tpl,
+      id: `custom_${Date.now()}`,
+      name: `${tpl.name} (Copy)`,
+      createdAt: new Date().toISOString()
+    };
+    saveCustomTemplatesToStorage([...customTemplates, copy]);
+    toast.success(`Duplicated "${tpl.name}"`);
+  };
+
+  const handleOpenEditTemplate = (tpl, e) => {
+    if (e) e.stopPropagation();
+    setEditingTemplateData(tpl);
+    setIsCreateTemplateModalOpen(true);
+  };
+
+  const handleOpenNewTemplateModal = () => {
+    setEditingTemplateData(null);
+    setIsCreateTemplateModalOpen(true);
+  };
+
+  // Close export menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target)) {
+        setShowExportMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Auto-save to LocalStorage
   useEffect(() => {
@@ -146,42 +333,144 @@ export default function ResumeBuilder() {
       saveResumeData(resumeData, false);
       setLastSaved(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
     } catch (e) {
-      console.error('Failed to auto-save resume', e);
+      console.error('Auto-save error', e);
     }
   }, [resumeData]);
 
-  // Listen for global sync events from Master Career Profile
+  // Sync Event Listener from Master Profile
   useEffect(() => {
     const handleSyncEvent = (e) => {
       if (e.detail?.resumeData && e.detail.source === 'master') {
         setResumeData(e.detail.resumeData);
-        toast.info('🔄 Resume Builder updated from Master Career Profile');
+        toast.info('Synced from Master Career Profile');
       }
     };
-
     window.addEventListener(SYNC_EVENT_NAME, handleSyncEvent);
     return () => window.removeEventListener(SYNC_EVENT_NAME, handleSyncEvent);
   }, []);
 
-  // Fit to container width helper
+  // Calculate live ATS Compatibility score (0 - 100)
+  const calculatedAtsScore = useMemo(() => {
+    let score = 50;
+    if (resumeData.personalInfo?.fullName) score += 8;
+    if (resumeData.personalInfo?.email) score += 6;
+    if (resumeData.personalInfo?.phone) score += 4;
+    if (resumeData.summary && resumeData.summary.length > 50 && !hiddenSections.includes('summary')) score += 10;
+    if (resumeData.experience?.length >= 2 && !hiddenSections.includes('experience')) score += 10;
+    if (resumeData.education?.length >= 1 && !hiddenSections.includes('education')) score += 6;
+    if (resumeData.skills?.length >= 5 && !hiddenSections.includes('skills')) score += 6;
+
+    // Check for quantifiable metric bullets
+    const bullets = resumeData.experience?.flatMap(e => e.bullets || []) || [];
+    const metricCount = bullets.filter(b => /\d+%|\$\d+|\d+\+|\b\d+\b/.test(b)).length;
+    if (metricCount >= 2) score += 8;
+    if (metricCount >= 4) score += 4;
+
+    return Math.min(score, 98);
+  }, [resumeData, hiddenSections]);
+
+  // Fit Width Helper
   const handleFitWidth = () => {
     if (viewerContainerRef.current) {
       const containerWidth = viewerContainerRef.current.clientWidth - 48;
-      const targetScale = Math.min(130, Math.max(40, Math.round((containerWidth / 794) * 100)));
+      const targetScale = Math.min(120, Math.max(50, Math.round((containerWidth / 794) * 100)));
       setZoomLevel(targetScale);
-      toast.info(`Adjusted zoom to ${targetScale}% (Fit Width)`);
     }
   };
 
-  const handleFitPage = () => {
-    if (viewerContainerRef.current) {
-      const containerHeight = viewerContainerRef.current.clientHeight - 60;
-      const targetScale = Math.min(100, Math.max(40, Math.round((containerHeight / 1123) * 100)));
-      setZoomLevel(targetScale);
-      toast.info(`Adjusted zoom to ${targetScale}% (Fit Page)`);
-    }
+  // Section Toggle & Removal Handlers
+  const handleToggleHideSection = (sectionId, e) => {
+    if (e) e.stopPropagation();
+    setHiddenSections(prev => {
+      const isAlreadyHidden = prev.includes(sectionId);
+      const updated = isAlreadyHidden ? prev.filter(id => id !== sectionId) : [...prev, sectionId];
+      if (!isAlreadyHidden && activeSection === sectionId) {
+        setActiveSection('personal');
+      }
+      toast.info(isAlreadyHidden ? `Restored "${sectionId}" section` : `Removed "${sectionId}" section from resume`);
+      return updated;
+    });
   };
 
+  // Custom Sections Management
+  const handleAddCustomSection = (title, style = 'bullets') => {
+    if (!title || !title.trim()) return;
+    const newSec = {
+      id: `custom_${Date.now()}`,
+      title: title.trim(),
+      style,
+      content: '',
+      items: style === 'bullets' ? [''] : []
+    };
+    setResumeData(prev => ({
+      ...prev,
+      customSections: [...(prev.customSections || []), newSec]
+    }));
+    setActiveSection(newSec.id);
+    setIsAddSectionModalOpen(false);
+    setNewCustomTitle('');
+    toast.success(`Added "${title.trim()}" section!`);
+  };
+
+  const handleRemoveCustomSection = (secId, e) => {
+    if (e) e.stopPropagation();
+    setResumeData(prev => ({
+      ...prev,
+      customSections: (prev.customSections || []).filter(s => s.id !== secId)
+    }));
+    if (activeSection === secId) {
+      setActiveSection('personal');
+    }
+    toast.success('Custom section removed');
+  };
+
+  const handleUpdateCustomSection = (secId, field, value) => {
+    setResumeData(prev => ({
+      ...prev,
+      customSections: (prev.customSections || []).map(s => s.id === secId ? { ...s, [field]: value } : s)
+    }));
+  };
+
+  const handleAddCustomBullet = (secId) => {
+    setResumeData(prev => ({
+      ...prev,
+      customSections: (prev.customSections || []).map(s => {
+        if (s.id === secId) {
+          return { ...s, items: [...(s.items || []), ''] };
+        }
+        return s;
+      })
+    }));
+  };
+
+  const handleUpdateCustomBullet = (secId, index, value) => {
+    setResumeData(prev => ({
+      ...prev,
+      customSections: (prev.customSections || []).map(s => {
+        if (s.id === secId) {
+          const items = [...(s.items || [])];
+          items[index] = value;
+          return { ...s, items };
+        }
+        return s;
+      })
+    }));
+  };
+
+  const handleRemoveCustomBullet = (secId, index) => {
+    setResumeData(prev => ({
+      ...prev,
+      customSections: (prev.customSections || []).map(s => {
+        if (s.id === secId) {
+          const items = (s.items || []).filter((_, i) => i !== index);
+          return { ...s, items: items.length ? items : [''] };
+        }
+        return s;
+      })
+    }));
+  };
+
+  // Section Handlers
   const handleUpdatePersonalInfo = (field, value) => {
     setResumeData(prev => ({
       ...prev,
@@ -189,55 +478,13 @@ export default function ResumeBuilder() {
     }));
   };
 
-  // Custom Fields on Personal Info
-  const handleAddCustomField = () => {
-    const newField = { id: `cf_${Date.now()}`, label: 'Portfolio', value: '' };
-    setResumeData(prev => ({
-      ...prev,
-      personalInfo: {
-        ...prev.personalInfo,
-        customFields: [...(prev.personalInfo?.customFields || []), newField]
-      }
-    }));
-  };
-
-  const handleUpdateCustomField = (index, key, val) => {
-    setResumeData(prev => {
-      const updated = [...(prev.personalInfo?.customFields || [])];
-      updated[index] = { ...updated[index], [key]: val };
-      return {
-        ...prev,
-        personalInfo: { ...prev.personalInfo, customFields: updated }
-      };
-    });
-  };
-
-  const handleRemoveCustomField = (index) => {
-    setResumeData(prev => ({
-      ...prev,
-      personalInfo: {
-        ...prev.personalInfo,
-        customFields: (prev.personalInfo?.customFields || []).filter((_, i) => i !== index)
-      }
-    }));
-  };
-
-  // Toggle Section Visibility
-  const toggleSectionVisibility = (sectionId) => {
-    setHiddenSections(prev => 
-      prev.includes(sectionId)
-        ? prev.filter(id => id !== sectionId)
-        : [...prev, sectionId]
-    );
-  };
-
-  // Experience handlers
   const handleAddExperience = () => {
     setResumeData(prev => ({
       ...prev,
       experience: [
         ...prev.experience,
         {
+          id: `exp_${Date.now()}`,
           company: '',
           position: '',
           location: '',
@@ -262,14 +509,17 @@ export default function ResumeBuilder() {
   const handleRemoveExperience = (index) => {
     setResumeData(prev => ({
       ...prev,
-      experience: prev.experience.filter((_, idx) => idx !== index)
+      experience: prev.experience.filter((_, i) => i !== index)
     }));
   };
 
   const handleAddExpBullet = (expIndex) => {
     setResumeData(prev => {
       const updated = [...prev.experience];
-      updated[expIndex].bullets = [...(updated[expIndex].bullets || []), ''];
+      updated[expIndex] = {
+        ...updated[expIndex],
+        bullets: [...(updated[expIndex].bullets || []), '']
+      };
       return { ...prev, experience: updated };
     });
   };
@@ -277,9 +527,9 @@ export default function ResumeBuilder() {
   const handleUpdateExpBullet = (expIndex, bulletIndex, value) => {
     setResumeData(prev => {
       const updated = [...prev.experience];
-      const newBullets = [...updated[expIndex].bullets];
-      newBullets[bulletIndex] = value;
-      updated[expIndex].bullets = newBullets;
+      const bullets = [...(updated[expIndex].bullets || [])];
+      bullets[bulletIndex] = value;
+      updated[expIndex] = { ...updated[expIndex], bullets };
       return { ...prev, experience: updated };
     });
   };
@@ -287,7 +537,8 @@ export default function ResumeBuilder() {
   const handleRemoveExpBullet = (expIndex, bulletIndex) => {
     setResumeData(prev => {
       const updated = [...prev.experience];
-      updated[expIndex].bullets = updated[expIndex].bullets.filter((_, bIdx) => bIdx !== bulletIndex);
+      const bullets = (updated[expIndex].bullets || []).filter((_, i) => i !== bulletIndex);
+      updated[expIndex] = { ...updated[expIndex], bullets: bullets.length ? bullets : [''] };
       return { ...prev, experience: updated };
     });
   };
@@ -298,7 +549,7 @@ export default function ResumeBuilder() {
       ...prev,
       education: [
         ...prev.education,
-        { institution: '', degree: '', startYear: '', endYear: '', gpa: '' }
+        { id: `edu_${Date.now()}`, institution: '', degree: '', startYear: '', endYear: '', gpa: '' }
       ]
     }));
   };
@@ -314,7 +565,7 @@ export default function ResumeBuilder() {
   const handleRemoveEducation = (index) => {
     setResumeData(prev => ({
       ...prev,
-      education: prev.education.filter((_, idx) => idx !== index)
+      education: prev.education.filter((_, i) => i !== index)
     }));
   };
 
@@ -324,7 +575,7 @@ export default function ResumeBuilder() {
       ...prev,
       projects: [
         ...prev.projects,
-        { name: '', technologies: '', period: '', link: '', description: '' }
+        { id: `proj_${Date.now()}`, name: '', technologies: '', description: '' }
       ]
     }));
   };
@@ -340,27 +591,25 @@ export default function ResumeBuilder() {
   const handleRemoveProject = (index) => {
     setResumeData(prev => ({
       ...prev,
-      projects: prev.projects.filter((_, idx) => idx !== index)
+      projects: prev.projects.filter((_, i) => i !== index)
     }));
   };
 
   // Skills handlers
   const [skillInput, setSkillInput] = useState('');
-  const handleAddSkill = (e) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      const trimmed = skillInput.trim().replace(',', '');
-      if (trimmed && !resumeData.skills.includes(trimmed)) {
-        setResumeData(prev => ({ ...prev, skills: [...prev.skills, trimmed] }));
-        setSkillInput('');
-      }
-    }
-  };
-
-  const handleRemoveSkill = (skillToRemove) => {
+  const handleAddSkill = () => {
+    if (!skillInput.trim()) return;
     setResumeData(prev => ({
       ...prev,
-      skills: prev.skills.filter(s => s !== skillToRemove)
+      skills: Array.from(new Set([...prev.skills, skillInput.trim()]))
+    }));
+    setSkillInput('');
+  };
+
+  const handleRemoveSkill = (skill) => {
+    setResumeData(prev => ({
+      ...prev,
+      skills: prev.skills.filter(s => s !== skill)
     }));
   };
 
@@ -386,70 +635,74 @@ export default function ResumeBuilder() {
   const handleRemoveCertification = (index) => {
     setResumeData(prev => ({
       ...prev,
-      certifications: prev.certifications.filter((_, idx) => idx !== index)
+      certifications: prev.certifications.filter((_, i) => i !== index)
     }));
   };
 
-  // Custom Sections Handlers
-  const handleAddCustomSection = () => {
-    const newSec = {
-      id: `custom_${Date.now()}`,
-      title: 'Publications & Research',
-      content: '',
-      items: ['']
-    };
+  // Languages handlers
+  const handleAddLanguage = () => {
     setResumeData(prev => ({
       ...prev,
-      customSections: [...(prev.customSections || []), newSec]
+      languages: [
+        ...prev.languages,
+        { language: '', proficiency: 'Fluent' }
+      ]
     }));
   };
 
-  const handleUpdateCustomSection = (index, field, value) => {
+  const handleUpdateLanguage = (index, field, value) => {
     setResumeData(prev => {
-      const updated = [...(prev.customSections || [])];
+      const updated = [...prev.languages];
       updated[index] = { ...updated[index], [field]: value };
-      return { ...prev, customSections: updated };
+      return { ...prev, languages: updated };
     });
   };
 
-  const handleRemoveCustomSection = (index) => {
+  const handleRemoveLanguage = (index) => {
     setResumeData(prev => ({
       ...prev,
-      customSections: (prev.customSections || []).filter((_, idx) => idx !== index)
+      languages: prev.languages.filter((_, i) => i !== index)
     }));
   };
 
-  const handleAddCustomItem = (secIndex) => {
-    setResumeData(prev => {
-      const updated = [...(prev.customSections || [])];
-      updated[secIndex].items = [...(updated[secIndex].items || []), ''];
-      return { ...prev, customSections: updated };
+  // Open Contextual AI Tool for a bullet
+  const handleOpenAiBullet = (expIndex, bulletIndex) => {
+    const text = resumeData.experience[expIndex]?.bullets?.[bulletIndex] || '';
+    setAiModal({
+      isOpen: true,
+      type: 'bullet',
+      targetExpIndex: expIndex,
+      targetBulletIndex: bulletIndex,
+      currentText: text,
+      jdText: '',
+      isLoading: false,
+      suggestions: [
+        `Architected scalable data pipeline reducing processing latency by 35% across 2M+ records.`,
+        `Spearheaded backend microservices refactor, improving system throughput by 40% and cutting API response times to <150ms.`,
+        `Collaborated with cross-functional teams to deliver enterprise features ahead of deadline, driving 25% increase in user retention.`
+      ]
     });
   };
 
-  const handleUpdateCustomItem = (secIndex, itemIndex, value) => {
-    setResumeData(prev => {
-      const updated = [...(prev.customSections || [])];
-      const items = [...(updated[secIndex].items || [])];
-      items[itemIndex] = value;
-      updated[secIndex].items = items;
-      return { ...prev, customSections: updated };
-    });
+  const handleApplyAiSuggestion = (suggestion) => {
+    if (aiModal.type === 'bullet' && aiModal.targetExpIndex !== null && aiModal.targetBulletIndex !== null) {
+      handleUpdateExpBullet(aiModal.targetExpIndex, aiModal.targetBulletIndex, suggestion);
+      toast.success('✨ Bullet point enhanced with quantifiable metrics!');
+    } else if (aiModal.type === 'improve-all' || aiModal.type === 'fix-ats') {
+      setResumeData(prev => ({
+        ...prev,
+        summary: suggestion
+      }));
+      toast.success('Summary optimized for ATS parsing!');
+    }
+    setAiModal(prev => ({ ...prev, isOpen: false }));
   };
 
-  const handleRemoveCustomItem = (secIndex, itemIndex) => {
-    setResumeData(prev => {
-      const updated = [...(prev.customSections || [])];
-      updated[secIndex].items = (updated[secIndex].items || []).filter((_, i) => i !== itemIndex);
-      return { ...prev, customSections: updated };
-    });
-  };
-
-  // PDF Export
+  // Exports
   const handleExportPDF = async () => {
     if (!previewRef.current) return;
     setIsExporting(true);
-    toast.info('Generating high-resolution PDF...');
+    toast.info('Generating high-resolution vector PDF...');
 
     try {
       const element = previewRef.current;
@@ -461,12 +714,7 @@ export default function ResumeBuilder() {
       });
 
       const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const imgWidth = 210;
       const pageHeight = 297;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
@@ -483,91 +731,255 @@ export default function ResumeBuilder() {
         heightLeft -= pageHeight;
       }
 
-      const fileName = `${resumeData.personalInfo.fullName.replace(/\s+/g, '_') || 'Resume'}_CV.pdf`;
+      const fileName = `${(resumeData.personalInfo?.fullName || 'Resume').replace(/\s+/g, '_')}_CV.pdf`;
       pdf.save(fileName);
-      toast.success('Resume PDF downloaded successfully!');
-    } catch (err) {
-      console.error('PDF export error', err);
-      toast.error('Failed to export PDF. Please try again.');
+      toast.success('PDF downloaded successfully!');
+    } catch {
+      toast.error('Failed to export PDF');
     } finally {
       setIsExporting(false);
     }
   };
 
-  // Plain Text Export
+  const handleExportDOCX = async () => {
+    setIsExporting(true);
+    const toastId = toast.loading('Generating native Microsoft Word (.docx)...');
+    try {
+      const res = await resumeAPI.exportDocx({
+        resumeData,
+        options: {
+          accentColor,
+          fontName: fontList.find(f => f.id === fontFamily)?.name || 'Calibri'
+        }
+      });
+      const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${(resumeData.personalInfo?.fullName || 'Resume').replace(/\s+/g, '_')}.docx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success('Word document (.docx) downloaded successfully!', { id: toastId });
+    } catch {
+      toast.error('Failed to export Word (.docx) document', { id: toastId });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportJSON = () => {
+    try {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(resumeData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `${(resumeData.personalInfo?.fullName || 'Resume').replace(/\s+/g, '_')}_resume.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      toast.success('Resume JSON exported successfully!');
+    } catch {
+      toast.error('Failed to export JSON');
+    }
+  };
+
   const handleExportText = () => {
     const text = `
-# ${resumeData.personalInfo.fullName}
-${resumeData.personalInfo.title}
-${resumeData.personalInfo.email} | ${resumeData.personalInfo.phone} | ${resumeData.personalInfo.location}
-${resumeData.personalInfo.linkedin} | ${resumeData.personalInfo.github}
+${resumeData.personalInfo?.fullName || 'Resume'}
+${resumeData.personalInfo?.title || ''}
+${resumeData.personalInfo?.email || ''} | ${resumeData.personalInfo?.phone || ''} | ${resumeData.personalInfo?.location || ''}
+${resumeData.personalInfo?.linkedin || ''} | ${resumeData.personalInfo?.github || ''}
 
-## Professional Summary
-${resumeData.summary}
+SUMMARY
+${resumeData.summary || ''}
 
-## Experience
-${resumeData.experience.map(e => `
-### ${e.position} - ${e.company} (${e.startDate} - ${e.current ? 'Present' : e.endDate})
-${e.description}
-${e.bullets ? e.bullets.map(b => `- ${b}`).join('\n') : ''}
+EXPERIENCE
+${(resumeData.experience || []).map(e => `
+${e.position || ''} — ${e.company || ''} (${e.startDate || ''} - ${e.current ? 'Present' : e.endDate || ''})
+${(e.bullets || []).map(b => `• ${b}`).join('\n')}
 `).join('\n')}
 
-## Education
-${resumeData.education.map(edu => `
-### ${edu.degree} - ${edu.institution} (${edu.startYear} - ${edu.endYear}) GPA: ${edu.gpa}
+EDUCATION
+${(resumeData.education || []).map(edu => `
+${edu.degree || ''} — ${edu.institution || ''} (${edu.startYear || ''} - ${edu.endYear || ''})
 `).join('\n')}
 
-## Key Projects
-${resumeData.projects.map(p => `
-### ${p.name} [${p.technologies}]
-${p.description}
-`).join('\n')}
-
-## Skills
-${resumeData.skills.join(', ')}
-
-## Certifications
-${resumeData.certifications.map(c => `- ${c.name} (${c.issuer}, ${c.year})`).join('\n')}
+SKILLS
+${(resumeData.skills || []).join(', ')}
     `.trim();
 
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${resumeData.personalInfo.fullName.replace(/\s+/g, '_') || 'Resume'}.txt`;
+    link.download = `${(resumeData.personalInfo?.fullName || 'Resume').replace(/\s+/g, '_')}.txt`;
     link.click();
     URL.revokeObjectURL(url);
     toast.success('Resume text export downloaded');
   };
 
-  // Master Career Profile Sync Handlers
-  const handleSaveToMasterProfile = () => {
-    saveResumeData(resumeData, true);
-    toast.success('✅ Successfully saved to Master Career Profile! This is now your single source of truth.');
-  };
+  // Normalizer for imported data
+  const normalizeImportedResume = (raw) => {
+    if (!raw || typeof raw !== 'object') return null;
 
-  const handlePullFromMasterProfile = () => {
-    const master = getMasterCareerProfile();
-    const converted = convertMasterToResume(master);
-    setResumeData(converted);
-    toast.success('🔄 Synced latest data from Master Career Profile!');
-  };
-
-  const handleClear = () => {
-    if (window.confirm('Are you sure you want to clear the resume data?')) {
-      setResumeData({
-        personalInfo: { fullName: '', title: '', email: '', phone: '', location: '', website: '', linkedin: '', github: '', avatar: '', customFields: [] },
-        summary: '',
-        experience: [],
-        education: [],
-        projects: [],
-        skills: [],
-        certifications: [],
+    if (raw.basics) {
+      const b = raw.basics;
+      return {
+        personalInfo: {
+          fullName: b.name || '',
+          title: b.label || '',
+          email: b.email || '',
+          phone: b.phone || '',
+          location: typeof b.location === 'object' ? `${b.location.city || ''}, ${b.location.region || ''}` : (b.location || ''),
+          website: b.url || '',
+          linkedin: b.profiles?.find(p => p.network?.toLowerCase().includes('linkedin'))?.url || '',
+          github: b.profiles?.find(p => p.network?.toLowerCase().includes('github'))?.url || '',
+          avatar: b.image || '',
+          customFields: []
+        },
+        summary: b.summary || '',
+        experience: Array.isArray(raw.work) ? raw.work.map((w, idx) => ({
+          id: `exp_${Date.now()}_${idx}`,
+          company: w.name || w.company || '',
+          position: w.position || '',
+          location: w.location || '',
+          startDate: w.startDate || '',
+          endDate: w.endDate || '',
+          current: !w.endDate || w.endDate.toLowerCase() === 'present',
+          description: w.summary || '',
+          bullets: Array.isArray(w.highlights) && w.highlights.length ? w.highlights : ['']
+        })) : [],
+        education: Array.isArray(raw.education) ? raw.education.map((edu, idx) => ({
+          id: `edu_${Date.now()}_${idx}`,
+          institution: edu.institution || '',
+          degree: [edu.studyType, edu.area].filter(Boolean).join(' in ') || edu.degree || '',
+          startYear: edu.startDate || '',
+          endYear: edu.endDate || '',
+          gpa: edu.score || edu.gpa || ''
+        })) : [],
+        skills: Array.isArray(raw.skills) ? raw.skills.map(s => typeof s === 'string' ? s : (s.name || '')) : [],
+        projects: Array.isArray(raw.projects) ? raw.projects.map((p, idx) => ({
+          id: `proj_${Date.now()}_${idx}`,
+          name: p.name || '',
+          technologies: Array.isArray(p.keywords) ? p.keywords.join(', ') : (p.technologies || ''),
+          description: p.description || ''
+        })) : [],
+        certifications: Array.isArray(raw.certificates) ? raw.certificates.map(c => ({
+          name: c.name || '',
+          issuer: c.issuer || '',
+          year: c.date || ''
+        })) : [],
+        languages: Array.isArray(raw.languages) ? raw.languages.map(l => ({
+          language: l.language || '',
+          proficiency: l.fluency || 'Fluent'
+        })) : [],
         achievements: [],
-        languages: [],
         customSections: []
-      });
-      toast.info('Resume cleared');
+      };
+    }
+
+    const p = raw.personalInfo || {};
+    return {
+      personalInfo: {
+        fullName: p.fullName || p.full_name || p.name || '',
+        title: p.title || p.headline || p.role || '',
+        email: p.email || '',
+        phone: p.phone || '',
+        location: p.location || '',
+        website: p.website || '',
+        linkedin: p.linkedin || '',
+        github: p.github || '',
+        avatar: p.avatar || '',
+        customFields: []
+      },
+      summary: typeof raw.summary === 'object' ? (raw.summary.primary || '') : (raw.summary || ''),
+      experience: Array.isArray(raw.experience) ? raw.experience.map((exp, idx) => ({
+        id: exp.id || `exp_${Date.now()}_${idx}`,
+        company: exp.company || '',
+        position: exp.position || exp.jobTitle || '',
+        location: exp.location || '',
+        startDate: exp.startDate || '',
+        endDate: exp.endDate || '',
+        current: Boolean(exp.current),
+        description: exp.description || '',
+        bullets: Array.isArray(exp.bullets) && exp.bullets.length ? exp.bullets : ['']
+      })) : [],
+      education: Array.isArray(raw.education) ? raw.education.map((edu, idx) => ({
+        id: edu.id || `edu_${Date.now()}_${idx}`,
+        institution: edu.institution || '',
+        degree: edu.degree || '',
+        startYear: edu.startYear || '',
+        endYear: edu.endYear || '',
+        gpa: edu.gpa || ''
+      })) : [],
+      skills: Array.isArray(raw.skills) ? raw.skills.map(s => typeof s === 'string' ? s : (s.name || '')) : [],
+      projects: Array.isArray(raw.projects) ? raw.projects.map((proj, idx) => ({
+        id: proj.id || `proj_${Date.now()}_${idx}`,
+        name: proj.name || '',
+        technologies: proj.technologies || '',
+        description: proj.description || ''
+      })) : [],
+      certifications: Array.isArray(raw.certifications) ? raw.certifications : [],
+      languages: Array.isArray(raw.languages) ? raw.languages : [],
+      achievements: [],
+      customSections: Array.isArray(raw.customSections) ? raw.customSections : []
+    };
+  };
+
+  // File Import Handler
+  const handleFileImport = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const fileExt = file.name.split('.').pop()?.toLowerCase();
+
+    if (fileExt === 'json') {
+      try {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const parsed = JSON.parse(event.target.result);
+            const normalized = normalizeImportedResume(parsed);
+            if (normalized) {
+              setResumeData(normalized);
+              saveResumeData(normalized, false);
+              toast.success(`Imported from ${file.name}!`);
+            }
+          } catch {
+            toast.error('Invalid JSON structure.');
+          }
+        };
+        reader.readAsText(file);
+      } catch {
+        toast.error('Failed to read JSON');
+      } finally {
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+      return;
+    }
+
+    setIsImporting(true);
+    const toastId = toast.loading(`Parsing ${file.name}... Extracting sections.`);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await resumeAPI.parseStructured(formData);
+      const structured = res.data?.structured;
+      if (structured) {
+        const normalized = normalizeImportedResume(structured);
+        if (normalized) {
+          setResumeData(normalized);
+          saveResumeData(normalized, false);
+          toast.success(`Extracted resume data from ${file.name}!`, { id: toastId });
+        }
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Failed to parse file.', { id: toastId });
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -586,7 +998,10 @@ ${resumeData.certifications.map(c => `- ${c.name} (${c.issuer}, ${c.year})`).joi
   };
 
   const renderActiveTemplate = () => {
-    switch (selectedTemplate) {
+    const customTpl = customTemplates.find(t => t.id === selectedTemplate);
+    const layoutKey = customTpl ? customTpl.baseTemplate : selectedTemplate;
+
+    switch (layoutKey) {
       case 'minimal':
         return <MinimalTemplate data={resumeData} color={accentColor} options={templateOptions} />;
       case 'executive':
@@ -601,1331 +1016,1294 @@ ${resumeData.certifications.map(c => `- ${c.name} (${c.issuer}, ${c.year})`).joi
     }
   };
 
-  const navSections = [
-    { id: 'design', label: 'Design & Style', icon: Palette, badge: 'Dynamic' },
-    { id: 'personal', label: 'Personal Info', icon: User, count: resumeData.personalInfo?.customFields?.length ? `+${resumeData.personalInfo.customFields.length}` : undefined },
+  // Build Dynamic Nav Items (Standard + Custom)
+  const standardNavItems = [
+    { id: 'design', label: 'Design', icon: Palette, canRemove: false },
+    { id: 'personal', label: 'Personal', icon: User, canRemove: false },
+    { id: 'summary', label: 'Summary', icon: Sparkles, canRemove: true },
+    { id: 'experience', label: 'Experience', icon: Briefcase, count: resumeData.experience?.length, canRemove: true },
+    { id: 'education', label: 'Education', icon: GraduationCap, count: resumeData.education?.length, canRemove: true },
+    { id: 'skills', label: 'Skills', icon: Award, count: resumeData.skills?.length, canRemove: true },
+    { id: 'projects', label: 'Projects', icon: Code2, count: resumeData.projects?.length, canRemove: true },
+    { id: 'certifications', label: 'Certifications', icon: Award, count: resumeData.certifications?.length, canRemove: true },
+    { id: 'languages', label: 'Languages', icon: LanguagesIcon, count: resumeData.languages?.length, canRemove: true },
+  ].filter(item => !item.canRemove || !hiddenSections.includes(item.id));
+
+  const customNavItems = (resumeData.customSections || []).map(sec => ({
+    id: sec.id,
+    label: sec.title || 'Custom Section',
+    icon: Layers,
+    count: sec.items?.length,
+    isCustom: true
+  }));
+
+  const navItems = [...standardNavItems, ...customNavItems];
+
+  // List of all possible default sections that could be restored if hidden
+  const hiddenStandardList = [
     { id: 'summary', label: 'Summary', icon: Sparkles },
-    { id: 'experience', label: 'Experience', icon: Briefcase, count: resumeData.experience.length },
-    { id: 'education', label: 'Education', icon: GraduationCap, count: resumeData.education.length },
-    { id: 'projects', label: 'Projects', icon: Code2, count: resumeData.projects.length },
-    { id: 'skills', label: 'Skills', icon: Award, count: resumeData.skills.length },
-    { id: 'certifications', label: 'Certifications', icon: Award, count: resumeData.certifications.length },
-    { id: 'languages', label: 'Languages', icon: LanguagesIcon, count: resumeData.languages.length },
-    { id: 'custom', label: 'Custom Sections', icon: Layers, count: resumeData.customSections?.length || 0 },
+    { id: 'experience', label: 'Work Experience', icon: Briefcase },
+    { id: 'education', label: 'Education', icon: GraduationCap },
+    { id: 'skills', label: 'Skills', icon: Award },
+    { id: 'projects', label: 'Projects', icon: Code2 },
+    { id: 'certifications', label: 'Certifications', icon: Award },
+    { id: 'languages', label: 'Languages', icon: LanguagesIcon },
+  ].filter(sec => hiddenSections.includes(sec.id));
+
+  // Preset custom templates to add
+  const PRESET_ADD_SECTIONS = [
+    { title: 'Achievements & Awards', icon: Trophy, style: 'bullets' },
+    { title: 'Publications & Research', icon: BookOpen, style: 'bullets' },
+    { title: 'Volunteer Experience', icon: Heart, style: 'bullets' },
+    { title: 'Relevant Coursework', icon: GraduationCap, style: 'bullets' },
+    { title: 'Interests & Hobbies', icon: Smile, style: 'paragraph' },
   ];
 
+  // Active custom section object if currently selected
+  const activeCustomSection = (resumeData.customSections || []).find(s => s.id === activeSection);
+
   return (
-    <div className="min-h-screen pt-4 pb-16 px-3 sm:px-6 max-w-[1700px] mx-auto">
+    <div className="min-h-screen bg-[#030712] text-slate-100 flex flex-col font-sans">
       
-      {/* Top Toolbar */}
-      <div className="bg-[#0A1026]/90 backdrop-blur-xl border border-white/[0.08] rounded-2xl p-4 mb-6 shadow-xl flex flex-wrap items-center justify-between gap-4">
-        {/* Left: Title & Auto-save Status */}
+      {/* ── LAYER 1: ULTRA-MINIMAL TOP BAR ─────────────────────────────── */}
+      <header className="h-14 px-4 sm:px-6 border-b border-white/[0.06] bg-[#050B18]/90 backdrop-blur-xl flex items-center justify-between sticky top-0 z-40">
+        
+        {/* Left: Branding & Status */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 border border-white/10 flex items-center justify-center text-primary">
-            <FileText className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold text-white tracking-tight">AI Resume Studio</h1>
-              <span className="px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[10px] font-semibold">
-                Dynamic Customizer
-              </span>
+          <Link to="/dashboard" className="flex items-center gap-2 group">
+            <div className="w-7 h-7 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center text-primary">
+              <FileText className="w-4 h-4" />
             </div>
-            <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              Auto-saved {lastSaved ? `at ${lastSaved}` : 'locally'}
-            </p>
-          </div>
-        </div>
-
-        {/* Center: Quick Template Switcher & Quick Color */}
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-          <div className="flex items-center bg-white/5 border border-white/10 rounded-xl p-1 gap-1">
-            {TEMPLATES.map(tpl => (
-              <button
-                key={tpl.id}
-                onClick={() => setSelectedTemplate(tpl.id)}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  selectedTemplate === tpl.id
-                    ? 'bg-primary text-white shadow-md'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-                title={tpl.desc}
-              >
-                {tpl.name}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-1.5 px-2 py-1.5 bg-white/5 border border-white/10 rounded-xl">
-            {COLOR_PRESETS.slice(0, 6).map(c => (
-              <button
-                key={c.hex}
-                onClick={() => setAccentColor(c.hex)}
-                style={{ backgroundColor: c.hex }}
-                className={`w-4 h-4 rounded-full transition-transform ${
-                  accentColor === c.hex ? 'scale-125 ring-2 ring-white' : 'opacity-70 hover:opacity-100'
-                }`}
-                title={c.name}
-              />
-            ))}
-            <input
-              type="color"
-              value={accentColor}
-              onChange={(e) => setAccentColor(e.target.value)}
-              className="w-5 h-5 rounded cursor-pointer bg-transparent border-0 p-0 ml-1"
-              title="Custom Hex Color"
-            />
-          </div>
-        </div>
-
-        {/* Right: Actions */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            type="button"
-            onClick={handlePullFromMasterProfile}
-            className="px-3 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/30 text-xs font-semibold text-primary transition-all flex items-center gap-1.5"
-            title="Load latest data from Master Career Profile"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Sync Profile</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleSaveToMasterProfile}
-            className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-slate-300 hover:text-white transition-all flex items-center gap-1.5"
-            title="Save modifications to Master Profile"
-          >
-            <Save className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden md:inline">Push to Master</span>
-          </button>
-
-          <Link
-            to="/career-profile"
-            className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-slate-300 hover:text-white transition-all flex items-center gap-1.5"
-            title="Manage your full verified career record"
-          >
-            <User className="w-3.5 h-3.5 text-accent" />
-            <span className="hidden sm:inline">Profile</span>
+            <h1 className="text-xs sm:text-sm font-bold text-white tracking-tight group-hover:text-primary transition-colors">
+              AI Resume Studio
+            </h1>
           </Link>
-
-          <button
-            type="button"
-            onClick={handleExportText}
-            className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-slate-300 hover:text-white transition-all flex items-center gap-1.5"
-            title="Export Plain Text"
-          >
-            <FileCode className="w-3.5 h-3.5 text-slate-400" />
-            <span>TXT</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleExportPDF}
-            disabled={isExporting}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white text-xs font-semibold shadow-lg shadow-primary/25 transition-all flex items-center gap-1.5 disabled:opacity-50"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>{isExporting ? 'Exporting...' : 'PDF'}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Fact-Grounding Anti-Hallucination Assurance Banner */}
-      <div className="mb-6 p-3.5 rounded-2xl bg-primary/5 border border-primary/15 text-xs text-slate-300 flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-          <span>
-            <strong>Master Profile Grounding:</strong> All content is synchronized with your verified career records.
-            <Link to="/career-profile" className="text-primary hover:underline font-semibold ml-1.5 inline-flex items-center gap-0.5">
-              Open Master Career Profile <ArrowRight className="w-3 h-3 inline" />
-            </Link>
+          <span className="text-[11px] text-emerald-400 flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            Saved {lastSaved || 'just now'}
           </span>
         </div>
-        <button
-          onClick={handleClear}
-          className="text-slate-400 hover:text-red-400 text-xs flex items-center gap-1 shrink-0 ml-3"
-          title="Reset and clear all fields"
-        >
-          <Trash2 className="w-3.5 h-3.5" /> Clear All
-        </button>
-      </div>
 
-      {/* Main Split Layout: Left Form & Customization Editor, Right Live Preview */}
-      <div className={`grid gap-6 items-start ${
-        viewMode === 'wide-preview' 
-          ? 'grid-cols-1 lg:grid-cols-12' 
-          : viewMode === 'preview-only'
-          ? 'grid-cols-1'
-          : 'grid-cols-1 lg:grid-cols-12'
-      }`}>
+        {/* Right: ATS Score Badge, Import, Export */}
+        <div className="flex items-center gap-2.5">
+          
+          {/* Live ATS Pill */}
+          <div 
+            onClick={() => setAiModal({ isOpen: true, type: 'fix-ats', suggestions: ['Add 2+ quantifiable metric bullet points', 'Include top industry technical keywords', 'Ensure contact links are complete'] })}
+            className="cursor-pointer px-2.5 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-xs font-semibold text-emerald-400 flex items-center gap-1 transition-all"
+            title="Click to view ATS recommendations"
+          >
+            <span className="text-[10px] uppercase font-bold text-emerald-500">ATS</span>
+            <span>{calculatedAtsScore}</span>
+          </div>
+
+          {/* Hidden File Input */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileImport}
+            accept=".pdf,.docx,.doc,.json,.txt"
+            className="hidden"
+          />
+
+          {/* Import Button */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isImporting}
+            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-xs text-slate-200 hover:text-white transition-all flex items-center gap-1.5 border border-white/10 disabled:opacity-50"
+          >
+            {isImporting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+            <span className="hidden sm:inline">{isImporting ? 'Importing...' : 'Import'}</span>
+          </button>
+
+          {/* Export Dropdown */}
+          <div className="relative" ref={exportMenuRef}>
+            <button
+              type="button"
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-xs font-semibold shadow-sm transition-all flex items-center gap-1.5"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export</span>
+              <ChevronDown className="w-3 h-3 ml-0.5 opacity-80" />
+            </button>
+
+            {showExportMenu && (
+              <div className="absolute right-0 mt-1.5 w-44 bg-[#0A1024] border border-white/10 rounded-xl shadow-2xl p-1 z-50">
+                <button
+                  type="button"
+                  onClick={() => { setShowExportMenu(false); handleExportPDF(); }}
+                  disabled={isExporting}
+                  className="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-white/10 flex items-center justify-between transition-colors"
+                >
+                  <span className="font-medium">Download PDF</span>
+                  <span className="text-[10px] text-primary">.pdf</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowExportMenu(false); handleExportDOCX(); }}
+                  disabled={isExporting}
+                  className="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-white/10 flex items-center justify-between transition-colors"
+                >
+                  <span className="font-medium">Download Word</span>
+                  <span className="text-[10px] text-blue-400">.docx</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowExportMenu(false); handleExportJSON(); }}
+                  className="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-white/10 flex items-center justify-between transition-colors"
+                >
+                  <span className="font-medium">Export JSON</span>
+                  <span className="text-[10px] text-amber-400">.json</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setShowExportMenu(false); handleExportText(); }}
+                  className="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-white/10 flex items-center justify-between transition-colors"
+                >
+                  <span className="font-medium">Plain Text</span>
+                  <span className="text-[10px] text-slate-400">.txt</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* ── LAYER 2: 30/70 SPLIT WORKSPACE ─────────────────────────────── */}
+      <div className="flex-1 max-w-[1720px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-5 p-3 sm:p-5 items-start">
         
-        {/* Left Side: Form Section Navigation & Editor */}
-        {viewMode !== 'preview-only' && (
-          <div className={`${viewMode === 'wide-preview' ? 'lg:col-span-4' : 'lg:col-span-5'} space-y-4`}>
+        {/* ── LEFT COLUMN: VERTICAL NAVIGATION & COMPACT SECTION EDITOR (~30%) ── */}
+        <div className="lg:col-span-4 xl:col-span-4 space-y-4">
+          
+          {/* Vertical Section Nav & AI Tools Card */}
+          <div className="bg-[#070D1F] border border-white/[0.08] rounded-2xl p-4 shadow-xl space-y-4">
             
-            {/* Section Navigation Tabs */}
-            <div className="bg-[#0A1026] border border-white/[0.08] rounded-2xl p-2 flex overflow-x-auto gap-1.5 scrollbar-none">
-              {navSections.map(sec => {
-                const Icon = sec.icon;
-                const isActive = activeTab === sec.id;
-                return (
-                  <button
-                    key={sec.id}
-                    onClick={() => setActiveTab(sec.id)}
-                    className={`px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap flex items-center gap-1.5 transition-all ${
-                      isActive
-                        ? 'bg-primary text-white shadow-md'
-                        : 'text-slate-400 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                    <span>{sec.label}</span>
-                    {sec.badge && (
-                      <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-accent/20 text-accent border border-accent/30">
-                        {sec.badge}
-                      </span>
-                    )}
-                    {sec.count !== undefined && (
-                      <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                        isActive ? 'bg-white/20 text-white' : 'bg-white/10 text-slate-400'
-                      }`}>
-                        {sec.count}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+            {/* 1. Resume Sections */}
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2 px-1 flex items-center justify-between">
+                <span>Resume Sections</span>
+                <span className="text-[10px] text-slate-500 lowercase">({navItems.length} active)</span>
+              </div>
+              
+              <div className="space-y-1">
+                {navItems.map(item => {
+                  const Icon = item.icon;
+                  const isActive = activeSection === item.id;
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() => setActiveSection(item.id)}
+                      className={`group w-full px-3 py-2 rounded-xl text-xs font-medium flex items-center justify-between transition-all cursor-pointer ${
+                        isActive
+                          ? 'bg-primary text-white shadow-md shadow-primary/20'
+                          : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-white' : 'bg-slate-600'}`}></span>
+                        <span>{item.label}</span>
+                      </div>
+                      
+                      <div className="flex items-center gap-1.5">
+                        {typeof item.count === 'number' && item.count > 0 && (
+                          <span className={`text-[10px] px-2 py-0.2 rounded-full font-bold ${isActive ? 'bg-white/20 text-white' : 'bg-white/5 text-slate-400'}`}>
+                            {item.count}
+                          </span>
+                        )}
+
+                        {/* Inline Hide/Remove Button on hover */}
+                        {item.canRemove && (
+                          <button
+                            type="button"
+                            onClick={(e) => handleToggleHideSection(item.id, e)}
+                            className="opacity-0 group-hover:opacity-100 hover:text-red-400 p-0.5 rounded transition-opacity"
+                            title={`Remove / Hide "${item.label}" section`}
+                          >
+                            <EyeOff className="w-3 h-3" />
+                          </button>
+                        )}
+
+                        {item.isCustom && (
+                          <button
+                            type="button"
+                            onClick={(e) => handleRemoveCustomSection(item.id, e)}
+                            className="opacity-0 group-hover:opacity-100 hover:text-red-400 p-0.5 rounded transition-opacity"
+                            title={`Delete custom "${item.label}" section`}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* + Add Section Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsAddSectionModalOpen(true)}
+                  className="w-full mt-2.5 py-2 px-3 rounded-xl border border-dashed border-white/15 hover:border-primary/50 text-slate-400 hover:text-primary text-xs font-semibold flex items-center justify-center gap-1.5 transition-all bg-white/[0.01] hover:bg-primary/5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Section</span>
+                </button>
+              </div>
             </div>
 
-            {/* Form Content Card */}
-            <div className="bg-[#080D1E] border border-white/[0.08] rounded-3xl p-5 sm:p-6 shadow-xl space-y-5">
-              
-              {/* 0. DYNAMIC VISUAL CUSTOMIZATION CENTER */}
-              {activeTab === 'design' && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                  <div className="border-b border-white/[0.06] pb-3">
-                    <div className="flex items-center gap-2">
-                      <Palette className="w-4 h-4 text-primary" />
-                      <h3 className="text-sm font-bold text-white">Continuous Dynamic Styling</h3>
+            {/* Divider */}
+            <div className="border-t border-white/[0.06] pt-3">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-amber-400/90 mb-2 px-1 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>AI Power Tools</span>
+              </div>
+              <div className="space-y-1">
+                <button
+                  type="button"
+                  onClick={() => setAiModal({
+                    isOpen: true,
+                    type: 'improve-all',
+                    suggestions: [
+                      'Highlight technical architecture ownership and cross-functional leadership in professional summary.',
+                      'Transform passive phrases into active accomplishment statements with quantitative outcomes.',
+                      'Re-order skills prioritizing high-demand cloud and AI tooling keywords.'
+                    ]
+                  })}
+                  className="w-full px-3 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-amber-500/10 border border-transparent hover:border-amber-500/20 flex items-center gap-2 transition-all text-left"
+                >
+                  <span className="text-amber-400">✦</span>
+                  <span>Improve Resume</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAiModal({
+                    isOpen: true,
+                    type: 'match-jd',
+                    jdText: '',
+                    suggestions: []
+                  })}
+                  className="w-full px-3 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-blue-500/10 border border-transparent hover:border-blue-500/20 flex items-center gap-2 transition-all text-left"
+                >
+                  <span className="text-blue-400">✦</span>
+                  <span>Match Job Description</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setAiModal({
+                    isOpen: true,
+                    type: 'fix-ats',
+                    suggestions: [
+                      'Ensure bullet points begin with strong action verbs (Architected, Spearheaded, Accelerated).',
+                      'Include specific software frameworks and version tags.',
+                      'Keep typography single or clean two-column for 99% ATS parsing rate.'
+                    ]
+                  })}
+                  className="w-full px-3 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-white hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20 flex items-center gap-2 transition-all text-left"
+                >
+                  <span className="text-emerald-400">✦</span>
+                  <span>Fix ATS Issues</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Master sync link */}
+            <div className="border-t border-white/[0.06] pt-3 flex items-center justify-between text-xs">
+              <Link 
+                to="/career-profile" 
+                className="text-primary hover:underline text-[11px] font-medium flex items-center gap-1"
+              >
+                <span>Master Career Vault</span>
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setResumeData(convertMasterToResume(getMasterCareerProfile()));
+                  toast.success('Synced from Master Career Profile!');
+                }}
+                className="text-slate-400 hover:text-white text-[11px] flex items-center gap-1"
+              >
+                <RefreshCw className="w-3 h-3" />
+                <span>Sync</span>
+              </button>
+            </div>
+
+          </div>
+
+          {/* ── CONTEXTUAL ACTIVE SECTION EDITOR CARD ── */}
+          <div className="bg-[#070D1F] border border-white/[0.08] rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
+            
+            {/* Header of the Active Section */}
+            <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+              <h2 className="text-sm font-bold text-white capitalize flex items-center gap-2">
+                <span>{activeCustomSection ? activeCustomSection.title : activeSection}</span>
+              </h2>
+
+              <div className="flex items-center gap-2">
+                {activeSection === 'experience' && (
+                  <button
+                    type="button"
+                    onClick={handleAddExperience}
+                    className="px-2.5 py-1 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 text-xs font-semibold flex items-center gap-1 transition-all"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Role</span>
+                  </button>
+                )}
+                {activeSection === 'education' && (
+                  <button
+                    type="button"
+                    onClick={handleAddEducation}
+                    className="px-2.5 py-1 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 text-xs font-semibold flex items-center gap-1 transition-all"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add School</span>
+                  </button>
+                )}
+                {activeSection === 'projects' && (
+                  <button
+                    type="button"
+                    onClick={handleAddProject}
+                    className="px-2.5 py-1 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 text-xs font-semibold flex items-center gap-1 transition-all"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Project</span>
+                  </button>
+                )}
+
+                {/* Hide / Remove active section button */}
+                {activeSection !== 'design' && activeSection !== 'personal' && !activeCustomSection && (
+                  <button
+                    type="button"
+                    onClick={(e) => handleToggleHideSection(activeSection, e)}
+                    className="text-slate-400 hover:text-red-400 text-xs flex items-center gap-1 pl-1"
+                    title="Remove this section from resume"
+                  >
+                    <EyeOff className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Hide</span>
+                  </button>
+                )}
+
+                {activeCustomSection && (
+                  <button
+                    type="button"
+                    onClick={(e) => handleRemoveCustomSection(activeCustomSection.id, e)}
+                    className="text-slate-400 hover:text-red-400 text-xs flex items-center gap-1 pl-1"
+                    title="Delete custom section"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Delete</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* 1. DESIGN & TEMPLATES SECTION */}
+            {activeSection === 'design' && (
+              <div className="space-y-4 text-xs">
+                
+                {/* Template Studio Header & Sub-Tabs */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-slate-200 font-bold block">Resume Templates</label>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={handleOpenNewTemplateModal}
+                        className="px-2 py-1 rounded-lg bg-primary hover:bg-primary/90 text-white font-semibold text-[11px] flex items-center gap-1 shadow-sm transition-all"
+                        title="Create a new template"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>Create New</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsSaveCurrentModalOpen(true)}
+                        className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 hover:text-white text-[11px] flex items-center gap-1 transition-all border border-white/10"
+                        title="Save current resume design as a new template"
+                      >
+                        <Save className="w-3 h-3 text-amber-400" />
+                        <span>Save Style</span>
+                      </button>
                     </div>
-                    <p className="text-xs text-slate-400 mt-0.5">Granular sliders and controls for font sizes, line heights, margins, and layout</p>
                   </div>
 
-                  {/* 1. Template Selection Grid */}
-                  <div className="space-y-2.5">
-                    <label className="text-xs font-bold text-slate-200 flex items-center justify-between">
-                      <span>1. ATS Resume Template</span>
-                      <span className="text-[11px] text-primary font-normal">{TEMPLATES.find(t => t.id === selectedTemplate)?.name}</span>
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {TEMPLATES.map(tpl => (
-                        <div
-                          key={tpl.id}
-                          onClick={() => setSelectedTemplate(tpl.id)}
-                          className={`p-3 rounded-2xl border cursor-pointer transition-all text-left ${
-                            selectedTemplate === tpl.id
-                              ? 'bg-primary/15 border-primary shadow-lg shadow-primary/10'
-                              : 'bg-white/[0.02] border-white/[0.08] hover:bg-white/[0.05] hover:border-white/20'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-white">{tpl.name}</span>
-                            {selectedTemplate === tpl.id && <Check className="w-3.5 h-3.5 text-primary" />}
-                          </div>
-                          <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">{tpl.desc}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* 2. Color Palette & Hex Input */}
-                  <div className="space-y-2.5 pt-3 border-t border-white/[0.06]">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-slate-200">2. Accent Color Theme</label>
-                      <span className="text-xs font-mono text-slate-300">{accentColor.toUpperCase()}</span>
-                    </div>
-                    
-                    <div className="grid grid-cols-6 sm:grid-cols-12 gap-2">
-                      {COLOR_PRESETS.map(c => (
-                        <button
-                          key={c.hex}
-                          type="button"
-                          onClick={() => setAccentColor(c.hex)}
-                          style={{ backgroundColor: c.hex }}
-                          className={`h-7 rounded-xl transition-all flex items-center justify-center ${
-                            accentColor.toLowerCase() === c.hex.toLowerCase()
-                              ? 'ring-2 ring-white scale-110 shadow-md'
-                              : 'opacity-80 hover:opacity-100 hover:scale-105'
-                          }`}
-                          title={c.name}
-                        >
-                          {accentColor.toLowerCase() === c.hex.toLowerCase() && (
-                            <Check className="w-3.5 h-3.5 text-white drop-shadow" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="flex items-center gap-2 pt-1">
-                      <div className="relative flex-1">
-                        <span className="absolute left-3 top-2 text-xs text-slate-500 font-mono">#</span>
-                        <input
-                          type="text"
-                          value={accentColor.replace('#', '')}
-                          onChange={(e) => setAccentColor(`#${e.target.value}`)}
-                          placeholder="4F8CFF"
-                          className="w-full pl-6 pr-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-mono focus:outline-none focus:border-primary uppercase"
-                        />
-                      </div>
-                      <label className="p-2 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 flex items-center gap-1.5 text-xs text-slate-300">
-                        <input
-                          type="color"
-                          value={accentColor}
-                          onChange={(e) => setAccentColor(e.target.value)}
-                          className="w-5 h-5 rounded cursor-pointer bg-transparent border-0 p-0"
-                        />
-                        <span>Color Wheel</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* 3. Typography & Font Family Picker */}
-                  <div className="space-y-2.5 pt-3 border-t border-white/[0.06]">
-                    <label className="text-xs font-bold text-slate-200">3. Font Family</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {FONT_OPTIONS.map(f => (
-                        <button
-                          key={f.id}
-                          type="button"
-                          onClick={() => setFontFamily(f.id)}
-                          className={`p-2 rounded-xl border text-left transition-all ${
-                            fontFamily === f.id
-                              ? 'bg-primary/15 border-primary text-white'
-                              : 'bg-white/[0.02] border-white/[0.08] text-slate-300 hover:bg-white/[0.05]'
-                          }`}
-                        >
-                          <div className="text-xs font-bold truncate">{f.name.split(' ')[0]}</div>
-                          <div className="text-[10px] text-slate-400 mt-0.5 truncate">{f.sample}</div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* 4. Continuous Sliders: Font Size & Line Height */}
-                  <div className="space-y-4 pt-3 border-t border-white/[0.06]">
-                    {/* Font Size Slider */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-200">
-                        <span className="flex items-center gap-1.5">
-                          <Type className="w-3.5 h-3.5 text-primary" /> Base Font Size
+                  {/* Sub-tab Switcher: Presets vs Custom Templates */}
+                  <div className="flex bg-[#050816] p-1 rounded-xl border border-white/10 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => setTemplateTab('presets')}
+                      className={`flex-1 py-1 rounded-lg text-xs font-semibold transition-all ${
+                        templateTab === 'presets'
+                          ? 'bg-primary text-white shadow-sm'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      Presets (5)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTemplateTab('custom')}
+                      className={`flex-1 py-1 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                        templateTab === 'custom'
+                          ? 'bg-primary text-white shadow-sm'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      <span>My Templates</span>
+                      {customTemplates.length > 0 && (
+                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                          templateTab === 'custom' ? 'bg-white/20 text-white' : 'bg-white/10 text-slate-400'
+                        }`}>
+                          {customTemplates.length}
                         </span>
-                        <span className="text-primary font-mono bg-primary/10 px-2 py-0.5 rounded-lg border border-primary/20">
-                          {fontSizeNum} pt
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-[10px] text-slate-500 font-mono">8.5pt</span>
-                        <input
-                          type="range"
-                          min="8.5"
-                          max="14.5"
-                          step="0.5"
-                          value={fontSizeNum}
-                          onChange={(e) => setFontSizeNum(parseFloat(e.target.value))}
-                          className="flex-1 accent-primary cursor-pointer"
-                        />
-                        <span className="text-[10px] text-slate-500 font-mono">14.5pt</span>
-                      </div>
-                    </div>
-
-                    {/* Line Height Slider */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-200">
-                        <span>Line Height / Text Spacing</span>
-                        <span className="text-primary font-mono bg-primary/10 px-2 py-0.5 rounded-lg border border-primary/20">
-                          {lineHeight.toFixed(2)}x
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-[10px] text-slate-500 font-mono">1.1x</span>
-                        <input
-                          type="range"
-                          min="1.1"
-                          max="2.1"
-                          step="0.05"
-                          value={lineHeight}
-                          onChange={(e) => setLineHeight(parseFloat(e.target.value))}
-                          className="flex-1 accent-primary cursor-pointer"
-                        />
-                        <span className="text-[10px] text-slate-500 font-mono">2.1x</span>
-                      </div>
-                    </div>
-
-                    {/* Page Margin / Padding Slider */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-200">
-                        <span>Page Margin / Border Padding</span>
-                        <span className="text-primary font-mono bg-primary/10 px-2 py-0.5 rounded-lg border border-primary/20">
-                          {pagePadding} px
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-[10px] text-slate-500 font-mono">12px</span>
-                        <input
-                          type="range"
-                          min="12"
-                          max="48"
-                          step="2"
-                          value={pagePadding}
-                          onChange={(e) => setPagePadding(parseInt(e.target.value))}
-                          className="flex-1 accent-primary cursor-pointer"
-                        />
-                        <span className="text-[10px] text-slate-500 font-mono">48px</span>
-                      </div>
-                    </div>
-
-                    {/* Section Gap Slider */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-200">
-                        <span>Gap Between Sections</span>
-                        <span className="text-primary font-mono bg-primary/10 px-2 py-0.5 rounded-lg border border-primary/20">
-                          {sectionGap} px
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-[10px] text-slate-500 font-mono">6px</span>
-                        <input
-                          type="range"
-                          min="6"
-                          max="32"
-                          step="2"
-                          value={sectionGap}
-                          onChange={(e) => setSectionGap(parseInt(e.target.value))}
-                          className="flex-1 accent-primary cursor-pointer"
-                        />
-                        <span className="text-[10px] text-slate-500 font-mono">32px</span>
-                      </div>
-                    </div>
-
-                    {/* Item Spacing & Border Radius */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between text-xs font-bold text-slate-200">
-                          <span>Item Gap</span>
-                          <span className="text-primary font-mono text-[11px]">{itemGap}px</span>
-                        </div>
-                        <input
-                          type="range"
-                          min="2"
-                          max="18"
-                          step="1"
-                          value={itemGap}
-                          onChange={(e) => setItemGap(parseInt(e.target.value))}
-                          className="w-full accent-primary cursor-pointer"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <div className="flex items-center justify-between text-xs font-bold text-slate-200">
-                          <span>Pill Radius</span>
-                          <span className="text-primary font-mono text-[11px]">{borderRadius}px</span>
-                        </div>
-                        <input
-                          type="range"
-                          min="0"
-                          max="16"
-                          step="2"
-                          value={borderRadius}
-                          onChange={(e) => setBorderRadius(parseInt(e.target.value))}
-                          className="w-full accent-primary cursor-pointer"
-                        />
-                      </div>
-                    </div>
+                      )}
+                    </button>
                   </div>
 
-                  {/* 5. Bullet Style & Header Alignment */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-white/[0.06]">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-200">Bullet Symbol Style</label>
-                      <div className="grid grid-cols-7 gap-1 bg-white/5 border border-white/10 rounded-xl p-1">
-                        {BULLET_STYLES.map(b => (
-                          <button
-                            key={b.id}
-                            type="button"
-                            onClick={() => setBulletStyle(b.id)}
-                            className={`py-1.5 rounded-lg text-xs font-bold transition-all ${
-                              bulletStyle === b.id
-                                ? 'bg-primary text-white shadow'
-                                : 'text-slate-400 hover:text-white'
-                            }`}
-                            title={b.label}
-                          >
-                            {b.char}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-200">Header Layout</label>
-                      <div className="flex bg-white/5 border border-white/10 rounded-xl p-1 gap-1">
-                        <button
-                          type="button"
-                          onClick={() => setHeaderLayout('left')}
-                          className={`flex-1 py-1.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all ${
-                            headerLayout === 'left' ? 'bg-primary text-white' : 'text-slate-400 hover:text-white'
-                          }`}
-                        >
-                          <AlignLeft className="w-3.5 h-3.5" /> Left
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setHeaderLayout('center')}
-                          className={`flex-1 py-1.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all ${
-                            headerLayout === 'center' ? 'bg-primary text-white' : 'text-slate-400 hover:text-white'
-                          }`}
-                        >
-                          <AlignCenter className="w-3.5 h-3.5" /> Center
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 6. Section Visibility Manager */}
-                  <div className="space-y-2 pt-3 border-t border-white/[0.06]">
-                    <label className="text-xs font-bold text-slate-200 flex items-center justify-between">
-                      <span>Section Visibility & Display</span>
-                      <span className="text-[11px] text-slate-400">Click to show / hide</span>
-                    </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {[
-                        { id: 'summary', label: 'Summary' },
-                        { id: 'experience', label: 'Experience' },
-                        { id: 'education', label: 'Education' },
-                        { id: 'projects', label: 'Projects' },
-                        { id: 'skills', label: 'Skills' },
-                        { id: 'certifications', label: 'Certifications' },
-                        { id: 'languages', label: 'Languages' },
-                        { id: 'customSections', label: 'Custom Sections' },
-                      ].map(sec => {
-                        const isHidden = hiddenSections.includes(sec.id);
+                  {/* TAB 1: PRESETS */}
+                  {templateTab === 'presets' && (
+                    <div className="grid grid-cols-1 gap-2">
+                      {TEMPLATES.map(tpl => {
+                        const isSelected = selectedTemplate === tpl.id;
                         return (
-                          <button
-                            key={sec.id}
-                            type="button"
-                            onClick={() => toggleSectionVisibility(sec.id)}
-                            className={`px-3 py-2 rounded-xl border text-xs font-medium flex items-center justify-between transition-all ${
-                              !isHidden
-                                ? 'bg-white/5 border-primary/30 text-white'
-                                : 'bg-white/[0.01] border-white/5 text-slate-500 line-through'
+                          <div
+                            key={tpl.id}
+                            onClick={() => handleApplyTemplate(tpl)}
+                            className={`p-2.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between group ${
+                              isSelected
+                                ? 'bg-primary/15 border-primary text-white'
+                                : 'bg-white/[0.02] border-white/[0.08] text-slate-300 hover:bg-white/[0.05]'
                             }`}
                           >
-                            <span>{sec.label}</span>
-                            {!isHidden ? (
-                              <Eye className="w-3.5 h-3.5 text-emerald-400" />
-                            ) : (
-                              <EyeOff className="w-3.5 h-3.5 text-slate-500" />
-                            )}
-                          </button>
+                            <div className="flex items-center gap-2.5">
+                              <span 
+                                className="w-3 h-3 rounded-full shrink-0 border border-white/20 shadow-sm"
+                                style={{ backgroundColor: tpl.accentColor || '#4F8CFF' }}
+                              />
+                              <div>
+                                <div className="font-bold flex items-center gap-1.5">
+                                  <span>{tpl.name}</span>
+                                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-white/10 text-slate-300 uppercase font-mono">
+                                    {tpl.baseTemplate}
+                                  </span>
+                                </div>
+                                <div className="text-[11px] text-slate-400">{tpl.desc}</div>
+                              </div>
+                            </div>
+                            {isSelected && <Check className="w-4 h-4 text-primary shrink-0" />}
+                          </div>
                         );
                       })}
                     </div>
-                  </div>
+                  )}
 
-                </motion.div>
-              )}
-
-              {/* 1. Personal Information & Custom Contact Fields */}
-              {activeTab === 'personal' && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-5">
-                  <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
-                    <div>
-                      <h3 className="text-sm font-bold text-white">Personal Information</h3>
-                      <p className="text-xs text-slate-400">Contact details and custom profile links</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleAddCustomField}
-                      className="px-3 py-1.5 rounded-xl bg-primary/20 hover:bg-primary/30 text-primary text-xs font-semibold flex items-center gap-1.5 transition-all"
-                    >
-                      <Plus className="w-3.5 h-3.5" /> Add Custom Field
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1 sm:col-span-2">
-                      <label className="text-xs text-slate-300 font-medium">Full Name</label>
-                      <input
-                        type="text"
-                        value={resumeData.personalInfo.fullName}
-                        onChange={(e) => handleUpdatePersonalInfo('fullName', e.target.value)}
-                        placeholder="e.g. Alex Morgan"
-                        className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                      />
-                    </div>
-
-                    <div className="space-y-1 sm:col-span-2">
-                      <label className="text-xs text-slate-300 font-medium">Professional Title / Headline</label>
-                      <input
-                        type="text"
-                        value={resumeData.personalInfo.title}
-                        onChange={(e) => handleUpdatePersonalInfo('title', e.target.value)}
-                        placeholder="e.g. Senior Full Stack & AI Engineer"
-                        className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs text-slate-300 font-medium">Email Address</label>
-                      <input
-                        type="email"
-                        value={resumeData.personalInfo.email}
-                        onChange={(e) => handleUpdatePersonalInfo('email', e.target.value)}
-                        placeholder="alex@example.com"
-                        className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs text-slate-300 font-medium">Phone Number</label>
-                      <input
-                        type="text"
-                        value={resumeData.personalInfo.phone}
-                        onChange={(e) => handleUpdatePersonalInfo('phone', e.target.value)}
-                        placeholder="+1 (555) 000-0000"
-                        className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                      />
-                    </div>
-
-                    <div className="space-y-1 sm:col-span-2">
-                      <label className="text-xs text-slate-300 font-medium">Location</label>
-                      <input
-                        type="text"
-                        value={resumeData.personalInfo.location}
-                        onChange={(e) => handleUpdatePersonalInfo('location', e.target.value)}
-                        placeholder="City, State / Country"
-                        className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs text-slate-300 font-medium">LinkedIn Profile</label>
-                      <input
-                        type="text"
-                        value={resumeData.personalInfo.linkedin}
-                        onChange={(e) => handleUpdatePersonalInfo('linkedin', e.target.value)}
-                        placeholder="linkedin.com/in/username"
-                        className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs text-slate-300 font-medium">GitHub / Portfolio</label>
-                      <input
-                        type="text"
-                        value={resumeData.personalInfo.github}
-                        onChange={(e) => handleUpdatePersonalInfo('github', e.target.value)}
-                        placeholder="github.com/username"
-                        className="w-full px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Dynamic Custom Fields List */}
-                  {(resumeData.personalInfo?.customFields || []).length > 0 && (
-                    <div className="pt-3 border-t border-white/[0.06] space-y-2.5">
-                      <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                        <Tag className="w-3.5 h-3.5 text-accent" /> Additional Custom Fields
-                      </label>
-                      <div className="space-y-2">
-                        {(resumeData.personalInfo?.customFields || []).map((cf, cIdx) => (
-                          <div key={cf.id || cIdx} className="flex items-center gap-2 p-2 rounded-xl bg-white/[0.02] border border-white/[0.06]">
-                            <input
-                              type="text"
-                              value={cf.label}
-                              onChange={(e) => handleUpdateCustomField(cIdx, 'label', e.target.value)}
-                              placeholder="Field Name (e.g. LeetCode, Visa, Twitter)"
-                              className="w-1/3 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs font-semibold focus:outline-none focus:border-primary"
-                            />
-                            <input
-                              type="text"
-                              value={cf.value}
-                              onChange={(e) => handleUpdateCustomField(cIdx, 'value', e.target.value)}
-                              placeholder="Value (e.g. leetcode.com/username, Authorized to work)"
-                              className="flex-1 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                            />
+                  {/* TAB 2: MY CUSTOM TEMPLATES */}
+                  {templateTab === 'custom' && (
+                    <div className="space-y-2">
+                      {customTemplates.length === 0 ? (
+                        <div className="text-center py-6 px-4 bg-white/[0.02] border border-dashed border-white/15 rounded-xl space-y-2.5">
+                          <Paintbrush className="w-7 h-7 text-slate-500 mx-auto" />
+                          <p className="text-slate-400 text-xs">No custom templates yet.</p>
+                          <div className="flex flex-col sm:flex-row gap-2 justify-center pt-1">
                             <button
                               type="button"
-                              onClick={() => handleRemoveCustomField(cIdx)}
-                              className="text-slate-500 hover:text-red-400 p-1"
-                              title="Delete Field"
+                              onClick={handleOpenNewTemplateModal}
+                              className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-white font-semibold text-xs flex items-center justify-center gap-1"
                             >
-                              <X className="w-3.5 h-3.5" />
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>Create Template</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setIsSaveCurrentModalOpen(true)}
+                              className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 text-xs flex items-center justify-center gap-1"
+                            >
+                              <Save className="w-3.5 h-3.5 text-amber-400" />
+                              <span>Save Current Style</span>
                             </button>
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 gap-2">
+                          {customTemplates.map(tpl => {
+                            const isSelected = selectedTemplate === tpl.id;
+                            return (
+                              <div
+                                key={tpl.id}
+                                onClick={() => handleApplyTemplate(tpl)}
+                                className={`p-2.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between group ${
+                                  isSelected
+                                    ? 'bg-primary/15 border-primary text-white'
+                                    : 'bg-white/[0.02] border-white/[0.08] text-slate-300 hover:bg-white/[0.05]'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                  <span 
+                                    className="w-3 h-3 rounded-full shrink-0 border border-white/20 shadow-sm"
+                                    style={{ backgroundColor: tpl.accentColor || '#4F8CFF' }}
+                                  />
+                                  <div className="min-w-0 flex-1 pr-2">
+                                    <div className="font-bold truncate flex items-center gap-1.5">
+                                      <span className="truncate">{tpl.name}</span>
+                                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-primary/20 text-primary uppercase font-mono shrink-0">
+                                        {tpl.baseTemplate || 'modern'}
+                                      </span>
+                                    </div>
+                                    <div className="text-[11px] text-slate-400 truncate">{tpl.desc || 'Custom template'}</div>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-1 shrink-0">
+                                  {isSelected && <Check className="w-3.5 h-3.5 text-primary mr-1" />}
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleOpenEditTemplate(tpl, e)}
+                                    className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/10 opacity-70 group-hover:opacity-100 transition-opacity"
+                                    title="Edit template settings"
+                                  >
+                                    <Edit3 className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleDuplicateCustomTemplate(tpl, e)}
+                                    className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/10 opacity-70 group-hover:opacity-100 transition-opacity"
+                                    title="Duplicate template"
+                                  >
+                                    <Copy className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleDeleteCustomTemplate(tpl.id, e)}
+                                    className="p-1 rounded text-slate-400 hover:text-red-400 hover:bg-red-500/10 opacity-70 group-hover:opacity-100 transition-opacity"
+                                    title="Delete template"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   )}
-                </motion.div>
-              )}
+                </div>
 
-              {/* 2. Professional Summary */}
-              {activeTab === 'summary' && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                  <div className="border-b border-white/[0.06] pb-3">
-                    <h3 className="text-sm font-bold text-white">Professional Summary</h3>
-                    <p className="text-xs text-slate-400">Summarize your career impact and core capabilities</p>
+                {/* Theme Accent Color */}
+                <div className="pt-3 border-t border-white/[0.06] space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-slate-300 font-bold block">Theme Accent Color</label>
+                    <span className="text-[11px] font-mono text-slate-400 font-medium">{accentColor.toUpperCase()}</span>
                   </div>
-
-                  <div className="space-y-2">
-                    <textarea
-                      rows={6}
-                      value={resumeData.summary}
-                      onChange={(e) => setResumeData(prev => ({ ...prev, summary: e.target.value }))}
-                      placeholder="Write a concise 3-4 sentence summary highlighting your key achievements and technical mastery..."
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs leading-relaxed focus:outline-none focus:border-primary resize-y"
-                    />
-                    <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] text-[11px] text-slate-400 flex items-start gap-2">
-                      <Sparkles className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                      <span>
-                        <strong>ATS Tip:</strong> Mention target job keywords directly in your summary for high score parsing.
-                      </span>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* 3. Work Experience */}
-              {activeTab === 'experience' && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
-                    <div>
-                      <h3 className="text-sm font-bold text-white">Work Experience</h3>
-                      <p className="text-xs text-slate-400">Add past roles, companies, and quantified achievements</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleAddExperience}
-                      className="px-3 py-1.5 rounded-xl bg-primary/20 hover:bg-primary/30 text-primary text-xs font-semibold flex items-center gap-1 transition-all"
+                  
+                  <div className="flex items-center gap-2.5">
+                    {/* Color Swatch Box / Tile */}
+                    <label 
+                      className="relative w-10 h-10 rounded-xl cursor-pointer shadow-md border border-white/20 transition-transform hover:scale-105 shrink-0 flex items-center justify-center overflow-hidden"
+                      style={{ backgroundColor: accentColor }}
+                      title="Click to pick color"
                     >
-                      <Plus className="w-3.5 h-3.5" /> Add Role
+                      <input
+                        type="color"
+                        value={accentColor}
+                        onChange={(e) => setAccentColor(e.target.value)}
+                        className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+                      />
+                    </label>
+
+                    {/* Hex Code Input Box */}
+                    <div className="relative flex-1">
+                      <span className="absolute left-3 top-2.5 text-xs text-slate-500 font-mono">#</span>
+                      <input
+                        type="text"
+                        value={accentColor.replace('#', '')}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9a-fA-F]/g, '').slice(0, 6);
+                          setAccentColor(`#${val}`);
+                        }}
+                        placeholder="4F8CFF"
+                        maxLength={6}
+                        className="w-full pl-6 pr-3 py-2 bg-[#050816] border border-white/10 rounded-xl text-white text-xs font-mono tracking-wider uppercase focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Quick Color Presets Palette */}
+                  <div className="flex items-center gap-1.5 pt-1">
+                    {PRESET_COLORS.map((pc, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setAccentColor(pc.hex)}
+                        className={`w-5 h-5 rounded-full border transition-transform hover:scale-110 ${
+                          accentColor.toLowerCase() === pc.hex.toLowerCase()
+                            ? 'border-white scale-110 shadow-md ring-2 ring-primary/40'
+                            : 'border-white/20'
+                        }`}
+                        style={{ backgroundColor: pc.hex }}
+                        title={pc.label}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Typography Font (Backend-Driven Categorized) */}
+                <div className="pt-3 border-t border-white/[0.06]">
+                  <label className="text-slate-300 font-bold block mb-1.5">Typography Font</label>
+                  <select
+                    value={fontFamily}
+                    onChange={(e) => setFontFamily(e.target.value)}
+                    className="w-full bg-[#050816] border border-white/10 rounded-xl p-2 text-slate-200 text-xs focus:outline-none focus:border-primary"
+                  >
+                    {['sans-serif', 'serif', 'handwriting', 'monospace'].map(cat => {
+                      const catFonts = fontList.filter(f => (f.category || '').toLowerCase() === cat);
+                      if (catFonts.length === 0) return null;
+                      const catLabel = cat === 'sans-serif' ? 'Sans-Serif (ATS Preferred)' 
+                        : cat === 'serif' ? 'Serif (Executive)' 
+                        : cat === 'handwriting' ? 'Handwriting & Script' 
+                        : 'Monospace & Tech';
+                      return (
+                        <optgroup key={cat} label={catLabel} className="bg-[#0B1228] text-primary font-bold">
+                          {catFonts.map(f => (
+                            <option key={f.id} value={f.id} className="bg-[#050816] text-slate-200 font-normal">
+                              {f.name}
+                            </option>
+                          ))}
+                        </optgroup>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                {/* Fine-Tuning Spacing & Geometry */}
+                <div className="pt-3 border-t border-white/[0.06] space-y-3">
+                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                    <span>Layout & Spacing Metrics</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <div className="flex justify-between text-slate-400 mb-1">
+                        <span>Font Size</span>
+                        <span className="font-mono text-slate-200">{fontSizeNum}pt</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="8.5"
+                        max="13"
+                        step="0.5"
+                        value={fontSizeNum}
+                        onChange={(e) => setFontSizeNum(parseFloat(e.target.value))}
+                        className="w-full accent-primary h-1.5 bg-[#050816] rounded-lg cursor-pointer"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-slate-400 mb-1">
+                        <span>Line Height</span>
+                        <span className="font-mono text-slate-200">{lineHeight}</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="1.15"
+                        max="1.8"
+                        step="0.05"
+                        value={lineHeight}
+                        onChange={(e) => setLineHeight(parseFloat(e.target.value))}
+                        className="w-full accent-primary h-1.5 bg-[#050816] rounded-lg cursor-pointer"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-slate-400 mb-1">
+                        <span>Page Margin</span>
+                        <span className="font-mono text-slate-200">{pagePadding}px</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="16"
+                        max="48"
+                        step="2"
+                        value={pagePadding}
+                        onChange={(e) => setPagePadding(parseInt(e.target.value))}
+                        className="w-full accent-primary h-1.5 bg-[#050816] rounded-lg cursor-pointer"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-slate-400 mb-1">
+                        <span>Section Gap</span>
+                        <span className="font-mono text-slate-200">{sectionGap}px</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="8"
+                        max="28"
+                        step="2"
+                        value={sectionGap}
+                        onChange={(e) => setSectionGap(parseInt(e.target.value))}
+                        className="w-full accent-primary h-1.5 bg-[#050816] rounded-lg cursor-pointer"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <div>
+                      <label className="text-slate-400 block mb-1">Header Layout</label>
+                      <select
+                        value={headerLayout}
+                        onChange={(e) => setHeaderLayout(e.target.value)}
+                        className="w-full bg-[#050816] border border-white/10 rounded-lg p-1.5 text-white text-xs focus:outline-none focus:border-primary"
+                      >
+                        <option value="left">Left Aligned</option>
+                        <option value="center">Centered</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-slate-400 block mb-1">Bullet Style</label>
+                      <select
+                        value={bulletStyle}
+                        onChange={(e) => setBulletStyle(e.target.value)}
+                        className="w-full bg-[#050816] border border-white/10 rounded-lg p-1.5 text-white text-xs focus:outline-none focus:border-primary"
+                      >
+                        <option value="disc">Disc (•)</option>
+                        <option value="square">Square (▪)</option>
+                        <option value="dash">Dash (–)</option>
+                        <option value="none">None</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* 2. PERSONAL INFO SECTION */}
+            {activeSection === 'personal' && (
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="text-slate-400 block mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    value={resumeData.personalInfo?.fullName || ''}
+                    onChange={(e) => handleUpdatePersonalInfo('fullName', e.target.value)}
+                    placeholder="e.g. Alex Chen"
+                    className="w-full bg-[#050816] border border-white/10 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-400 block mb-1">Professional Headline / Role</label>
+                  <input
+                    type="text"
+                    value={resumeData.personalInfo?.title || ''}
+                    onChange={(e) => handleUpdatePersonalInfo('title', e.target.value)}
+                    placeholder="e.g. Senior Full-Stack AI Engineer"
+                    className="w-full bg-[#050816] border border-white/10 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="text-slate-400 block mb-1">Email</label>
+                    <input
+                      type="email"
+                      value={resumeData.personalInfo?.email || ''}
+                      onChange={(e) => handleUpdatePersonalInfo('email', e.target.value)}
+                      placeholder="alex@example.com"
+                      className="w-full bg-[#050816] border border-white/10 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-slate-400 block mb-1">Phone</label>
+                    <input
+                      type="text"
+                      value={resumeData.personalInfo?.phone || ''}
+                      onChange={(e) => handleUpdatePersonalInfo('phone', e.target.value)}
+                      placeholder="+1 (555) 019-2834"
+                      className="w-full bg-[#050816] border border-white/10 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="text-slate-400 block mb-1">Location</label>
+                    <input
+                      type="text"
+                      value={resumeData.personalInfo?.location || ''}
+                      onChange={(e) => handleUpdatePersonalInfo('location', e.target.value)}
+                      placeholder="San Francisco, CA"
+                      className="w-full bg-[#050816] border border-white/10 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-slate-400 block mb-1">LinkedIn Profile</label>
+                    <input
+                      type="text"
+                      value={resumeData.personalInfo?.linkedin || ''}
+                      onChange={(e) => handleUpdatePersonalInfo('linkedin', e.target.value)}
+                      placeholder="linkedin.com/in/alex"
+                      className="w-full bg-[#050816] border border-white/10 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-slate-400 block mb-1">GitHub / Portfolio</label>
+                  <input
+                    type="text"
+                    value={resumeData.personalInfo?.github || ''}
+                    onChange={(e) => handleUpdatePersonalInfo('github', e.target.value)}
+                    placeholder="github.com/alexchen"
+                    className="w-full bg-[#050816] border border-white/10 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* 3. SUMMARY SECTION */}
+            {activeSection === 'summary' && (
+              <div className="space-y-3 text-xs">
+                <div className="flex items-center justify-between">
+                  <label className="text-slate-400">Professional Summary</label>
+                  <button
+                    type="button"
+                    onClick={() => setAiModal({
+                      isOpen: true,
+                      type: 'improve-all',
+                      suggestions: [
+                        'Proven Software Engineer with 4+ years architecting high-availability distributed systems, specialized in Python, React, and LLM microservices.',
+                        'Results-driven AI Engineer experienced in fine-tuning models, scaling vector databases, and reducing cloud infrastructure costs by 30%.'
+                      ]
+                    })}
+                    className="text-amber-400 hover:text-amber-300 text-[11px] font-semibold flex items-center gap-1"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    <span>AI Polish</span>
+                  </button>
+                </div>
+                <textarea
+                  rows={6}
+                  value={resumeData.summary || ''}
+                  onChange={(e) => setResumeData(prev => ({ ...prev, summary: e.target.value }))}
+                  placeholder="Write a compelling 2-3 sentence overview highlighting your core strengths, achievements, and technical expertise..."
+                  className="w-full bg-[#050816] border border-white/10 rounded-xl p-3 text-white text-xs leading-relaxed focus:outline-none focus:border-primary"
+                />
+              </div>
+            )}
+
+            {/* 4. EXPERIENCE SECTION */}
+            {activeSection === 'experience' && (
+              <div className="space-y-5 text-xs">
+                {(resumeData.experience || []).length === 0 ? (
+                  <div className="text-center py-6 text-slate-500">
+                    <Briefcase className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                    <p>No experience entries yet.</p>
+                    <button
+                      onClick={handleAddExperience}
+                      className="mt-2 text-primary hover:underline font-semibold"
+                    >
+                      + Add your first role
                     </button>
                   </div>
-
-                  <div className="space-y-4">
-                    {resumeData.experience.map((exp, expIdx) => (
-                      <div key={expIdx} className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3 relative">
+                ) : (
+                  (resumeData.experience || []).map((exp, expIdx) => (
+                    <div key={exp.id || expIdx} className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.08] space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-200">Role #{expIdx + 1}</span>
                         <button
                           type="button"
                           onClick={() => handleRemoveExperience(expIdx)}
-                          className="absolute top-3 right-3 text-slate-400 hover:text-red-400 transition-colors"
-                          title="Delete Role"
+                          className="text-slate-500 hover:text-red-400"
+                          title="Remove role"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
+                      </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pr-8">
-                          <div className="space-y-1">
-                            <label className="text-[11px] text-slate-300 font-medium">Job Title / Position</label>
-                            <input
-                              type="text"
-                              value={exp.position}
-                              onChange={(e) => handleUpdateExperience(expIdx, 'position', e.target.value)}
-                              placeholder="e.g. Senior Software Engineer"
-                              className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[11px] text-slate-300 font-medium">Company Name</label>
-                            <input
-                              type="text"
-                              value={exp.company}
-                              onChange={(e) => handleUpdateExperience(expIdx, 'company', e.target.value)}
-                              placeholder="e.g. Google"
-                              className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[11px] text-slate-300 font-medium">Start Date</label>
-                            <input
-                              type="text"
-                              value={exp.startDate}
-                              onChange={(e) => handleUpdateExperience(expIdx, 'startDate', e.target.value)}
-                              placeholder="e.g. Jan 2022"
-                              className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[11px] text-slate-300 font-medium">End Date</label>
-                            <input
-                              type="text"
-                              value={exp.current ? 'Present' : exp.endDate}
-                              disabled={exp.current}
-                              onChange={(e) => handleUpdateExperience(expIdx, 'endDate', e.target.value)}
-                              placeholder="e.g. Dec 2023"
-                              className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary disabled:opacity-40"
-                            />
-                          </div>
-                        </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={exp.position || ''}
+                          onChange={(e) => handleUpdateExperience(expIdx, 'position', e.target.value)}
+                          placeholder="Job Title (e.g. Senior Software Engineer)"
+                          className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                        />
+                        <input
+                          type="text"
+                          value={exp.company || ''}
+                          onChange={(e) => handleUpdateExperience(expIdx, 'company', e.target.value)}
+                          placeholder="Company (e.g. Stripe)"
+                          className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                        />
+                      </div>
 
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            id={`current-${expIdx}`}
-                            checked={exp.current}
-                            onChange={(e) => handleUpdateExperience(expIdx, 'current', e.target.checked)}
-                            className="rounded bg-white/5 border-white/20 text-primary focus:ring-0"
-                          />
-                          <label htmlFor={`current-${expIdx}`} className="text-xs text-slate-400 cursor-pointer">
-                            I currently work here
-                          </label>
-                        </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={exp.startDate || ''}
+                          onChange={(e) => handleUpdateExperience(expIdx, 'startDate', e.target.value)}
+                          placeholder="Start Date (e.g. 2022)"
+                          className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                        />
+                        <input
+                          type="text"
+                          value={exp.endDate || ''}
+                          onChange={(e) => handleUpdateExperience(expIdx, 'endDate', e.target.value)}
+                          placeholder="End Date (or Present)"
+                          className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                        />
+                      </div>
 
-                        {/* Bullet Points */}
-                        <div className="space-y-2 pt-2 border-t border-white/[0.04]">
-                          <div className="flex items-center justify-between">
-                            <label className="text-[11px] text-slate-400 font-medium">Key Achievement Bullets</label>
-                            <button
-                              type="button"
-                              onClick={() => handleAddExpBullet(expIdx)}
-                              className="text-[11px] text-primary hover:text-accent font-medium flex items-center gap-1"
-                            >
-                              <Plus className="w-3 h-3" /> Add Bullet
-                            </button>
-                          </div>
-                          {exp.bullets && exp.bullets.map((bullet, bIdx) => (
-                            <div key={bIdx} className="flex items-center gap-2">
-                              <input
-                                type="text"
+                      {/* Bullets List */}
+                      <div className="space-y-2 pt-1">
+                        <label className="text-[11px] font-bold text-slate-400 block">Responsibility Bullets</label>
+                        {(exp.bullets || []).map((bullet, bIdx) => (
+                          <div key={bIdx} className="space-y-1">
+                            <div className="flex items-start gap-1.5">
+                              <span className="text-slate-500 pt-2 text-xs">•</span>
+                              <textarea
+                                rows={2}
                                 value={bullet}
                                 onChange={(e) => handleUpdateExpBullet(expIdx, bIdx, e.target.value)}
-                                placeholder="e.g. Increased system throughput by 35% by rewriting caching layer..."
-                                className="flex-1 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
+                                placeholder="Describe impact with numbers..."
+                                className="flex-1 bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary leading-relaxed"
                               />
                               <button
                                 type="button"
                                 onClick={() => handleRemoveExpBullet(expIdx, bIdx)}
-                                className="text-slate-500 hover:text-red-400"
+                                className="text-slate-600 hover:text-red-400 pt-2"
                               >
                                 <X className="w-3.5 h-3.5" />
                               </button>
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
+                            
+                            {/* Inline AI Improve button */}
+                            <div className="pl-4">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenAiBullet(expIdx, bIdx)}
+                                className="text-[10px] text-amber-400/90 hover:text-amber-300 font-semibold inline-flex items-center gap-1 bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/20 transition-colors"
+                              >
+                                <Sparkles className="w-2.5 h-2.5" />
+                                <span>Improve with Metrics</span>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
 
-              {/* 4. Education */}
-              {activeTab === 'education' && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
-                    <div>
-                      <h3 className="text-sm font-bold text-white">Education</h3>
-                      <p className="text-xs text-slate-400">Degrees, colleges, and GPA</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleAddEducation}
-                      className="px-3 py-1.5 rounded-xl bg-primary/20 hover:bg-primary/30 text-primary text-xs font-semibold flex items-center gap-1 transition-all"
-                    >
-                      <Plus className="w-3.5 h-3.5" /> Add Degree
-                    </button>
-                  </div>
-
-                  <div className="space-y-4">
-                    {resumeData.education.map((edu, idx) => (
-                      <div key={idx} className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3 relative">
                         <button
                           type="button"
-                          onClick={() => handleRemoveEducation(idx)}
-                          className="absolute top-3 right-3 text-slate-400 hover:text-red-400"
+                          onClick={() => handleAddExpBullet(expIdx)}
+                          className="text-primary hover:underline text-[11px] font-semibold pt-1 block"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          + Add Bullet
                         </button>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pr-8">
-                          <div className="space-y-1 sm:col-span-2">
-                            <label className="text-[11px] text-slate-300 font-medium">Institution / University</label>
-                            <input
-                              type="text"
-                              value={edu.institution}
-                              onChange={(e) => handleUpdateEducation(idx, 'institution', e.target.value)}
-                              placeholder="e.g. Stanford University"
-                              className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                            />
-                          </div>
-                          <div className="space-y-1 sm:col-span-2">
-                            <label className="text-[11px] text-slate-300 font-medium">Degree & Major</label>
-                            <input
-                              type="text"
-                              value={edu.degree}
-                              onChange={(e) => handleUpdateEducation(idx, 'degree', e.target.value)}
-                              placeholder="e.g. B.S. in Computer Science"
-                              className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[11px] text-slate-300 font-medium">Start Year</label>
-                            <input
-                              type="text"
-                              value={edu.startYear}
-                              onChange={(e) => handleUpdateEducation(idx, 'startYear', e.target.value)}
-                              placeholder="e.g. 2018"
-                              className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[11px] text-slate-300 font-medium">End Year / Expected</label>
-                            <input
-                              type="text"
-                              value={edu.endYear}
-                              onChange={(e) => handleUpdateEducation(idx, 'endYear', e.target.value)}
-                              placeholder="e.g. 2022"
-                              className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                            />
-                          </div>
-                        </div>
                       </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* 5. Projects */}
-              {activeTab === 'projects' && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
-                    <div>
-                      <h3 className="text-sm font-bold text-white">Projects</h3>
-                      <p className="text-xs text-slate-400">Technical applications, open source repos, and tools</p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleAddProject}
-                      className="px-3 py-1.5 rounded-xl bg-primary/20 hover:bg-primary/30 text-primary text-xs font-semibold flex items-center gap-1"
-                    >
-                      <Plus className="w-3.5 h-3.5" /> Add Project
-                    </button>
-                  </div>
+                  ))
+                )}
+              </div>
+            )}
 
-                  <div className="space-y-4">
-                    {resumeData.projects.map((proj, idx) => (
-                      <div key={idx} className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3 relative">
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveProject(idx)}
-                          className="absolute top-3 right-3 text-slate-400 hover:text-red-400"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pr-8">
-                          <div className="space-y-1">
-                            <label className="text-[11px] text-slate-300 font-medium">Project Name</label>
-                            <input
-                              type="text"
-                              value={proj.name}
-                              onChange={(e) => handleUpdateProject(idx, 'name', e.target.value)}
-                              placeholder="e.g. AI Resume Parser"
-                              className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[11px] text-slate-300 font-medium">Tech Stack / Tools</label>
-                            <input
-                              type="text"
-                              value={proj.technologies}
-                              onChange={(e) => handleUpdateProject(idx, 'technologies', e.target.value)}
-                              placeholder="e.g. React, FastAPI, OpenAI"
-                              className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                            />
-                          </div>
-                          <div className="space-y-1 sm:col-span-2">
-                            <label className="text-[11px] text-slate-300 font-medium">Link / GitHub</label>
-                            <input
-                              type="text"
-                              value={proj.link}
-                              onChange={(e) => handleUpdateProject(idx, 'link', e.target.value)}
-                              placeholder="e.g. github.com/username/project"
-                              className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                            />
-                          </div>
-                          <div className="space-y-1 sm:col-span-2">
-                            <label className="text-[11px] text-slate-300 font-medium">Description</label>
-                            <textarea
-                              rows={2}
-                              value={proj.description}
-                              onChange={(e) => handleUpdateProject(idx, 'description', e.target.value)}
-                              placeholder="Describe architecture decisions, and impact..."
-                              className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary resize-y"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* 6. Skills */}
-              {activeTab === 'skills' && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                  <div className="border-b border-white/[0.06] pb-3">
-                    <h3 className="text-sm font-bold text-white">Skills & Keywords</h3>
-                    <p className="text-xs text-slate-400">Add technical skills, libraries, frameworks, and tools</p>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={skillInput}
-                        onChange={(e) => setSkillInput(e.target.value)}
-                        onKeyDown={handleAddSkill}
-                        placeholder="Type a skill and press Enter (e.g. Docker, Python)..."
-                        className="flex-1 px-3.5 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                      />
+            {/* 5. EDUCATION SECTION */}
+            {activeSection === 'education' && (
+              <div className="space-y-4 text-xs">
+                {(resumeData.education || []).map((edu, eduIdx) => (
+                  <div key={edu.id || eduIdx} className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.08] space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-200">Education #{eduIdx + 1}</span>
                       <button
                         type="button"
-                        onClick={() => {
-                          const trimmed = skillInput.trim();
-                          if (trimmed && !resumeData.skills.includes(trimmed)) {
-                            setResumeData(prev => ({ ...prev, skills: [...prev.skills, trimmed] }));
-                            setSkillInput('');
-                          }
-                        }}
-                        className="px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-semibold"
+                        onClick={() => handleRemoveEducation(eduIdx)}
+                        className="text-slate-500 hover:text-red-400"
                       >
-                        Add
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 pt-2">
-                      {resumeData.skills.map((skill, idx) => (
-                        <span
-                          key={idx}
-                          className="px-3 py-1 rounded-lg bg-white/5 border border-white/10 text-slate-200 text-xs flex items-center gap-1.5 group"
-                        >
-                          {skill}
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveSkill(skill)}
-                            className="text-slate-400 group-hover:text-red-400 transition-colors"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </span>
-                      ))}
+                    <input
+                      type="text"
+                      value={edu.institution || ''}
+                      onChange={(e) => handleUpdateEducation(eduIdx, 'institution', e.target.value)}
+                      placeholder="University / College (e.g. Stanford University)"
+                      className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                    />
+
+                    <input
+                      type="text"
+                      value={edu.degree || ''}
+                      onChange={(e) => handleUpdateEducation(eduIdx, 'degree', e.target.value)}
+                      placeholder="Degree & Major (e.g. B.S. in Computer Science)"
+                      className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                    />
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        value={edu.startYear || ''}
+                        onChange={(e) => handleUpdateEducation(eduIdx, 'startYear', e.target.value)}
+                        placeholder="Start Year (2018)"
+                        className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                      />
+                      <input
+                        type="text"
+                        value={edu.endYear || ''}
+                        onChange={(e) => handleUpdateEducation(eduIdx, 'endYear', e.target.value)}
+                        placeholder="Grad Year (2022)"
+                        className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                      />
                     </div>
                   </div>
-                </motion.div>
-              )}
+                ))}
+              </div>
+            )}
 
-              {/* 7. Certifications */}
-              {activeTab === 'certifications' && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
-                    <div>
-                      <h3 className="text-sm font-bold text-white">Certifications</h3>
-                      <p className="text-xs text-slate-400">Industry credentials and specialized badges</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleAddCertification}
-                      className="px-3 py-1.5 rounded-xl bg-primary/20 hover:bg-primary/30 text-primary text-xs font-semibold flex items-center gap-1"
+            {/* 6. SKILLS SECTION */}
+            {activeSection === 'skills' && (
+              <div className="space-y-3 text-xs">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={skillInput}
+                    onChange={(e) => setSkillInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddSkill(); } }}
+                    placeholder="Add skill (e.g. TypeScript, PyTorch, Docker)..."
+                    className="flex-1 bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddSkill}
+                    className="px-3 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold text-xs"
+                  >
+                    Add
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5 pt-2">
+                  {(resumeData.skills || []).map((skill, sIdx) => (
+                    <span
+                      key={sIdx}
+                      className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-slate-200 text-xs flex items-center gap-1.5 hover:border-primary/40 transition-colors"
                     >
-                      <Plus className="w-3.5 h-3.5" /> Add Certificate
+                      <span>{skill}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSkill(skill)}
+                        className="text-slate-500 hover:text-red-400"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 7. PROJECTS SECTION */}
+            {activeSection === 'projects' && (
+              <div className="space-y-4 text-xs">
+                {(resumeData.projects || []).map((proj, pIdx) => (
+                  <div key={proj.id || pIdx} className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.08] space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-200">Project #{pIdx + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveProject(pIdx)}
+                        className="text-slate-500 hover:text-red-400"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    <input
+                      type="text"
+                      value={proj.name || ''}
+                      onChange={(e) => handleUpdateProject(pIdx, 'name', e.target.value)}
+                      placeholder="Project Name"
+                      className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                    />
+
+                    <input
+                      type="text"
+                      value={proj.technologies || ''}
+                      onChange={(e) => handleUpdateProject(pIdx, 'technologies', e.target.value)}
+                      placeholder="Technologies (e.g. Next.js, FastAPI, PostgreSQL)"
+                      className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                    />
+
+                    <textarea
+                      rows={2}
+                      value={proj.description || ''}
+                      onChange={(e) => handleUpdateProject(pIdx, 'description', e.target.value)}
+                      placeholder="Brief description of outcomes and technical highlights..."
+                      className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 8. CERTIFICATIONS SECTION */}
+            {activeSection === 'certifications' && (
+              <div className="space-y-3 text-xs">
+                <button
+                  type="button"
+                  onClick={handleAddCertification}
+                  className="px-2.5 py-1 rounded-lg bg-primary/20 text-primary text-xs font-semibold flex items-center gap-1 mb-2"
+                >
+                  <Plus className="w-3 h-3" /> Add Certificate
+                </button>
+                {(resumeData.certifications || []).map((c, cIdx) => (
+                  <div key={cIdx} className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.08] space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-slate-300">Cert #{cIdx + 1}</span>
+                      <button onClick={() => handleRemoveCertification(cIdx)} className="text-slate-500 hover:text-red-400">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={c.name || ''}
+                      onChange={(e) => handleUpdateCertification(cIdx, 'name', e.target.value)}
+                      placeholder="Certificate Name (e.g. AWS Certified Solutions Architect)"
+                      className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                    />
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        value={c.issuer || ''}
+                        onChange={(e) => handleUpdateCertification(cIdx, 'issuer', e.target.value)}
+                        placeholder="Issuer (e.g. Amazon)"
+                        className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                      />
+                      <input
+                        type="text"
+                        value={c.year || ''}
+                        onChange={(e) => handleUpdateCertification(cIdx, 'year', e.target.value)}
+                        placeholder="Year (2023)"
+                        className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 9. LANGUAGES SECTION */}
+            {activeSection === 'languages' && (
+              <div className="space-y-3 text-xs">
+                <button
+                  type="button"
+                  onClick={handleAddLanguage}
+                  className="px-2.5 py-1 rounded-lg bg-primary/20 text-primary text-xs font-semibold flex items-center gap-1 mb-2"
+                >
+                  <Plus className="w-3 h-3" /> Add Language
+                </button>
+                {(resumeData.languages || []).map((l, lIdx) => (
+                  <div key={lIdx} className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      value={l.language || ''}
+                      onChange={(e) => handleUpdateLanguage(lIdx, 'language', e.target.value)}
+                      placeholder="Language (e.g. English)"
+                      className="flex-1 bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                    />
+                    <input
+                      type="text"
+                      value={l.proficiency || ''}
+                      onChange={(e) => handleUpdateLanguage(lIdx, 'proficiency', e.target.value)}
+                      placeholder="Proficiency (Native / Fluent)"
+                      className="w-32 bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                    />
+                    <button onClick={() => handleRemoveLanguage(lIdx)} className="text-slate-500 hover:text-red-400">
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
+                ))}
+              </div>
+            )}
 
-                  <div className="space-y-3">
-                    {resumeData.certifications.map((c, idx) => (
-                      <div key={idx} className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.08] grid grid-cols-1 sm:grid-cols-3 gap-2.5 relative">
+            {/* 10. DYNAMIC CUSTOM SECTION EDITOR */}
+            {activeCustomSection && (
+              <div className="space-y-4 text-xs">
+                <div>
+                  <label className="text-slate-400 block mb-1">Section Title</label>
+                  <input
+                    type="text"
+                    value={activeCustomSection.title || ''}
+                    onChange={(e) => handleUpdateCustomSection(activeCustomSection.id, 'title', e.target.value)}
+                    placeholder="Section Title"
+                    className="w-full bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs font-bold focus:outline-none focus:border-primary"
+                  />
+                </div>
+
+                {activeCustomSection.style === 'paragraph' ? (
+                  <div>
+                    <label className="text-slate-400 block mb-1">Content</label>
+                    <textarea
+                      rows={5}
+                      value={activeCustomSection.content || ''}
+                      onChange={(e) => handleUpdateCustomSection(activeCustomSection.id, 'content', e.target.value)}
+                      placeholder="Write details for this section..."
+                      className="w-full bg-[#050816] border border-white/10 rounded-lg p-2.5 text-white text-xs leading-relaxed focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <label className="text-slate-400 block">Items / Bullet Points</label>
+                    {(activeCustomSection.items || []).map((item, itIdx) => (
+                      <div key={itIdx} className="flex items-start gap-1.5">
+                        <span className="text-slate-500 pt-2 text-xs">•</span>
+                        <textarea
+                          rows={2}
+                          value={item}
+                          onChange={(e) => handleUpdateCustomBullet(activeCustomSection.id, itIdx, e.target.value)}
+                          placeholder="Add accomplishment, publication, or detail..."
+                          className="flex-1 bg-[#050816] border border-white/10 rounded-lg p-2 text-white text-xs focus:outline-none focus:border-primary"
+                        />
                         <button
                           type="button"
-                          onClick={() => handleRemoveCertification(idx)}
-                          className="absolute top-2.5 right-2.5 text-slate-400 hover:text-red-400"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                        <input
-                          type="text"
-                          value={c.name}
-                          onChange={(e) => handleUpdateCertification(idx, 'name', e.target.value)}
-                          placeholder="Certificate Title"
-                          className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                        />
-                        <input
-                          type="text"
-                          value={c.issuer}
-                          onChange={(e) => handleUpdateCertification(idx, 'issuer', e.target.value)}
-                          placeholder="Issuing Organization"
-                          className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                        />
-                        <input
-                          type="text"
-                          value={c.year}
-                          onChange={(e) => handleUpdateCertification(idx, 'year', e.target.value)}
-                          placeholder="Year (e.g. 2023)"
-                          className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary pr-8"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* 8. Languages */}
-              {activeTab === 'languages' && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
-                    <div>
-                      <h3 className="text-sm font-bold text-white">Languages</h3>
-                      <p className="text-xs text-slate-400">Language proficiencies and fluency</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setResumeData(prev => ({ ...prev, languages: [...prev.languages, { name: '', proficiency: 'Fluent' }] }))}
-                      className="px-3 py-1.5 rounded-xl bg-primary/20 hover:bg-primary/30 text-primary text-xs font-semibold flex items-center gap-1"
-                    >
-                      <Plus className="w-3.5 h-3.5" /> Add Language
-                    </button>
-                  </div>
-
-                  <div className="space-y-3">
-                    {resumeData.languages.map((l, idx) => (
-                      <div key={idx} className="flex items-center gap-3">
-                        <input
-                          type="text"
-                          value={l.name}
-                          onChange={(e) => {
-                            const updated = [...resumeData.languages];
-                            updated[idx].name = e.target.value;
-                            setResumeData(prev => ({ ...prev, languages: updated }));
-                          }}
-                          placeholder="Language (e.g. English, French)"
-                          className="flex-1 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                        />
-                        <select
-                          value={l.proficiency}
-                          onChange={(e) => {
-                            const updated = [...resumeData.languages];
-                            updated[idx].proficiency = e.target.value;
-                            setResumeData(prev => ({ ...prev, languages: updated }));
-                          }}
-                          className="px-3 py-1.5 rounded-lg bg-[#0c1226] border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                        >
-                          <option value="Native / Bilingual">Native / Bilingual</option>
-                          <option value="Fluent">Fluent</option>
-                          <option value="Professional Working">Professional Working</option>
-                          <option value="Conversational">Conversational</option>
-                        </select>
-                        <button
-                          type="button"
-                          onClick={() => setResumeData(prev => ({ ...prev, languages: prev.languages.filter((_, lIdx) => lIdx !== idx) }))}
-                          className="text-slate-400 hover:text-red-400"
+                          onClick={() => handleRemoveCustomBullet(activeCustomSection.id, itIdx)}
+                          className="text-slate-600 hover:text-red-400 pt-2"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     ))}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* 9. Custom Sections */}
-              {activeTab === 'custom' && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
-                    <div>
-                      <h3 className="text-sm font-bold text-white">Custom Sections</h3>
-                      <p className="text-xs text-slate-400">Add arbitrary sections (e.g. Publications, Volunteering, Patents, Talks)</p>
-                    </div>
                     <button
                       type="button"
-                      onClick={handleAddCustomSection}
-                      className="px-3 py-1.5 rounded-xl bg-primary/20 hover:bg-primary/30 text-primary text-xs font-semibold flex items-center gap-1"
+                      onClick={() => handleAddCustomBullet(activeCustomSection.id)}
+                      className="text-primary hover:underline text-[11px] font-semibold pt-1 block"
                     >
-                      <Plus className="w-3.5 h-3.5" /> Add Section
+                      + Add Item
                     </button>
                   </div>
-
-                  <div className="space-y-4">
-                    {(resumeData.customSections || []).map((sec, sIdx) => (
-                      <div key={sec.id || sIdx} className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-3 relative">
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveCustomSection(sIdx)}
-                          className="absolute top-3 right-3 text-slate-400 hover:text-red-400"
-                          title="Remove Section"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-
-                        <div className="space-y-2 pr-8">
-                          <label className="text-[11px] text-slate-300 font-medium">Section Title</label>
-                          <input
-                            type="text"
-                            value={sec.title}
-                            onChange={(e) => handleUpdateCustomSection(sIdx, 'title', e.target.value)}
-                            placeholder="e.g. Publications & Research"
-                            className="w-full px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs font-bold focus:outline-none focus:border-primary"
-                          />
-                        </div>
-
-                        <div className="space-y-2 pt-2 border-t border-white/[0.04]">
-                          <div className="flex items-center justify-between">
-                            <label className="text-[11px] text-slate-400 font-medium">Bullet Items</label>
-                            <button
-                              type="button"
-                              onClick={() => handleAddCustomItem(sIdx)}
-                              className="text-[11px] text-primary hover:text-accent font-medium flex items-center gap-1"
-                            >
-                              <Plus className="w-3 h-3" /> Add Item
-                            </button>
-                          </div>
-                          {(sec.items || []).map((item, itemIdx) => (
-                            <div key={itemIdx} className="flex items-center gap-2">
-                              <input
-                                type="text"
-                                value={typeof item === 'string' ? item : (item.text || '')}
-                                onChange={(e) => handleUpdateCustomItem(sIdx, itemIdx, e.target.value)}
-                                placeholder="e.g. Published research paper on distributed systems..."
-                                className="flex-1 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-primary"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveCustomItem(sIdx, itemIdx)}
-                                className="text-slate-500 hover:text-red-400"
-                              >
-                                <X className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-
-                    {(!resumeData.customSections || resumeData.customSections.length === 0) && (
-                      <div className="p-8 text-center text-slate-500 text-xs border border-dashed border-white/10 rounded-2xl">
-                        No custom sections added yet. Click "Add Section" to create one.
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-
-            </div>
-          </div>
-        )}
-
-        {/* Right Side: Responsive Live A4 PDF & Document Viewer */}
-        <div 
-          ref={viewerContainerRef}
-          className={`${
-            viewMode === 'wide-preview' 
-              ? 'lg:col-span-8' 
-              : viewMode === 'preview-only' 
-              ? 'w-full max-w-5xl mx-auto' 
-              : 'lg:col-span-7'
-          } space-y-3 sticky top-20`}
-        >
-          {/* Zoom & Document Viewer Controls Header */}
-          <div className="flex items-center justify-between bg-[#0A1026] border border-white/[0.08] rounded-2xl px-4 py-2.5 text-xs text-slate-300 shadow-md flex-wrap gap-2">
-            <div className="flex items-center gap-2">
-              <Eye className="w-4 h-4 text-primary" />
-              <span className="font-semibold text-white">Live A4 Document Viewer</span>
-              <span className="text-slate-500 text-[11px] hidden sm:inline">• {selectedTemplate.toUpperCase()}</span>
-              <span className="text-primary text-[10px] font-mono font-bold ml-1">{fontFamily.toUpperCase()}</span>
-            </div>
-
-            {/* Viewer Mode & Scale Controls */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Quick Auto-Fit Buttons */}
-              <button
-                type="button"
-                onClick={handleFitWidth}
-                className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-[11px] font-medium transition-all"
-                title="Scale to fit container width"
-              >
-                Fit Width
-              </button>
-              <button
-                type="button"
-                onClick={handleFitPage}
-                className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-[11px] font-medium transition-all"
-                title="Scale to fit full page"
-              >
-                Fit Page
-              </button>
-
-              {/* Zoom Buttons & Slider */}
-              <div className="flex items-center gap-1.5 bg-white/5 px-2 py-1 rounded-xl border border-white/10">
-                <button
-                  type="button"
-                  onClick={() => setZoomLevel(prev => Math.max(40, prev - 10))}
-                  className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-white"
-                  title="Zoom Out"
-                >
-                  <ZoomOut className="w-3.5 h-3.5" />
-                </button>
-                <input
-                  type="range"
-                  min="40"
-                  max="140"
-                  step="5"
-                  value={zoomLevel}
-                  onChange={(e) => setZoomLevel(parseInt(e.target.value))}
-                  className="w-16 sm:w-24 accent-primary cursor-pointer h-1"
-                />
-                <span className="text-[11px] font-mono w-9 text-center font-bold text-white">{zoomLevel}%</span>
-                <button
-                  type="button"
-                  onClick={() => setZoomLevel(prev => Math.min(140, prev + 10))}
-                  className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-white"
-                  title="Zoom In"
-                >
-                  <ZoomIn className="w-3.5 h-3.5" />
-                </button>
+                )}
               </div>
+            )}
 
-              {/* View Layout Toggle */}
-              <div className="flex items-center bg-white/5 p-1 rounded-xl border border-white/10 gap-1">
-                <button
-                  type="button"
-                  onClick={() => setViewMode(viewMode === 'split' ? 'wide-preview' : 'split')}
-                  className={`p-1.5 rounded-lg text-slate-300 hover:text-white ${viewMode === 'wide-preview' ? 'bg-primary text-white' : ''}`}
-                  title="Toggle Wide Preview"
-                >
-                  <Columns className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsFullscreenPreview(true)}
-                  className="p-1.5 rounded-lg text-slate-300 hover:text-white"
-                  title="Fullscreen Preview Mode"
-                >
-                  <Maximize className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
           </div>
 
-          {/* Paper Canvas Frame - Clean A4 Scaling & Proper Shadow */}
-          <div className="bg-[#050816]/70 border border-white/[0.08] rounded-3xl p-4 sm:p-6 overflow-x-auto overflow-y-auto max-h-[calc(100vh-170px)] flex justify-center custom-scrollbar">
+        </div>
+
+        {/* ── RIGHT COLUMN: A4 RESUME LIVE CANVAS PREVIEW (~70%) ── */}
+        <div className="lg:col-span-8 xl:col-span-8 flex flex-col items-center">
+          
+          {/* Paper Canvas Frame */}
+          <div 
+            ref={viewerContainerRef}
+            className="w-full bg-[#050A18]/80 border border-white/[0.08] rounded-3xl p-4 sm:p-6 overflow-x-auto overflow-y-auto max-h-[calc(100vh-130px)] flex justify-center custom-scrollbar shadow-2xl relative"
+          >
             <div
               style={{
-                width: '794px', // 210mm at 96 DPI
-                minHeight: '1123px', // 297mm at 96 DPI
+                width: '794px',
+                minHeight: '1123px',
                 transform: `scale(${zoomLevel / 100})`,
                 transformOrigin: 'top center',
-                transition: 'transform 0.12s ease-out',
+                transition: 'transform 0.1s ease-out',
                 marginBottom: `${(zoomLevel / 100 - 1) * 1123}px`
               }}
               className="shrink-0 shadow-2xl rounded-sm overflow-hidden bg-white"
@@ -1935,32 +2313,367 @@ ${resumeData.certifications.map(c => `- ${c.name} (${c.issuer}, ${c.year})`).joi
               </div>
             </div>
           </div>
+
+          {/* Minimalist Floating Zoom & Canvas Controls */}
+          <div className="mt-3 bg-[#0A1024]/90 backdrop-blur-md border border-white/10 px-4 py-1.5 rounded-full flex items-center gap-3 text-xs text-slate-300 shadow-xl">
+            <button
+              onClick={() => setZoomLevel(prev => Math.max(40, prev - 10))}
+              className="hover:text-white font-bold px-1"
+              title="Zoom Out"
+            >
+              −
+            </button>
+            <span className="font-mono text-[11px] w-9 text-center text-slate-400">{zoomLevel}%</span>
+            <button
+              onClick={() => setZoomLevel(prev => Math.min(130, prev + 10))}
+              className="hover:text-white font-bold px-1"
+              title="Zoom In"
+            >
+              +
+            </button>
+            <span className="w-px h-3 bg-white/10"></span>
+            <button
+              onClick={handleFitWidth}
+              className="hover:text-white font-medium text-[11px]"
+              title="Fit to Container"
+            >
+              Fit
+            </button>
+            <span className="w-px h-3 bg-white/10"></span>
+            <button
+              onClick={() => setIsFullscreenPreview(true)}
+              className="hover:text-white"
+              title="Fullscreen Preview"
+            >
+              <Maximize className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
         </div>
 
       </div>
 
-      {/* Fullscreen Preview Modal */}
+      {/* ── LAYER 3A: ADD / RESTORE SECTION MODAL ───────────────────────── */}
+      <AnimatePresence>
+        {isAddSectionModalOpen && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-[#0B1228] border border-white/10 rounded-2xl p-5 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <div className="flex items-center gap-2 text-white font-bold text-sm">
+                  <Plus className="w-4 h-4 text-primary" />
+                  <span>Add or Restore Section</span>
+                </div>
+                <button
+                  onClick={() => setIsAddSectionModalOpen(false)}
+                  className="text-slate-400 hover:text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* 1. Restore Hidden Standard Sections (if any) */}
+              {hiddenStandardList.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    Hidden Standard Sections
+                  </div>
+                  <div className="grid grid-cols-1 gap-1.5">
+                    {hiddenStandardList.map(sec => {
+                      const Icon = sec.icon;
+                      return (
+                        <div
+                          key={sec.id}
+                          className="p-2.5 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-2 text-xs text-white">
+                            <Icon className="w-3.5 h-3.5 text-primary" />
+                            <span>{sec.label}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleHideSection(sec.id)}
+                            className="px-2.5 py-1 rounded-lg bg-primary text-white text-[11px] font-semibold hover:bg-primary/90 transition-all flex items-center gap-1"
+                          >
+                            <Plus className="w-3 h-3" />
+                            <span>Restore</span>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* 2. Quick Preset Additions */}
+              <div className="space-y-2 pt-2 border-t border-white/[0.06]">
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  Popular Sections
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {PRESET_ADD_SECTIONS.map((preset, pIdx) => {
+                    const Icon = preset.icon;
+                    return (
+                      <button
+                        key={pIdx}
+                        type="button"
+                        onClick={() => handleAddCustomSection(preset.title, preset.style)}
+                        className="p-2.5 rounded-xl bg-white/[0.03] hover:bg-primary/15 border border-white/10 hover:border-primary/40 text-left transition-all group"
+                      >
+                        <div className="flex items-center gap-2 text-xs font-bold text-slate-200 group-hover:text-primary">
+                          <Icon className="w-3.5 h-3.5 text-slate-400 group-hover:text-primary" />
+                          <span>{preset.title}</span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-1 capitalize">{preset.style} format</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 3. Create Custom Section */}
+              <div className="space-y-2.5 pt-2 border-t border-white/[0.06]">
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  Create Custom Section
+                </div>
+                <input
+                  type="text"
+                  value={newCustomTitle}
+                  onChange={(e) => setNewCustomTitle(e.target.value)}
+                  placeholder="e.g. Leadership, Patents, Hackathons..."
+                  className="w-full bg-[#050816] border border-white/10 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-primary"
+                />
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNewCustomStyle('bullets')}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                      newCustomStyle === 'bullets'
+                        ? 'bg-primary/20 border-primary text-primary'
+                        : 'bg-white/[0.02] border-white/10 text-slate-400'
+                    }`}
+                  >
+                    Bullet List
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewCustomStyle('paragraph')}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                      newCustomStyle === 'paragraph'
+                        ? 'bg-primary/20 border-primary text-primary'
+                        : 'bg-white/[0.02] border-white/10 text-slate-400'
+                    }`}
+                  >
+                    Paragraph Text
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleAddCustomSection(newCustomTitle, newCustomStyle)}
+                  disabled={!newCustomTitle.trim()}
+                  className="w-full py-2 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-xs shadow-md disabled:opacity-40 transition-all flex items-center justify-center gap-1.5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Create Section</span>
+                </button>
+              </div>
+
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── LAYER 3A-2: SAVE CURRENT STYLE AS TEMPLATE MODAL ─────────────── */}
+      <AnimatePresence>
+        {isSaveCurrentModalOpen && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-[#0B1228] border border-white/10 rounded-2xl p-5 max-w-md w-full shadow-2xl space-y-4"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <div className="flex items-center gap-2 text-white font-bold text-sm">
+                  <Save className="w-4 h-4 text-amber-400" />
+                  <span>Save Style as New Template</span>
+                </div>
+                <button
+                  onClick={() => setIsSaveCurrentModalOpen(false)}
+                  className="text-slate-400 hover:text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/10 space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">Current Base Layout:</span>
+                  <span className="font-bold text-white uppercase font-mono">{selectedTemplate}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">Accent Color:</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: accentColor }}></span>
+                    <span className="font-mono text-slate-200">{accentColor}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-400">Typography Font:</span>
+                  <span className="text-slate-200 capitalize">{fontFamily}</span>
+                </div>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="text-slate-300 font-bold block mb-1">Template Name</label>
+                  <input
+                    type="text"
+                    value={saveCurrentTemplateName}
+                    onChange={(e) => setSaveCurrentTemplateName(e.target.value)}
+                    placeholder="e.g. Google Principal Minimal, Fintech Dark"
+                    className="w-full bg-[#050816] border border-white/10 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-slate-400 block mb-1">Description (Optional)</label>
+                  <input
+                    type="text"
+                    value={saveCurrentTemplateDesc}
+                    onChange={(e) => setSaveCurrentTemplateDesc(e.target.value)}
+                    placeholder="e.g. Optimized for FAANG engineering management"
+                    className="w-full bg-[#050816] border border-white/10 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-primary"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSaveCurrentAsTemplate}
+                  disabled={!saveCurrentTemplateName.trim()}
+                  className="w-full py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-xs shadow-md disabled:opacity-40 transition-all flex items-center justify-center gap-1.5"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>Save & Add to Templates</span>
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── LAYER 3A-3: 100% MS WORD TEMPLATE STUDIO (Full-Screen Visual Canvas) ── */}
+      {isCreateTemplateModalOpen && (
+        <WordTemplateStudio
+          isOpen={isCreateTemplateModalOpen}
+          onClose={() => setIsCreateTemplateModalOpen(false)}
+          onSaveTemplate={handleSaveStudioTemplate}
+          initialTemplateData={editingTemplateData}
+        />
+      )}
+
+      {/* ── LAYER 3B: CONTEXTUAL AI MODAL / DRAWER ──────────────────────── */}
+      <AnimatePresence>
+        {aiModal.isOpen && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-[#0B1228] border border-white/10 rounded-2xl p-5 max-w-lg w-full shadow-2xl space-y-4"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <div className="flex items-center gap-2 text-white font-bold text-sm">
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span>
+                    {aiModal.type === 'bullet' && 'AI Bullet Enhancer'}
+                    {aiModal.type === 'improve-all' && 'AI Resume Polish'}
+                    {aiModal.type === 'match-jd' && 'Job Description Keyword Match'}
+                    {aiModal.type === 'fix-ats' && 'ATS Readiness Suggestions'}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setAiModal(prev => ({ ...prev, isOpen: false }))}
+                  className="text-slate-400 hover:text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {aiModal.type === 'match-jd' ? (
+                <div className="space-y-3 text-xs">
+                  <p className="text-slate-400">Paste the target Job Description to compare against your resume:</p>
+                  <textarea
+                    rows={5}
+                    value={aiModal.jdText}
+                    onChange={(e) => setAiModal(prev => ({ ...prev, jdText: e.target.value }))}
+                    placeholder="Paste job requirements here..."
+                    className="w-full bg-[#050816] border border-white/10 rounded-xl p-3 text-white text-xs focus:outline-none focus:border-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      toast.success('Analyzing JD match against career records...');
+                      setAiModal(prev => ({
+                        ...prev,
+                        suggestions: [
+                          'Found 8/10 core keywords in your resume.',
+                          'Suggested addition: Highlight AWS Lambda & Microservices in your top bullet points.',
+                          'Add "CI/CD Pipeline Architecture" to your technical skills list.'
+                        ]
+                      }));
+                    }}
+                    className="w-full py-2 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold"
+                  >
+                    Analyze & Align Resume
+                  </button>
+                </div>
+              ) : null}
+
+              {/* AI Suggested Enhancements List */}
+              <div className="space-y-2">
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  AI Recommended Variations (Click to Apply)
+                </div>
+                {aiModal.suggestions.map((sug, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => handleApplyAiSuggestion(sug)}
+                    className="p-3 rounded-xl bg-white/[0.03] hover:bg-amber-500/10 border border-white/10 hover:border-amber-500/30 cursor-pointer text-xs text-slate-200 transition-all flex items-start justify-between gap-3 group"
+                  >
+                    <p className="leading-relaxed group-hover:text-white">{sug}</p>
+                    <CheckCheck className="w-4 h-4 text-amber-400 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── FULLSCREEN PREVIEW MODAL ────────────────────────────────────── */}
       {isFullscreenPreview && (
-        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xl flex flex-col p-4 sm:p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col p-4 sm:p-6 overflow-y-auto">
           <div className="flex items-center justify-between pb-4 max-w-5xl mx-auto w-full border-b border-white/10">
-            <div className="flex items-center gap-3">
-              <Eye className="w-5 h-5 text-primary" />
-              <h2 className="text-base font-bold text-white">Full-Screen Resume Preview</h2>
-              <span className="text-xs text-slate-400">({selectedTemplate.toUpperCase()} Template)</span>
-            </div>
+            <h2 className="text-sm font-bold text-white">Full-Screen Resume Canvas</h2>
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={handleExportPDF}
-                className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold flex items-center gap-1.5"
+                className="px-3.5 py-1.5 rounded-xl bg-primary text-white text-xs font-semibold flex items-center gap-1.5"
               >
                 <Download className="w-3.5 h-3.5" /> Download PDF
               </button>
               <button
                 type="button"
                 onClick={() => setIsFullscreenPreview(false)}
-                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white"
-                title="Close Fullscreen Preview"
+                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white"
               >
                 <Minimize2 className="w-4 h-4" />
               </button>

@@ -33,18 +33,6 @@ if (initialToken && isTokenExpired(initialToken)) {
 
 const initialUser = initialToken ? decodeToken(initialToken) : null;
 
-export const googleLogin = createAsyncThunk('auth/googleLogin', async ({ credential, role }, { rejectWithValue }) => {
-  try {
-    const res = await authAPI.googleAuth(credential, role);
-    const token = res.data.access_token;
-    localStorage.setItem('token', token);
-    const user = res.data.user || decodeToken(token);
-    return { token, user };
-  } catch (err) {
-    return rejectWithValue(getApiErrorMessage(err, 'Google sign-in failed'));
-  }
-});
-
 export const login = createAsyncThunk('auth/login', async ({ email, password }, { rejectWithValue }) => {
   try {
     const res = await authAPI.login(email, password);
@@ -57,15 +45,27 @@ export const login = createAsyncThunk('auth/login', async ({ email, password }, 
   }
 });
 
-export const register = createAsyncThunk('auth/register', async ({ name, email, password, role, organization_id }, { rejectWithValue }) => {
+export const register = createAsyncThunk('auth/register', async ({ name, email, password }, { rejectWithValue }) => {
   try {
-    const res = await authAPI.register(name, email, password, role, organization_id);
+    const res = await authAPI.register(name, email, password);
     const token = res.data.access_token;
     localStorage.setItem('token', token);
     const user = res.data.user || decodeToken(token);
     return { token, user };
   } catch (err) {
     return rejectWithValue(getApiErrorMessage(err, 'Registration failed. Please check your information.'));
+  }
+});
+
+export const googleLogin = createAsyncThunk('auth/googleLogin', async ({ credential }, { rejectWithValue }) => {
+  try {
+    const res = await api.post('/auth/google', { credential });
+    const token = res.data.access_token;
+    localStorage.setItem('token', token);
+    const user = res.data.user || decodeToken(token);
+    return { token, user };
+  } catch (err) {
+    return rejectWithValue(getApiErrorMessage(err, 'Google sign-in failed'));
   }
 });
 
@@ -107,20 +107,23 @@ const authSlice = createSlice({
     clearError(state) {
       state.error = null;
     },
+    setUser(state, action) {
+      state.user = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(googleLogin.pending, handlePending)
-      .addCase(googleLogin.fulfilled, handleFulfilled)
-      .addCase(googleLogin.rejected, handleRejected)
       .addCase(login.pending, handlePending)
       .addCase(login.fulfilled, handleFulfilled)
       .addCase(login.rejected, handleRejected)
       .addCase(register.pending, handlePending)
       .addCase(register.fulfilled, handleFulfilled)
-      .addCase(register.rejected, handleRejected);
+      .addCase(register.rejected, handleRejected)
+      .addCase(googleLogin.pending, handlePending)
+      .addCase(googleLogin.fulfilled, handleFulfilled)
+      .addCase(googleLogin.rejected, handleRejected);
   },
 });
 
-export const { logout, clearError } = authSlice.actions;
+export const { logout, clearError, setUser } = authSlice.actions;
 export default authSlice.reducer;

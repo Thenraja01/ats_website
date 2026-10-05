@@ -24,30 +24,64 @@ import {
  * Dynamic Font Family Resolver
  */
 export const getFontFamilyStyle = (font = 'inter') => {
-  switch (font.toLowerCase()) {
-    case 'merriweather':
-    case 'serif':
-      return { fontFamily: '"Merriweather", Georgia, Cambria, serif' };
+  if (!font) return { fontFamily: '"Inter", sans-serif' };
+  
+  // If a full CSS fontFamily string was passed (e.g. "'Poppins', sans-serif")
+  if (font.includes(',') || font.includes("'") || font.includes('"')) {
+    return { fontFamily: font };
+  }
+
+  const normalized = font.toLowerCase().trim();
+  switch (normalized) {
+    case 'poppins':
+      return { fontFamily: "'Poppins', sans-serif" };
     case 'playfair':
-      return { fontFamily: '"Playfair Display", Georgia, serif' };
+    case 'playfair-display':
+      return { fontFamily: "'Playfair Display', Georgia, serif" };
+    case 'pacifico':
+      return { fontFamily: "'Pacifico', cursive" };
+    case 'caveat':
+      return { fontFamily: "'Caveat', cursive" };
+    case 'dancing-script':
+      return { fontFamily: "'Dancing Script', cursive" };
+    case 'merriweather':
+      return { fontFamily: "'Merriweather', Georgia, Cambria, serif" };
+    case 'lora':
+      return { fontFamily: "'Lora', Georgia, serif" };
+    case 'eb-garamond':
+      return { fontFamily: "'EB Garamond', Georgia, serif" };
+    case 'georgia':
+      return { fontFamily: "Georgia, serif" };
+    case 'times':
+    case 'times-new-roman':
+      return { fontFamily: "'Times New Roman', Times, serif" };
     case 'mono':
     case 'jetbrains':
-      return { fontFamily: '"JetBrains Mono", "Courier New", monospace' };
-    case 'poppins':
-      return { fontFamily: '"Poppins", -apple-system, sans-serif' };
+    case 'jetbrains-mono':
+      return { fontFamily: "'JetBrains Mono', monospace" };
+    case 'fira-code':
+      return { fontFamily: "'Fira Code', monospace" };
+    case 'space-grotesk':
+      return { fontFamily: "'Space Grotesk', sans-serif" };
     case 'outfit':
-    case 'heading':
-      return { fontFamily: '"Outfit", "Cabinet Grotesk", sans-serif' };
+      return { fontFamily: "'Outfit', sans-serif" };
     case 'roboto':
-      return { fontFamily: '"Roboto", sans-serif' };
+      return { fontFamily: "'Roboto', sans-serif" };
+    case 'open-sans':
+      return { fontFamily: "'Open Sans', sans-serif" };
     case 'lato':
-      return { fontFamily: '"Lato", sans-serif' };
+      return { fontFamily: "'Lato', sans-serif" };
     case 'montserrat':
-      return { fontFamily: '"Montserrat", sans-serif' };
+      return { fontFamily: "'Montserrat', sans-serif" };
+    case 'plus-jakarta-sans':
+      return { fontFamily: "'Plus Jakarta Sans', sans-serif" };
+    case 'calibri':
+      return { fontFamily: "Calibri, 'Segoe UI', sans-serif" };
+    case 'arial':
+      return { fontFamily: "Arial, sans-serif" };
     case 'inter':
-    case 'sans':
     default:
-      return { fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' };
+      return { fontFamily: "'Inter', sans-serif" };
   }
 };
 

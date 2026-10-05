@@ -1,8 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { FileText, Wand2, ScanSearch, Mic2, MessagesSquare, Loader2, ArrowRight } from 'lucide-react';
-import { intelligenceAPI, careerAPI, studioAPI } from '../../services/api';
+import { motion } from 'framer-motion';
+import { 
+  FileText, Wand2, ScanSearch, Mic2, MessagesSquare, Loader2, ArrowRight,
+  Sparkles, CheckCircle2, TrendingUp, Briefcase, ChevronRight, AlertCircle,
+  Clock, ShieldCheck, Zap
+} from 'lucide-react';
+import { dashboardAPI } from '../../services/api';
 import ScoreRing, { scoreColor, scoreLabel } from '../../components/workspace/ScoreRing';
 import EmptyState from '../../components/workspace/EmptyState';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,12 +15,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { safeDate } from '../../components/workspace/utils';
 
-const QUICK = [
-  { label: 'Create Resume', href: '/resume-studio/new', icon: FileText, desc: 'Start from a template' },
-  { label: 'Tailor Resume', href: '/resume-studio/jd-tailor', icon: Wand2, desc: 'Optimize for a job description' },
-  { label: 'ATS Check', href: '/ats-analyzer', icon: ScanSearch, desc: 'Verify ATS compatibility' },
-  { label: 'Practice Interview', href: '/interview', icon: Mic2, desc: 'Category-based preparation' },
-  { label: 'Mock Interview', href: '/interview/mock', icon: MessagesSquare, desc: 'AI-led practice session' },
+const QUICK_ACTIONS = [
+  { label: 'Create Resume', href: '/resumes/new', icon: FileText, desc: '10-step guided builder' },
+  { label: 'ATS Analyzer', href: '/resumes/analyze', icon: ScanSearch, desc: 'Score & keyword breakdown' },
+  { label: 'JD Match', href: '/jd-match', icon: Wand2, desc: 'Tailor resume to job description' },
+  { label: 'Mock Interview', href: '/interviews/mock', icon: MessagesSquare, desc: 'Interactive AI practice' },
+  { label: 'Application Tracker', href: '/applications', icon: Briefcase, desc: 'Kanban job pipeline' },
 ];
 
 function greeting() {
@@ -29,154 +34,284 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useSelector((s) => s.auth);
 
-  const overview = useQuery({ queryKey: ['intelligence', 'overview'], queryFn: () => intelligenceAPI.overview().then((r) => r.data), retry: 1 });
-  const completion = useQuery({ queryKey: ['career', 'completion'], queryFn: () => careerAPI.completion().then((r) => r.data), retry: 1 });
-  const resumes = useQuery({ queryKey: ['studio', 'resumes'], queryFn: () => studioAPI.listResumes().then((r) => r.data || []), retry: 1 });
+  const { data: dashboard, isLoading } = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: () => dashboardAPI.get().then((r) => r.data),
+    retry: 1,
+  });
 
-  const firstName = user?.name?.split(' ')[0] || 'there';
-  const readiness = overview.data?.readiness || {};
-  const avgAts = overview.data?.stats?.averageAts;
-  const profiles = resumes.data || [];
-
-  const careerScore = completion.data?.completion ?? readiness.profile ?? 0;
-  const resumeResumeScore = readiness.resume || readiness.ats;
-  const resumeScore = resumeResumeScore || avgAts || 0;
+  const firstName = user?.name?.split(' ')[0] || dashboard?.user_name?.split(' ')[0] || 'there';
+  const profileCompletion = dashboard?.profile_completion ?? 0;
+  const resumeScore = dashboard?.resume_score ?? 0;
+  const interviewReadiness = dashboard?.interview_readiness ?? 0;
+  const apps = dashboard?.applications || { total: 0, applied: 0, screening: 0, interviews: 0, offers: 0 };
+  const recommendations = dashboard?.recommendations || [];
+  const recentResumes = dashboard?.recent_resumes || [];
+  const recentInterviews = dashboard?.recent_interviews || [];
+  const recentApplications = dashboard?.recent_applications || [];
 
   return (
     <div className="space-y-6">
+      {/* Header Banner */}
       <div className="flex flex-col gap-1">
-        <h1 className="font-heading text-2xl font-bold tracking-tight">
+        <h1 className="font-heading text-2xl font-bold tracking-tight sm:text-3xl">
           {greeting()}, {firstName} 👋
         </h1>
         <p className="text-sm text-muted-foreground">
-          Your resume and interview preparation workspace.
+          Welcome to your personal career workspace. Here is your current preparation status.
         </p>
       </div>
 
-      {/* Readiness cards */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-xl border border-border bg-card p-5">
-          <div className="flex items-center justify-between">
-            <p className="font-heading text-sm font-semibold">Career Profile</p>
-            {completion.isLoading && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+      {/* Main Readiness Gauge Grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Profile Completion */}
+        <div className="rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/40">
+          <div className="flex items-center justify-between pb-2">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Profile Health</span>
+            <ShieldCheck className="size-4 text-primary" />
           </div>
-          <div className="mt-4 flex items-center gap-5">
-            <ScoreRing value={careerScore} size={112} stroke={10} color={scoreColor(careerScore)}>
-              <span className="font-heading text-2xl font-bold tabular-nums">{Math.round(careerScore)}</span>
-              <span className="text-[9px] text-muted-foreground uppercase tracking-wider">complete</span>
-            </ScoreRing>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                Keep this the foundation of every resume and interview session.
-              </p>
-              <Button
-                size="sm"
-                variant="outline"
-                className="mt-3"
-                onClick={() => navigate('/career-vault')}
-              >
-                Complete <ArrowRight className="size-3.5" />
-              </Button>
+          <div className="mt-2 flex items-center justify-between">
+            <div>
+              <p className="text-2xl font-bold tracking-tight text-foreground">{profileCompletion}%</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Master profile foundation</p>
             </div>
+            <ScoreRing value={profileCompletion} size={48} stroke={5} color={scoreColor(profileCompletion)}>
+              <span className="text-[10px] font-bold">{profileCompletion}%</span>
+            </ScoreRing>
           </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="w-full mt-3 justify-between text-xs h-7 px-2"
+            onClick={() => navigate('/profile')}
+          >
+            Update Profile <ChevronRight className="size-3.5" />
+          </Button>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-5">
-          <div className="flex items-center justify-between">
-            <p className="font-heading text-sm font-semibold">Resume Readiness</p>
-            {overview.isLoading && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+        {/* Resume ATS Score */}
+        <div className="rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/40">
+          <div className="flex items-center justify-between pb-2">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Resume ATS</span>
+            <ScanSearch className="size-4 text-emerald-500" />
           </div>
-          <div className="mt-4 flex items-center gap-5">
-            <ScoreRing value={resumeScore} size={112} stroke={10} color={scoreColor(resumeScore)}>
-              <span className="font-heading text-2xl font-bold tabular-nums">{Math.round(resumeScore)}</span>
-              <span className="text-[9px] text-muted-foreground uppercase tracking-wider">{scoreLabel(resumeScore)}</span>
+          <div className="mt-2 flex items-center justify-between">
+            <div>
+              <p className="text-2xl font-bold tracking-tight text-foreground">{resumeScore}/100</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">{scoreLabel(resumeScore)}</p>
+            </div>
+            <ScoreRing value={resumeScore} size={48} stroke={5} color={scoreColor(resumeScore)}>
+              <span className="text-[10px] font-bold">{resumeScore}</span>
             </ScoreRing>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                {profiles.length
-                  ? `${profiles.length} resume${profiles.length === 1 ? '' : 's'} in your studio — verify them against a JD.`
-                  : 'Create a resume first, then analyze it for ATS compatibility.'}
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="w-full mt-3 justify-between text-xs h-7 px-2"
+            onClick={() => navigate('/resumes')}
+          >
+            Manage Resumes <ChevronRight className="size-3.5" />
+          </Button>
+        </div>
+
+        {/* Interview Readiness */}
+        <div className="rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/40">
+          <div className="flex items-center justify-between pb-2">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Interview Readiness</span>
+            <Mic2 className="size-4 text-purple-500" />
+          </div>
+          <div className="mt-2 flex items-center justify-between">
+            <div>
+              <p className="text-2xl font-bold tracking-tight text-foreground">{interviewReadiness}%</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">AI mock session average</p>
+            </div>
+            <ScoreRing value={interviewReadiness} size={48} stroke={5} color={scoreColor(interviewReadiness)}>
+              <span className="text-[10px] font-bold">{interviewReadiness}%</span>
+            </ScoreRing>
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="w-full mt-3 justify-between text-xs h-7 px-2"
+            onClick={() => navigate('/interviews/mock')}
+          >
+            Practice Session <ChevronRight className="size-3.5" />
+          </Button>
+        </div>
+
+        {/* Applications Progress */}
+        <div className="rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/40">
+          <div className="flex items-center justify-between pb-2">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Job Applications</span>
+            <Briefcase className="size-4 text-blue-500" />
+          </div>
+          <div className="mt-2 flex items-center justify-between">
+            <div>
+              <p className="text-2xl font-bold tracking-tight text-foreground">{apps.total}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                {apps.interviews} interview{apps.interviews === 1 ? '' : 's'} · {apps.offers} offer{apps.offers === 1 ? '' : 's'}
               </p>
-              <Button
-                size="sm"
-                variant="outline"
-                className="mt-3"
-                onClick={() => navigate(profiles.length ? '/ats-analyzer' : '/resume-studio/new')}
-              >
-                {profiles.length ? 'Analyze' : 'Create resume'} <ArrowRight className="size-3.5" />
-              </Button>
+            </div>
+            <div className="flex size-12 items-center justify-center rounded-full bg-blue-500/10 text-blue-500 font-bold text-sm">
+              {apps.total}
             </div>
           </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="w-full mt-3 justify-between text-xs h-7 px-2"
+            onClick={() => navigate('/applications')}
+          >
+            Open Tracker <ChevronRight className="size-3.5" />
+          </Button>
         </div>
       </div>
 
+      {/* AI Next Steps & Recommendations */}
+      {recommendations.length > 0 && (
+        <div className="rounded-xl border border-border bg-gradient-to-br from-primary/5 via-card to-card p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="size-4 text-primary" />
+            <p className="font-heading text-sm font-semibold">AI Career Recommendations</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {recommendations.map((rec) => (
+              <div
+                key={rec.id}
+                className="flex flex-col justify-between rounded-lg border border-border/80 bg-background/80 p-3.5 transition-all hover:border-primary/40 hover:shadow-sm"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-xs font-semibold text-foreground">{rec.title}</h3>
+                    {rec.priority === 'high' && (
+                      <span className="rounded bg-rose-500/10 px-1.5 py-0.5 text-[9px] font-medium text-rose-500">
+                        Priority
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
+                    {rec.description}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mt-3 w-full text-xs h-7"
+                  onClick={() => navigate(rec.action_link)}
+                >
+                  {rec.action_text} <ArrowRight className="size-3 ml-1" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Quick actions */}
       <div className="rounded-xl border border-border bg-card p-5">
-        <p className="font-heading mb-4 text-sm font-semibold">Quick Actions</p>
+        <p className="font-heading mb-3 text-sm font-semibold">Workspace Quick Actions</p>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {QUICK.map((q) => (
+          {QUICK_ACTIONS.map((q) => (
             <button
               key={q.label}
               onClick={() => navigate(q.href)}
-              className="group flex flex-col items-start gap-3 rounded-lg border border-border p-4 text-left transition-all hover:border-primary/40 hover:bg-accent/40"
+              className="group flex flex-col items-start gap-2.5 rounded-lg border border-border p-3.5 text-left transition-all hover:border-primary/40 hover:bg-accent/40"
             >
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-primary">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <q.icon className="size-4" />
               </div>
-              <span className="min-w-0">
-                <span className="block text-sm font-medium">{q.label}</span>
-                <span className="block text-xs text-muted-foreground">{q.desc}</span>
-              </span>
+              <div>
+                <span className="block text-xs font-semibold text-foreground">{q.label}</span>
+                <span className="block text-[10px] text-muted-foreground mt-0.5">{q.desc}</span>
+              </div>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Recent resumes */}
-      <div className="rounded-xl border border-border bg-card p-5">
-        <div className="mb-4 flex items-center justify-between">
-          <p className="font-heading text-sm font-semibold">Recent resumes</p>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/resume-studio')}>
-            Open studio <ArrowRight className="size-3.5" />
-          </Button>
-        </div>
-        {resumes.isLoading ? (
-          <div className="space-y-2">
-            {[0, 1].map((i) => <Skeleton key={i} className="h-14 w-full" />)}
+      {/* Recent Resumes & Recent Applications 2-Column */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Recent Resumes */}
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="font-heading text-sm font-semibold">My Resumes</p>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/resumes')}>
+              View all <ArrowRight className="size-3.5 ml-1" />
+            </Button>
           </div>
-        ) : profiles.length === 0 ? (
-          <EmptyState
-            icon={FileText}
-            title="No resumes yet"
-            description="Create your first resume from a template to get an ATS score."
-          />
-        ) : (
-          <div className="divide-y divide-border">
-            {profiles.slice(0, 3).map((r) => (
-              <div key={r.id} className="flex flex-wrap items-center gap-3 py-3">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{r.name}</p>
-                  <p className="text-xs text-muted-foreground">Updated {safeDate(r.updated_at)}</p>
+          {isLoading ? (
+            <div className="space-y-2">
+              {[0, 1].map((i) => <Skeleton key={i} className="h-12 w-full" />)}
+            </div>
+          ) : recentResumes.length === 0 ? (
+            <EmptyState
+              icon={FileText}
+              title="No resumes yet"
+              description="Build your first professional resume with the 10-step AI builder."
+            />
+          ) : (
+            <div className="divide-y divide-border/60">
+              {recentResumes.slice(0, 4).map((r) => (
+                <div key={r.id} className="flex items-center justify-between py-2.5">
+                  <div className="min-w-0 flex-1 pr-2">
+                    <p className="truncate text-xs font-semibold text-foreground">{r.name}</p>
+                    <p className="text-[11px] text-muted-foreground">Version {r.version_number} · {safeDate(r.updated_at)}</p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Badge
+                      variant="outline"
+                      className={
+                        r.ats?.score >= 75
+                          ? 'border-emerald-500/30 text-emerald-500 bg-emerald-500/10 text-[10px]'
+                          : 'border-amber-500/30 text-amber-500 bg-amber-500/10 text-[10px]'
+                      }
+                    >
+                      {r.ats ? `ATS ${r.ats.score}` : 'Draft'}
+                    </Badge>
+                    <Button size="sm" variant="ghost" className="h-7 text-xs px-2" onClick={() => navigate(`/resumes/new`)}>
+                      Edit
+                    </Button>
+                  </div>
                 </div>
-                <Badge
-                  variant="outline"
-                  className={
-                    !r.ats
-                      ? 'text-muted-foreground'
-                      : r.ats.score >= 75
-                        ? 'border-success/25 text-success bg-success/10'
-                        : 'border-warning/25 text-warning bg-warning/10'
-                  }
-                >
-                  {r.ats ? `ATS ${r.ats.score}` : 'Not analyzed'}
-                </Badge>
-                <Button size="sm" variant="ghost" onClick={() => navigate(`/resume-studio/${r.id}/edit`)}>Edit</Button>
-                <Button size="sm" variant="outline" onClick={() => navigate('/ats-analyzer', { state: { resumeId: r.id } })}>ATS</Button>
-                <Button size="sm" variant="outline" onClick={() => navigate('/resume-studio/jd-tailor', { state: { resumeId: r.id } })}>Tailor</Button>
-              </div>
-            ))}
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Recent Applications */}
+        <div className="rounded-xl border border-border bg-card p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="font-heading text-sm font-semibold">Tracked Applications</p>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/applications')}>
+              View all <ArrowRight className="size-3.5 ml-1" />
+            </Button>
           </div>
-        )}
+          {isLoading ? (
+            <div className="space-y-2">
+              {[0, 1].map((i) => <Skeleton key={i} className="h-12 w-full" />)}
+            </div>
+          ) : recentApplications.length === 0 ? (
+            <EmptyState
+              icon={Briefcase}
+              title="No applications tracked yet"
+              description="Track job applications and keep your interview stages organized."
+            />
+          ) : (
+            <div className="divide-y divide-border/60">
+              {recentApplications.slice(0, 4).map((app) => (
+                <div key={app.id} className="flex items-center justify-between py-2.5">
+                  <div className="min-w-0 flex-1 pr-2">
+                    <p className="truncate text-xs font-semibold text-foreground">{app.role || app.job_title}</p>
+                    <p className="text-[11px] text-muted-foreground">{app.company} · {app.location || 'Remote'}</p>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] capitalize">
+                    {app.status || 'applied'}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,10 +1,14 @@
-"""Career Intelligence router — aggregated insights from Career Vault + ATS + jobs + interviews."""
+"""Career Intelligence router — aggregated insights from Career Vault + ATS + jobs + interviews.
+
+Spec: HireMind AI — one user type (USER). All data ownership via user_id
+from authenticated JWT. No RBAC, no role checking.
+"""
 
 from datetime import datetime
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
-from app.dependencies.role_dependency import require_roles
+from app.dependencies.auth_dependency import get_current_user
 from app.models.user_model import User
 from app.models.career_model import CareerProfile
 from app.models.resume_version_model import ResumeVersion
@@ -26,21 +30,73 @@ IN_DEMAND_SKILLS = [
 ]
 
 
-async def _profile(user: User) -> CareerProfile:
-    p = await CareerProfile.find_one(CareerProfile.user_id == str(user.id))
+async def _profile(user_id: str) -> CareerProfile:
+    p = await CareerProfile.find_one(CareerProfile.user_id == user_id)
     if p is None:
-        p = CareerProfile(user_id=str(user.id))
+        p = CareerProfile(user_id=user_id)
         await p.insert()
     return p
 
 
-@intelligence_router.get("/overview")
-async def intelligence_overview(user: User = Depends(require_roles(["candidate"]))):
-    profile = await _profile(user)
+def _lensu(items, minimum):
+    return len(items) >= minimum
 
-    skill_names = [
-        s.name for s in profile.skills if s.name
-    ]
+
+def _filled(v) -> bool:
+    if isinstance(v, str):
+        return bool(v.strip())
+    if isinstance(v, list):
+        return len(v) > 0
+    return bool(v)
+
+
+def _readiness(profile: CareerProfile, analyses: list, avg_interview: int, avg_match: int) -> dict:
+    personal = sum(_filled(getattr(profile.personal_info, f)) for f in ["full_name", "headline", "email", "phone", "location"])
+    profile_score = round(min(100, (personal / 5) * 20 + (15 if _filled(profile.summary.primary) else 0)
+                     + min(25, len(profile.experience) * 8) + (10 if _lensu(profile.education, 1) else 0)
+                     + (10 if _filled(profile.skills) else 0) + (10 if _lensu(profile.projects, 1) else 0)))
+
+    avg_ats = round(sum(a.ats_score for a in analyses) / len(analyses)) if analyses else 0
+    return {
+        "profile": profile_score,
+        "resume": avg_ats if analyses else 0,
+        "ats": avg_ats,
+        "interview": avg_interview,
+        "match": avg_match or 0,
+        "overall": round(
+            (profile_score * 0.3 + (avg_ats if analyses else 60) * 0.3 + (avg_match or 60) * 0.2 + avg_interview * 0.2)
+        ) if avg_ats or avg_match or avg_interview else profile_score,
+    }
+
+
+def _build_insights(readiness: dict, top_skills: list, gaps: list, interviews_done: int, applications: int) -> list:
+    insights = []
+    if readiness["resume"] >= 80:
+        insights.append({"tone": "positive", "text": "Resume is ATS-ready. Focus shifts to interviews and applications."})
+    elif readiness["resume"] < 65 and readiness["resume"] > 0:
+        insights.append({"tone": "warning", "text": "Resume ATS score is below 65 — tailor it to a target JD to lift keyword match."})
+    if readiness["interview"] < 70 and interviews_done > 0:
+        insights.append({"tone": "warning", "text": "Interview answers are scoring below 70. Practice structuring answers with signposting."})
+    if interviews_done == 0:
+        insights.append({"tone": "neutral", "text": "No mock interviews yet — complete one to activate interview readiness tracking."})
+    if applications == 0:
+        insights.append({"tone": "neutral", "text": "You haven't logged any applications. Match a resume to a JD to start your tracker."})
+    if gaps:
+        gap_names = ", ".join(gaps[:3])
+        insights.append({
+            "tone": "info",
+            "text": f"High-demand skills missing evidence: {gap_names}. Add Career Vault evidence to unlock them.",
+        })
+    if len(top_skills) >= 5:
+        insights.append({"tone": "positive", "text": "Strong skill base detected. Career Intelligence can now power contextual interview prep."})
+    return insights[:5]
+
+
+@intelligence_router.get("/overview")
+async def intelligence_overview(user: User = Depends(get_current_user)):
+    profile = await _profile(str(user.id))
+
+    skill_names = [s.name for s in profile.skills if s.name]
 
     # ATS-derived strengths (from analysis history)
     analyses = (
@@ -87,7 +143,6 @@ async def intelligence_overview(user: User = Depends(require_roles(["candidate"]
 
     avg_interview = round(sum(interview_scores) / len(interview_scores)) if interview_scores else 0
 
-    examine_profile = profile
     readiness = _readiness(profile, analyses, avg_interview, avg_match)
 
     insights = _build_insights(readiness, top_skills, potential_gaps, len(sessions), len(apps))
@@ -111,7 +166,7 @@ async def intelligence_overview(user: User = Depends(require_roles(["candidate"]
 
 
 @intelligence_router.get("/activity")
-async def activity(user: User = Depends(require_roles(["candidate"]))):
+async def activity(user: User = Depends(get_current_user)):
     events = []
 
     for a in (
@@ -131,7 +186,7 @@ async def activity(user: User = Depends(require_roles(["candidate"]))):
         events.append({
             "type": "resume",
             "title": r.name,
-            "detail": f"Version {r.version_number} · {r.template}",
+            "detail": f"Version {r.version_number}",
             "at": r.created_at,
             "link": f"/resume-studio/{r.id}/edit",
         })
@@ -141,7 +196,7 @@ async def activity(user: User = Depends(require_roles(["candidate"]))):
     ):
         events.append({
             "type": "application",
-            "title": f"Application · {s.role or s.job_id}",
+            "title": f"Application",
             "detail": f"Status: {s.status}",
             "at": s.created_at,
             "link": f"/applications/{s.id}",
@@ -160,56 +215,3 @@ async def activity(user: User = Depends(require_roles(["candidate"]))):
 
     events.sort(key=lambda e: e["at"], reverse=True)
     return events[:20]
-
-
-def _lensu(items, minimum):
-    return len(items) >= minimum
-
-
-def _readiness(profile: CareerProfile, analyses: list, avg_interview: int, avg_match: int) -> dict:
-    def filled(v) -> bool:
-        if isinstance(v, str):
-            return bool(v.strip())
-        if isinstance(v, list):
-            return len(v) > 0
-        return bool(v)
-
-    personal = sum(filled(getattr(profile.personal_info, f)) for f in ["full_name", "headline", "email", "phone", "location"])
-    profile_score = round(min(100, (personal / 5) * 20 + (15 if filled(profile.summary.primary) else 0)
-                             + min(25, len(profile.experience) * 8) + (10 if _lensu(profile.education, 1) else 0)
-                             + (10 if filled(profile.skills) else 0) + (10 if _lensu(profile.projects, 1) else 0)))
-
-    avg_ats = round(sum(a.ats_score for a in analyses) / len(analyses)) if analyses else 0
-    return {
-        "profile": profile_score,
-        "resume": avg_ats if analyses else 0,
-        "ats": avg_ats,
-        "interview": avg_interview,
-        "match": avg_match or 0,
-        "overall": round(
-            (profile_score * 0.3 + (avg_ats if analyses else 60) * 0.3 + (avg_match or 60) * 0.2 + avg_interview * 0.2)
-        ) if avg_ats or avg_match or avg_interview else profile_score,
-    }
-
-
-def _build_insights(readiness: dict, top_skills: list, gaps: list, interviews_done: int, applications: int) -> list:
-    insights = []
-    if readiness["resume"] >= 80:
-        insights.append({"tone": "positive", "text": "Resume is ATS-ready. Focus shifts to interviews and applications."})
-    elif readiness["resume"] < 65 and readiness["resume"] > 0:
-        insights.append({"tone": "warning", "text": "Resume ATS score is below 65 — tailor it to a target JD to lift keyword match."})
-    if readiness["interview"] < 70 and interviews_done > 0:
-        insights.append({"tone": "warning", "text": "Interview answers are scoring below 70. Practice structuring answers with signposting."})
-    if interviews_done == 0:
-        insights.append({"tone": "neutral", "text": "No mock interviews yet — complete one to activate interview readiness tracking."})
-    if applications == 0:
-        insights.append({"tone": "neutral", "text": "You haven't logged any applications. Match a resume to a JD to start your tracker."})
-    if gaps:
-        gap_names = ", ".join(gaps[:3])
-        insights.append({
-            "tone": "info",
-            "text": f"High-demand skills missing evidence: {gap_names}. Add Career Vault evidence to unlock them.",
-        })
-    if len(top_skills) >= 5:
-        insights.append({"tone": "positive", "text": "Strong skill base detected. Career Intelligence can now power contextual interview prep."})
-    return insights[:5]

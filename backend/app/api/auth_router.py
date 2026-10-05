@@ -1,9 +1,7 @@
-from fastapi import APIRouter, HTTPException, Depends, status
-import httpx
 from datetime import datetime, timezone
+from fastapi import APIRouter, HTTPException, Depends, status
 from typing import Optional
 from pydantic import BaseModel, EmailStr
-
 from app.models.user_model import User
 from app.core.security import create_access_token, hash_password, verify_password
 from app.dependencies.auth_dependency import get_current_user
@@ -20,8 +18,6 @@ class RegisterRequest(BaseModel):
     name: str
     email: EmailStr
     password: str
-    role: Optional[str] = "candidate"
-    organization_id: Optional[str] = None
 
 
 @auth_router.post("/login")
@@ -40,9 +36,7 @@ async def login(data: LoginRequest):
             detail="Invalid email or password",
         )
 
-    token = create_access_token(
-        data={"id": str(user.id), "email": user.email, "role": user.role}
-    )
+    token = create_access_token(data={"id": str(user.id), "email": user.email})
 
     return {
         "access_token": token,
@@ -51,8 +45,6 @@ async def login(data: LoginRequest):
             "id": str(user.id),
             "email": user.email,
             "name": user.name,
-            "role": user.role,
-            "organization_id": user.organization_id,
         },
     }
 
@@ -79,23 +71,18 @@ async def register(data: RegisterRequest):
             detail="An account with this email already exists",
         )
 
-    role = data.role if data.role in ["candidate", "recruiter", "organization_admin"] else "candidate"
     hashed_pwd = hash_password(data.password)
 
     user = User(
         name=name,
         email=email,
         password=hashed_pwd,
-        role=role,
-        organization_id=data.organization_id,
         created_at=datetime.now(timezone.utc),
         updated_at=datetime.now(timezone.utc),
     )
     await user.insert()
 
-    token = create_access_token(
-        data={"id": str(user.id), "email": user.email, "role": user.role}
-    )
+    token = create_access_token(data={"id": str(user.id), "email": user.email})
 
     return {
         "access_token": token,
@@ -104,61 +91,37 @@ async def register(data: RegisterRequest):
             "id": str(user.id),
             "email": user.email,
             "name": user.name,
-            "role": user.role,
-            "organization_id": user.organization_id,
         },
     }
 
 
-@auth_router.post("/google")
-async def google_auth(data: dict):
-    id_token = data.get("credential")
-    role = data.get("role", "candidate")
+@auth_router.post("/verify-otp")
+async def verify_otp(data: dict):
+    email = data.get("email")
+    otp = data.get("otp")
 
-    if not id_token:
-        raise HTTPException(status_code=400, detail="Google credential token is required")
-
-    async with httpx.AsyncClient() as client:
-        res = await client.get(f"https://oauth2.googleapis.com/tokeninfo?id_token={id_token}")
-        if res.status_code != 200:
-            raise HTTPException(status_code=400, detail="Invalid Google token")
-        payload = res.json()
-
-    email = payload.get("email")
-    name = payload.get("name", "User")
-    
-    if not email:
-        raise HTTPException(status_code=400, detail="Email not provided by Google")
-
-    email = email.lower()
-    user = await User.find_one(User.email == email)
-    
-    if not user:
-        user = User(
-            email=email,
-            name=name,
-            role=role,
-            password="",  # OAuth users don't have passwords
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+    if not email or not otp:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email and OTP are required",
         )
-        await user.insert()
 
-    token = create_access_token(
-        data={"id": str(user.id), "email": user.email, "role": user.role}
-    )
+    # In a real app, verify OTP against what was sent
+    # For now, accept any 6-digit OTP
+    if not otp.isdigit() or len(otp) != 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid OTP format",
+        )
 
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "user": {
-            "id": str(user.id),
-            "email": user.email,
-            "name": user.name,
-            "role": user.role,
-            "organization_id": user.organization_id,
-        },
-    }
+    user = await User.find_one(User.email == email.lower())
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    return {"status": "verified", "user": {"id": str(user.id), "email": user.email}}
 
 
 @auth_router.get("/me")
@@ -167,8 +130,4 @@ async def get_current_user_profile(current_user: User = Depends(get_current_user
         "id": str(current_user.id),
         "email": current_user.email,
         "name": current_user.name,
-        "role": current_user.role,
-        "organization_id": current_user.organization_id,
     }
-
-

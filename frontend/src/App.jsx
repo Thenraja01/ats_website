@@ -23,6 +23,8 @@ import Unauthorized from './pages/Unauthorized';
 import JdAnalyzer from './pages/JdAnalyzer';
 import ResumeBuilder from './pages/ResumeBuilder';
 import CareerVault from './pages/CareerVault';
+import CareerAdvisor from './pages/CareerAdvisor';
+import JobApplications from './pages/JobApplications';
 import OnboardingWizard from './pages/OnboardingWizard';
 
 import Dashboard from './pages/workspace/Dashboard';
@@ -38,6 +40,7 @@ import ProjectPreparation from './pages/workspace/ProjectPreparation';
 import DocumentsPage from './pages/workspace/DocumentsPage';
 import SettingsPage from './pages/workspace/SettingsPage';
 import CoverLetterPage from './pages/workspace/CoverLetterPage';
+import CareerIntelligence from './pages/workspace/CareerIntelligence';
 
 function PublicShell() {
   const location = useLocation();
@@ -90,43 +93,73 @@ function App() {
                   </ProtectedRoute>
                 }
               >
+                {/* 1. Dashboard */}
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/result/:id" element={<AtsResult />} />
 
+                {/* 2. My Career */}
+                <Route path="/profile" element={<CareerVault />} />
+                <Route path="/profile/edit" element={<CareerVault />} />
+                <Route path="/career-profile" element={<CareerVault />} />
+                <Route path="/career/advisor" element={<CareerAdvisor />} />
+                <Route path="/career/skills" element={<CareerIntelligence />} />
+                <Route path="/career/goals" element={<CareerVault />} />
+
+                {/* 3. Resume */}
+                <Route path="/resumes" element={<ResumeStudio />} />
+                <Route path="/resumes/new" element={<ResumeBuilder />} />
+                <Route path="/resumes/:id" element={<ResumeBuilder />} />
+                <Route path="/resumes/analyze" element={<AtsAnalyzer />} />
+                <Route path="/resumes/:id/analyze" element={<AtsAnalyzer />} />
+                <Route path="/resumes/:id/optimize" element={<JDTailor />} />
                 <Route path="/resume-studio" element={<ResumeStudio />} />
-                <Route path="/resume-studio/new" element={<ResumeStudio />} />
+                <Route path="/resume-studio/new" element={<ResumeBuilder />} />
                 <Route path="/resume-studio/jd-tailor" element={<JDTailor />} />
                 <Route path="/resume-studio/:resumeId/edit" element={<ResumeBuilder />} />
                 <Route path="/builder" element={<ResumeBuilder />} />
                 <Route path="/resume-builder" element={<ResumeBuilder />} />
-
                 <Route path="/ats-analyzer" element={<AtsAnalyzer />} />
                 <Route path="/ats" element={<AtsAnalyzer />} />
                 <Route path="/ats/:analysisId" element={<AtsResult />} />
 
-                <Route path="/jobs/analyzer" element={<JdAnalyzer />} />
+                {/* 4. JD Match */}
+                <Route path="/jd-match" element={<JdAnalyzer />} />
+                <Route path="/jd-match/new" element={<JdAnalyzer />} />
+                <Route path="/jd-match/:id" element={<JdAnalyzer />} />
                 <Route path="/jd-analyzer" element={<JdAnalyzer />} />
                 <Route path="/jd-matcher" element={<JdAnalyzer />} />
+                <Route path="/jobs/analyzer" element={<JdAnalyzer />} />
 
-                <Route path="/career-vault" element={<CareerVault />} />
-                <Route path="/vault" element={<CareerVault />} />
-                <Route path="/career-profile" element={<CareerVault />} />
-                <Route path="/profile" element={<CareerVault />} />
+                {/* 5. Applications */}
+                <Route path="/applications" element={<JobApplications />} />
+                <Route path="/applications/new" element={<JobApplications />} />
+                <Route path="/applications/:id" element={<JobApplications />} />
 
+                {/* 6. Interview Hub */}
+                <Route path="/interviews" element={<InterviewHub />} />
                 <Route path="/interview" element={<InterviewHub />} />
                 <Route path="/interview-hub" element={<InterviewHub />} />
+                <Route path="/interviews/mock" element={<MockInterview />} />
                 <Route path="/interview/mock" element={<MockInterview />} />
                 <Route path="/interview/mock/:sessionId" element={<MockInterview />} />
-                <Route path="/interview/project" element={<ProjectPreparation />} />
+                <Route path="/interviews/questions" element={<InterviewQuestionBank />} />
                 <Route path="/interview/questions" element={<InterviewQuestionBank />} />
+                <Route path="/interviews/reports" element={<InterviewReports />} />
                 <Route path="/interview/reports" element={<InterviewReports />} />
+                <Route path="/interviews/reports/:reportId" element={<InterviewReport />} />
                 <Route path="/interview/reports/:reportId" element={<InterviewReport />} />
+                <Route path="/interview/project" element={<ProjectPreparation />} />
 
-                <Route path="/onboarding" element={<OnboardingWizard />} />
-
+                {/* 7. Career Vault & Documents */}
+                <Route path="/vault" element={<CareerVault />} />
+                <Route path="/vault/documents" element={<DocumentsPage />} />
+                <Route path="/career-vault" element={<CareerVault />} />
                 <Route path="/documents" element={<DocumentsPage />} />
                 <Route path="/documents/cover-letter" element={<CoverLetterPage />} />
                 <Route path="/cover-letter" element={<CoverLetterPage />} />
+
+                {/* 8. Onboarding & Settings */}
+                <Route path="/onboarding" element={<OnboardingWizard />} />
                 <Route path="/settings" element={<SettingsPage />} />
               </Route>
             </Routes>

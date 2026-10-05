@@ -1,8 +1,8 @@
-"""Notifications router — in-app activity notifications."""
+"""Notifications router — in-app personal activity notifications."""
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from app.dependencies.role_dependency import require_roles
+from app.dependencies.auth_dependency import get_current_user
 from app.models.user_model import User
 from app.models.notification_model import Notification
 
@@ -13,7 +13,7 @@ notifications_router = APIRouter(prefix="/notifications", tags=["Notifications"]
 async def list_notifications(
     unread_only: bool = Query(False),
     limit: int = Query(50, le=200),
-    user: User = Depends(require_roles(["candidate"])),
+    user: User = Depends(get_current_user),
 ):
     query = Notification.find(Notification.user_id == str(user.id))
     if unread_only:
@@ -23,7 +23,7 @@ async def list_notifications(
 
 
 @notifications_router.get("/unread-count")
-async def unread_count(user: User = Depends(require_roles(["candidate"]))):
+async def unread_count(user: User = Depends(get_current_user)):
     count = await Notification.find(
         Notification.user_id == str(user.id),
         Notification.read == False,  # noqa: E712
@@ -32,7 +32,7 @@ async def unread_count(user: User = Depends(require_roles(["candidate"]))):
 
 
 @notifications_router.post("/{notification_id}/read")
-async def mark_read(notification_id: str, user: User = Depends(require_roles(["candidate"]))):
+async def mark_read(notification_id: str, user: User = Depends(get_current_user)):
     item = await Notification.get(notification_id)
     if not item or item.user_id != str(user.id):
         raise HTTPException(status_code=404, detail="Notification not found")
@@ -42,7 +42,7 @@ async def mark_read(notification_id: str, user: User = Depends(require_roles(["c
 
 
 @notifications_router.post("/read-all")
-async def mark_all_read(user: User = Depends(require_roles(["candidate"]))):
+async def mark_all_read(user: User = Depends(get_current_user)):
     items = await Notification.find(
         Notification.user_id == str(user.id),
         Notification.read == False,  # noqa: E712

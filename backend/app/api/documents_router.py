@@ -1,4 +1,8 @@
-"""Documents router — categorized document library with version tracking."""
+"""Documents router — categorized document library with version tracking.
+
+Spec: HireMind AI — one user type (USER). All data ownership via user_id
+from authenticated JWT. No RBAC, no role checking.
+"""
 
 from datetime import datetime
 from typing import Optional
@@ -6,16 +10,21 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict
 
-from app.dependencies.role_dependency import require_roles
+from app.dependencies.auth_dependency import get_current_user
 from app.models.user_model import User
-from app.models.career_model import to_camel
 from app.models.document_model import DocumentRecord
+from app.models.career_model import to_camel
 
 documents_router = APIRouter(prefix="/documents", tags=["Documents"])
 
 CATEGORIES = [
-    "Resume", "Certificate", "Job Description", "Cover Letter",
-    "Offer Letter", "Portfolio", "Other",
+    "Resume",
+    "Certificate",
+    "Job Description",
+    "Cover Letter",
+    "Offer Letter",
+    "Portfolio",
+    "Other",
 ]
 
 
@@ -49,16 +58,16 @@ async def categories():
 
 
 @documents_router.get("")
-async def list_documents(category: str = "", user: User = Depends(require_roles(["candidate"]))):
+async def list_documents(user: User = Depends(get_current_user)):
+    """List documents for the authenticated user."""
     query = DocumentRecord.find(DocumentRecord.user_id == str(user.id))
-    if category and category != "All":
-        query = query.find(DocumentRecord.category == category)
     docs = await query.sort(-DocumentRecord.created_at).to_list()
     return [d.to_api_dict() for d in docs]
 
 
 @documents_router.post("")
-async def create_document(payload: DocumentCreate, user: User = Depends(require_roles(["candidate"]))):
+async def create_document(payload: DocumentCreate, user: User = Depends(get_current_user)):
+    """Create a new document entry for the authenticated user."""
     doc = DocumentRecord(
         user_id=str(user.id),
         category=payload.category,
@@ -77,8 +86,9 @@ async def create_document(payload: DocumentCreate, user: User = Depends(require_
 async def update_document(
     document_id: str,
     payload: DocumentUpdate,
-    user: User = Depends(require_roles(["candidate"])),
+    user: User = Depends(get_current_user),
 ):
+    """Update a document owned by the authenticated user."""
     doc = await DocumentRecord.get(document_id)
     if not doc or doc.user_id != str(user.id):
         raise HTTPException(status_code=404, detail="Document not found")
@@ -92,7 +102,8 @@ async def update_document(
 
 
 @documents_router.delete("/{document_id}")
-async def delete_document(document_id: str, user: User = Depends(require_roles(["candidate"]))):
+async def delete_document(document_id: str, user: User = Depends(get_current_user)):
+    """Delete a document owned by the authenticated user."""
     doc = await DocumentRecord.get(document_id)
     if not doc or doc.user_id != str(user.id):
         raise HTTPException(status_code=404, detail="Document not found")
