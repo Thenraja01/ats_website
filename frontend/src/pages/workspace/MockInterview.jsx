@@ -12,6 +12,8 @@ import {
   Mic2,
   Play,
   RotateCcw,
+  Sparkles,
+  Bot,
 } from 'lucide-react';
 import { interviewAPI } from '../../services/api';
 import PageHeader from '../../components/workspace/PageHeader';
@@ -291,38 +293,71 @@ function MockSession({ sessionId }) {
       </Card>
 
       {lastFeedback && (
-        <Card className="border-success/30">
+        <Card className="border-primary/30 shadow-md">
           <CardContent className="space-y-4 p-5">
-            <div className="flex items-center gap-3">
-              <ScoreRing value={lastFeedback.overall} size={72} stroke={7} color={scoreColor(lastFeedback.overall)}>
-                <span className="text-lg font-bold">{lastFeedback.overall}</span>
+            <div className="flex items-center justify-between border-b border-border/50 pb-2">
+              <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary gap-1 text-xs font-medium">
+                <Sparkles className="size-3" /> 100% AI Evaluated (Ollama llama3.2)
+              </Badge>
+              <span className="text-xs text-muted-foreground">Cubic Analysis</span>
+            </div>
+
+            {/* Written AI Critique */}
+            {lastFeedback.feedback && (
+              <div className="rounded-lg bg-muted/40 p-3.5 border border-border/60 text-sm leading-relaxed text-foreground/90">
+                <p className="font-semibold text-xs text-primary mb-1 flex items-center gap-1.5">
+                  <Bot className="size-3.5" /> Interviewer Assessment:
+                </p>
+                {lastFeedback.feedback}
+              </div>
+            )}
+
+            <div className="flex items-center gap-4">
+              <ScoreRing value={lastFeedback.overall || lastFeedback.score || 0} size={72} stroke={7} color={scoreColor(lastFeedback.overall || lastFeedback.score || 0)}>
+                <span className="text-lg font-bold">{lastFeedback.overall || lastFeedback.score || 0}</span>
               </ScoreRing>
               <div className="flex-1 space-y-2">
                 {FEEDBACK_BARS.map((f) => (
                   <div key={f.key}>
                     <div className="mb-0.5 flex justify-between text-xs">
                       <span className="text-muted-foreground">{f.label}</span>
-                      <span className="font-semibold">{lastFeedback[f.key]}</span>
+                      <span className="font-semibold">{lastFeedback[f.key] || 0}%</span>
                     </div>
                     <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                      <div className="h-full rounded-full bg-success" style={{ width: `${lastFeedback[f.key] || 0}%` }} />
+                      <div className="h-full rounded-full bg-primary" style={{ width: `${lastFeedback[f.key] || 0}%` }} />
                     </div>
                   </div>
                 ))}
               </div>
             </div>
+
+            {/* 4-Dimension Rubric Detail */}
+            {Array.isArray(lastFeedback.scores) && lastFeedback.scores.length > 0 && (
+              <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+                {lastFeedback.scores.map((sc, i) => (
+                  <div key={i} className="rounded-md border border-border/60 bg-background/50 p-2.5">
+                    <div className="flex items-center justify-between font-semibold capitalize text-foreground">
+                      <span>{sc.dimension?.replace('_', ' ')}</span>
+                      <span className="text-primary font-mono">{sc.score} / 5</span>
+                    </div>
+                    {sc.notes && <p className="text-[11px] text-muted-foreground mt-1 leading-snug">{sc.notes}</p>}
+                  </div>
+                ))}
+              </div>
+            )}
+
             {(lastFeedback.strengths || []).length > 0 && (
               <div>
-                <p className="mb-1 text-xs font-semibold text-success">Strengths</p>
-                <ul className="space-y-1 text-sm text-muted-foreground">
+                <p className="mb-1 text-xs font-semibold text-success">Key Strengths</p>
+                <ul className="space-y-1 text-xs text-muted-foreground">
                   {(lastFeedback.strengths || []).map((st, i) => <li key={i}>• {st}</li>)}
                 </ul>
               </div>
             )}
             {(lastFeedback.improvements || []).length > 0 && (
               <div>
-                <p className="mb-1 text-xs font-semibold text-warning">Improve</p>
-                <ul className="space-y-1 text-sm text-muted-foreground">
+                <p className="mb-1 text-xs font-semibold text-warning">Opportunities to Elevate</p>
+                <ul className="space-y-1 text-xs text-muted-foreground">
                   {(lastFeedback.improvements || []).map((im, i) => <li key={i}>• {im}</li>)}
                 </ul>
               </div>

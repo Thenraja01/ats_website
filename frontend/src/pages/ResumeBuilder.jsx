@@ -57,11 +57,14 @@ import {
   Copy,
   Edit3,
   SlidersHorizontal,
-  Paintbrush
+  Paintbrush,
+  Lock,
+  Globe
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 import {
   ModernTemplate,
   MinimalTemplate,
@@ -72,6 +75,8 @@ import {
 import WordTemplateStudio from '@/components/builder/WordTemplateStudio';
 import XyzQuantifierModal from '@/components/builder/XyzQuantifierModal';
 import AtsHeatmapViewer from '@/components/builder/AtsHeatmapViewer';
+import DynamicResumeRenderer from '@/components/builder/DynamicResumeRenderer';
+import TemplateGalleryModal from '@/components/builder/TemplateGalleryModal';
 import {
   getResumeData,
   saveResumeData,
@@ -81,7 +86,8 @@ import {
   SYNC_EVENT_NAME
 } from '../services/careerProfileSync';
 import { resumeAPI } from '../services/api';
-
+import { useTheme } from '../hooks/useTheme';
+import ThemeToggle from '../components/layout/ThemeToggle';
 const TEMPLATES = [
   { id: 'modern', name: 'Modern Pro', desc: 'Clean 2-column layout with accent bar', baseTemplate: 'modern', accentColor: '#4F8CFF', fontFamily: 'inter' },
   { id: 'minimal', name: 'Minimal ATS', desc: 'High-parsing single-column standard', baseTemplate: 'minimal', accentColor: '#0EA5E9', fontFamily: 'inter' },
@@ -104,9 +110,10 @@ const PRESET_COLORS = [
 ];
 
 export default function ResumeBuilder() {
+  const { theme, resolved } = useTheme();
   const [activeSection, setActiveSection] = useState('experience');
   const [selectedTemplate, setSelectedTemplate] = useState('modern');
-  const [accentColor, setAccentColor] = useState('#4F8CFF');
+  const [accentColor, setAccentColor] = useState('#2563EB');
   const [fontFamily, setFontFamily] = useState('inter');
   const [fontList, setFontList] = useState(DEFAULT_FALLBACK_FONTS);
 
@@ -162,7 +169,7 @@ export default function ResumeBuilder() {
     name: '',
     desc: '',
     baseTemplate: 'modern',
-    accentColor: '#4F8CFF',
+    accentColor: '#fdfeffff',
     fontFamily: 'inter',
     fontSizeNum: 10.5,
     lineHeight: 1.45,
@@ -187,7 +194,21 @@ export default function ResumeBuilder() {
   const [isImporting, setIsImporting] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
-  const [resumeData, setResumeData] = useState(() => getResumeData());
+  const [resumeData, setResumeData] = useState(() => {
+    const d = getResumeData();
+    return d && typeof d === 'object' ? d : {
+      personalInfo: {},
+      summary: '',
+      experience: [],
+      education: [],
+      skills: [],
+      projects: [],
+      certifications: [],
+      languages: [],
+      achievements: [],
+      customSections: []
+    };
+  });
 
   // Contextual AI Modal State
   const [aiModal, setAiModal] = useState({
@@ -216,7 +237,46 @@ export default function ResumeBuilder() {
     }
   };
 
+  const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false);
+  const [activeDynamicTemplate, setActiveDynamicTemplate] = useState(null);
+
+  const handleSelectDynamicTemplate = (tpl) => {
+    setActiveDynamicTemplate(tpl);
+    setSelectedTemplate(tpl.slug || tpl.id);
+    if (tpl.palette?.primary) {
+      setAccentColor(tpl.palette.primary);
+    }
+    if (tpl.typography?.fontFamily) {
+      setFontFamily(tpl.typography.fontFamily);
+    }
+    if (tpl.typography?.baseSizePt) {
+      setFontSizeNum(tpl.typography.baseSizePt);
+    }
+    if (tpl.typography?.lineHeight) {
+      setLineHeight(tpl.typography.lineHeight);
+    }
+    if (tpl.layout?.pageMarginPx) {
+      setPagePadding(tpl.layout.pageMarginPx);
+    }
+    if (tpl.layout?.sectionGapPx) {
+      setSectionGap(tpl.layout.sectionGapPx);
+    }
+    if (tpl.layout?.itemGapPx) {
+      setItemGap(tpl.layout.itemGapPx);
+    }
+    if (tpl.layout?.borderRadiusPx !== undefined) {
+      setBorderRadius(tpl.layout.borderRadiusPx);
+    }
+    if (tpl.layout?.bulletStyle) {
+      setBulletStyle(tpl.layout.bulletStyle);
+    }
+    if (tpl.layout?.headerAlign) {
+      setHeaderLayout(tpl.layout.headerAlign);
+    }
+  };
+
   const handleApplyTemplate = (tpl) => {
+    setActiveDynamicTemplate(null);
     setSelectedTemplate(tpl.id);
     if (tpl.accentColor) setAccentColor(tpl.accentColor);
     if (tpl.fontFamily) setFontFamily(tpl.fontFamily);
@@ -1018,6 +1078,17 @@ ${(resumeData.skills || []).join(', ')}
   };
 
   const renderActiveTemplate = () => {
+    if (activeDynamicTemplate) {
+      return (
+        <DynamicResumeRenderer
+          data={resumeData}
+          template={activeDynamicTemplate}
+          color={accentColor}
+          options={templateOptions}
+        />
+      );
+    }
+
     const customTpl = customTemplates.find(t => t.id === selectedTemplate);
     const layoutKey = customTpl ? customTpl.baseTemplate : selectedTemplate;
 
@@ -1083,37 +1154,67 @@ ${(resumeData.skills || []).join(', ')}
   const activeCustomSection = (resumeData.customSections || []).find(s => s.id === activeSection);
 
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-100 flex flex-col font-sans">
+    <div className="h-full min-h-0 flex-1 bg-background text-foreground flex flex-col font-sans overflow-y-auto">
 
       {/* ── LAYER 1: ULTRA-MINIMAL TOP BAR ─────────────────────────────── */}
-      <header className="h-14 px-4 sm:px-6 border-b border-primary/[0.06] bg-[#050B18]/90 backdrop-blur-xl flex items-center justify-between sticky top-0 z-40">
+      <header className="h-14 px-4 sm:px-6 border-b border-border/80 bg-card/85 backdrop-blur-xl flex items-center justify-between shrink-0 z-30">
 
         {/* Left: Branding & Status */}
         <div className="flex items-center gap-3">
-          <Link to="/dashboard" className="flex items-center gap-2 group">
-            <div className="w-7 h-7 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center text-primary">
+          <Link to="/resumes" className="flex items-center gap-2 group" title="Back to Resume Studio">
+            <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
               <FileText className="w-4 h-4" />
             </div>
-            <h1 className="text-xs sm:text-sm font-bold text-primary tracking-tight group-hover:text-primary transition-colors">
+            <h1 className="text-xs sm:text-sm font-bold text-foreground tracking-tight group-hover:text-primary transition-colors">
               AI Resume Studio
             </h1>
           </Link>
-          <span className="text-[11px] text-emerald-400 flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
             Saved {lastSaved || 'just now'}
           </span>
         </div>
 
-        {/* Right: ATS Score Badge, Import, Export */}
+        {/* Right: ATS Score Badge, Template Library, Privacy Badge, Import, Export */}
         <div className="flex items-center gap-2.5">
+
+          {/* Dynamic 1,000+ Template Library Button */}
+          <button
+            type="button"
+            onClick={() => setIsGalleryModalOpen(true)}
+            className="px-2.5 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs"
+            title="Browse 1,000+ templates & private vault"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
+            <span className="hidden sm:inline">1,000+ Templates</span>
+          </button>
+
+          {/* Privacy Indicator Badge (Configured in Settings page) */}
+          <Link
+            to="/workspace/settings"
+            className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border border-border bg-muted/40 hover:bg-muted text-muted-foreground transition-colors"
+            title="Work privately preference is controlled in Settings. Click to adjust."
+          >
+            {(typeof window !== 'undefined' && localStorage.getItem('hiremind_template_privacy') === 'public') ? (
+              <>
+                <Globe className="w-3 h-3 text-blue-500" />
+                <span>Public Mode</span>
+              </>
+            ) : (
+              <>
+                <Lock className="w-3 h-3 text-emerald-500" />
+                <span>Private Mode (Only Me)</span>
+              </>
+            )}
+          </Link>
 
           {/* Live ATS Pill */}
           <div
             onClick={() => setAiModal({ isOpen: true, type: 'fix-ats', suggestions: ['Add 2+ quantifiable metric bullet points', 'Include top industry technical keywords', 'Ensure contact links are complete'] })}
-            className="cursor-pointer px-2.5 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-xs font-semibold text-emerald-400 flex items-center gap-1 transition-all"
+            className="cursor-pointer px-2.5 py-1 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 transition-all"
             title="Click to view ATS recommendations"
           >
-            <span className="text-[10px] uppercase font-bold text-emerald-500">ATS</span>
+            <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-500">ATS</span>
             <span>{calculatedAtsScore}</span>
           </div>
 
@@ -1131,7 +1232,7 @@ ${(resumeData.skills || []).join(', ')}
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isImporting}
-            className="px-3 py-1.5 rounded-lg bg-primary/5 hover:bg-primary/10 text-xs text-slate-200 hover:text-primary transition-all flex items-center gap-1.5 border border-primary/10 disabled:opacity-50"
+            className="px-3 py-1.5 rounded-lg bg-muted/60 hover:bg-muted text-xs text-foreground hover:text-primary transition-all flex items-center gap-1.5 border border-border disabled:opacity-50"
           >
             {isImporting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
             <span className="hidden sm:inline">{isImporting ? 'Importing...' : 'Import'}</span>
@@ -1142,7 +1243,7 @@ ${(resumeData.skills || []).join(', ')}
             <button
               type="button"
               onClick={() => setShowExportMenu(!showExportMenu)}
-              className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary text-xs font-semibold shadow-sm transition-all flex items-center gap-1.5"
+              className="px-3.5 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold shadow-xs transition-all flex items-center gap-1.5"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Export</span>
@@ -1150,12 +1251,12 @@ ${(resumeData.skills || []).join(', ')}
             </button>
 
             {showExportMenu && (
-              <div className="absolute right-0 mt-1.5 w-44 bg-[#0A1024] border border-primary/10 rounded-xl shadow-2xl p-1 z-50">
+              <div className="absolute right-0 mt-1.5 w-44 bg-popover border border-border rounded-xl shadow-xl p-1 z-50 text-popover-foreground">
                 <button
                   type="button"
                   onClick={() => { setShowExportMenu(false); handleExportPDF(); }}
                   disabled={isExporting}
-                  className="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-primary/10 flex items-center justify-between transition-colors"
+                  className="w-full text-left px-3 py-2 rounded-lg text-xs text-foreground hover:bg-muted flex items-center justify-between transition-colors"
                 >
                   <span className="font-medium">Download PDF</span>
                   <span className="text-[10px] text-primary">.pdf</span>
@@ -1164,30 +1265,32 @@ ${(resumeData.skills || []).join(', ')}
                   type="button"
                   onClick={() => { setShowExportMenu(false); handleExportDOCX(); }}
                   disabled={isExporting}
-                  className="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-primary/10 flex items-center justify-between transition-colors"
+                  className="w-full text-left px-3 py-2 rounded-lg text-xs text-foreground hover:bg-muted flex items-center justify-between transition-colors"
                 >
                   <span className="font-medium">Download Word</span>
-                  <span className="text-[10px] text-blue-400">.docx</span>
+                  <span className="text-[10px] text-blue-500">.docx</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => { setShowExportMenu(false); handleExportJSON(); }}
-                  className="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-primary/10 flex items-center justify-between transition-colors"
+                  className="w-full text-left px-3 py-2 rounded-lg text-xs text-foreground hover:bg-muted flex items-center justify-between transition-colors"
                 >
                   <span className="font-medium">Export JSON</span>
-                  <span className="text-[10px] text-amber-400">.json</span>
+                  <span className="text-[10px] text-amber-500">.json</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => { setShowExportMenu(false); handleExportText(); }}
-                  className="w-full text-left px-3 py-2 rounded-lg text-xs text-slate-200 hover:bg-primary/10 flex items-center justify-between transition-colors"
+                  className="w-full text-left px-3 py-2 rounded-lg text-xs text-foreground hover:bg-muted flex items-center justify-between transition-colors"
                 >
                   <span className="font-medium">Plain Text</span>
-                  <span className="text-[10px] text-slate-400">.txt</span>
+                  <span className="text-[10px] text-muted-foreground">.txt</span>
                 </button>
               </div>
             )}
           </div>
+
+          <ThemeToggle compact />
         </div>
       </header>
 
@@ -1198,13 +1301,13 @@ ${(resumeData.skills || []).join(', ')}
         <div className="lg:col-span-4 xl:col-span-4 space-y-4">
 
           {/* Vertical Section Nav & AI Tools Card */}
-          <div className="bg-[#070D1F] border border-primary/[0.08] rounded-2xl p-4 shadow-xl space-y-4">
+          <div className="bg-card border border-border rounded-2xl p-4 shadow-sm space-y-4 text-card-foreground">
 
             {/* 1. Resume Sections */}
             <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2 px-1 flex items-center justify-between">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground mb-2 px-1 flex items-center justify-between">
                 <span>Resume Sections</span>
-                <span className="text-[10px] text-slate-500 lowercase">({navItems.length} active)</span>
+                <span className="text-[10px] text-muted-foreground/80 lowercase">({navItems.length} active)</span>
               </div>
 
               <div className="space-y-1">
@@ -1216,18 +1319,18 @@ ${(resumeData.skills || []).join(', ')}
                       key={item.id}
                       onClick={() => setActiveSection(item.id)}
                       className={`group w-full px-3 py-2 rounded-xl text-xs font-medium flex items-center justify-between transition-all cursor-pointer ${isActive
-                          ? 'bg-primary text-primary shadow-md shadow-primary/20'
-                          : 'text-slate-300 hover:bg-primary/5 hover:text-primary'
+                          ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/20'
+                          : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground'
                         }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-primary' : 'bg-slate-600'}`}></span>
+                        <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-primary-foreground' : 'bg-muted-foreground/40'}`}></span>
                         <span>{item.label}</span>
                       </div>
 
                       <div className="flex items-center gap-1.5">
                         {typeof item.count === 'number' && item.count > 0 && (
-                          <span className={`text-[10px] px-2 py-0.2 rounded-full font-bold ${isActive ? 'bg-primary/20 text-primary' : 'bg-primary/5 text-slate-400'}`}>
+                          <span className={`text-[10px] px-2 py-0.2 rounded-full font-bold ${isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
                             {item.count}
                           </span>
                         )}
@@ -1237,7 +1340,7 @@ ${(resumeData.skills || []).join(', ')}
                           <button
                             type="button"
                             onClick={(e) => handleToggleHideSection(item.id, e)}
-                            className="opacity-0 group-hover:opacity-100 hover:text-red-400 p-0.5 rounded transition-opacity"
+                            className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive p-0.5 rounded transition-opacity"
                             title={`Remove / Hide "${item.label}" section`}
                           >
                             <EyeOff className="w-3 h-3" />
@@ -1248,7 +1351,7 @@ ${(resumeData.skills || []).join(', ')}
                           <button
                             type="button"
                             onClick={(e) => handleRemoveCustomSection(item.id, e)}
-                            className="opacity-0 group-hover:opacity-100 hover:text-red-400 p-0.5 rounded transition-opacity"
+                            className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive p-0.5 rounded transition-opacity"
                             title={`Delete custom "${item.label}" section`}
                           >
                             <Trash2 className="w-3 h-3" />
@@ -1263,7 +1366,7 @@ ${(resumeData.skills || []).join(', ')}
                 <button
                   type="button"
                   onClick={() => setIsAddSectionModalOpen(true)}
-                  className="w-full mt-2.5 py-2 px-3 rounded-xl border border-dashed border-primary/15 hover:border-primary/50 text-slate-400 hover:text-primary text-xs font-semibold flex items-center justify-center gap-1.5 transition-all bg-primary/[0.01] hover:bg-primary/5"
+                  className="w-full mt-2.5 py-2 px-3 rounded-xl border border-dashed border-border hover:border-primary/50 text-muted-foreground hover:text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 transition-all bg-muted/30 hover:bg-muted/70"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add Section</span>
@@ -1272,9 +1375,9 @@ ${(resumeData.skills || []).join(', ')}
             </div>
 
             {/* Divider */}
-            <div className="border-t border-primary/[0.06] pt-3">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-amber-400/90 mb-2 px-1 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <div className="border-t border-border/80 pt-3">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-amber-500 dark:text-amber-400 mb-2 px-1 flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                 <span>AI Power Tools</span>
               </div>
               <div className="space-y-1">
@@ -1289,9 +1392,9 @@ ${(resumeData.skills || []).join(', ')}
                       'Re-order skills prioritizing high-demand cloud and AI tooling keywords.'
                     ]
                   })}
-                  className="w-full px-3 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-primary hover:bg-amber-500/10 border border-transparent hover:border-amber-500/20 flex items-center gap-2 transition-all text-left"
+                  className="w-full px-3 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-amber-500/10 border border-transparent hover:border-amber-500/20 flex items-center gap-2 transition-all text-left"
                 >
-                  <span className="text-amber-400">✦</span>
+                  <span className="text-amber-500 dark:text-amber-400">✦</span>
                   <span>Improve Resume</span>
                 </button>
 
@@ -1303,9 +1406,9 @@ ${(resumeData.skills || []).join(', ')}
                     jdText: '',
                     suggestions: []
                   })}
-                  className="w-full px-3 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-primary hover:bg-blue-500/10 border border-transparent hover:border-blue-500/20 flex items-center gap-2 transition-all text-left"
+                  className="w-full px-3 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-blue-500/10 border border-transparent hover:border-blue-500/20 flex items-center gap-2 transition-all text-left"
                 >
-                  <span className="text-blue-400">✦</span>
+                  <span className="text-blue-500 dark:text-blue-400">✦</span>
                   <span>Match Job Description</span>
                 </button>
 
@@ -1320,16 +1423,16 @@ ${(resumeData.skills || []).join(', ')}
                       'Keep typography single or clean two-column for 99% ATS parsing rate.'
                     ]
                   })}
-                  className="w-full px-3 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-primary hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20 flex items-center gap-2 transition-all text-left"
+                  className="w-full px-3 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20 flex items-center gap-2 transition-all text-left"
                 >
-                  <span className="text-emerald-400">✦</span>
+                  <span className="text-emerald-500 dark:text-emerald-400">✦</span>
                   <span>Fix ATS Issues</span>
                 </button>
               </div>
             </div>
 
             {/* Master sync link */}
-            <div className="border-t border-primary/[0.06] pt-3 flex items-center justify-between text-xs">
+            <div className="border-t border-border/80 pt-3 flex items-center justify-between text-xs">
               <Link
                 to="/career-profile"
                 className="text-primary hover:underline text-[11px] font-medium flex items-center gap-1"
@@ -1343,7 +1446,7 @@ ${(resumeData.skills || []).join(', ')}
                   setResumeData(convertMasterToResume(getMasterCareerProfile()));
                   toast.success('Synced from Master Career Profile!');
                 }}
-                className="text-slate-400 hover:text-primary text-[11px] flex items-center gap-1"
+                className="text-muted-foreground hover:text-foreground text-[11px] flex items-center gap-1"
               >
                 <RefreshCw className="w-3 h-3" />
                 <span>Sync</span>
@@ -1353,11 +1456,11 @@ ${(resumeData.skills || []).join(', ')}
           </div>
 
           {/* ── CONTEXTUAL ACTIVE SECTION EDITOR CARD ── */}
-          <div className="bg-[#070D1F] border border-primary/[0.08] rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
+          <div className="bg-card border border-border rounded-2xl p-4 sm:p-5 shadow-sm space-y-4 text-card-foreground">
 
             {/* Header of the Active Section */}
-            <div className="flex items-center justify-between border-b border-primary/[0.06] pb-3">
-              <h2 className="text-sm font-bold text-primary capitalize flex items-center gap-2">
+            <div className="flex items-center justify-between border-b border-border/80 pb-3">
+              <h2 className="text-sm font-bold text-foreground capitalize flex items-center gap-2">
                 <span>{activeCustomSection ? activeCustomSection.title : activeSection}</span>
               </h2>
 
@@ -1366,7 +1469,7 @@ ${(resumeData.skills || []).join(', ')}
                   <button
                     type="button"
                     onClick={handleAddExperience}
-                    className="px-2.5 py-1 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 text-xs font-semibold flex items-center gap-1 transition-all"
+                    className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 text-xs font-semibold flex items-center gap-1 transition-all"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Add Role</span>
@@ -1376,7 +1479,7 @@ ${(resumeData.skills || []).join(', ')}
                   <button
                     type="button"
                     onClick={handleAddEducation}
-                    className="px-2.5 py-1 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 text-xs font-semibold flex items-center gap-1 transition-all"
+                    className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 text-xs font-semibold flex items-center gap-1 transition-all"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Add School</span>
@@ -1386,7 +1489,7 @@ ${(resumeData.skills || []).join(', ')}
                   <button
                     type="button"
                     onClick={handleAddProject}
-                    className="px-2.5 py-1 rounded-lg bg-primary/20 text-primary hover:bg-primary/30 text-xs font-semibold flex items-center gap-1 transition-all"
+                    className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 text-xs font-semibold flex items-center gap-1 transition-all"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Add Project</span>
@@ -1398,7 +1501,7 @@ ${(resumeData.skills || []).join(', ')}
                   <button
                     type="button"
                     onClick={(e) => handleToggleHideSection(activeSection, e)}
-                    className="text-slate-400 hover:text-red-400 text-xs flex items-center gap-1 pl-1"
+                    className="text-muted-foreground hover:text-destructive text-xs flex items-center gap-1 pl-1"
                     title="Remove this section from resume"
                   >
                     <EyeOff className="w-3.5 h-3.5" />
@@ -1410,7 +1513,7 @@ ${(resumeData.skills || []).join(', ')}
                   <button
                     type="button"
                     onClick={(e) => handleRemoveCustomSection(activeCustomSection.id, e)}
-                    className="text-slate-400 hover:text-red-400 text-xs flex items-center gap-1 pl-1"
+                    className="text-muted-foreground hover:text-destructive text-xs flex items-center gap-1 pl-1"
                     title="Delete custom section"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -1427,12 +1530,21 @@ ${(resumeData.skills || []).join(', ')}
                 {/* Template Studio Header & Sub-Tabs */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="text-slate-200 font-bold block">Resume Templates</label>
+                    <label className="text-foreground font-semibold block">Resume Templates</label>
                     <div className="flex items-center gap-1.5">
                       <button
                         type="button"
+                        onClick={() => setIsGalleryModalOpen(true)}
+                        className="px-2 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 text-[11px] font-semibold flex items-center gap-1 shadow-xs transition-all"
+                        title="Browse 1,000+ templates & your private vault"
+                      >
+                        <Sparkles className="w-3 h-3 text-primary" />
+                        <span>1,000+ Library</span>
+                      </button>
+                      <button
+                        type="button"
                         onClick={handleOpenNewTemplateModal}
-                        className="px-2 py-1 rounded-lg bg-primary hover:bg-primary/90 text-primary font-semibold text-[11px] flex items-center gap-1 shadow-sm transition-all"
+                        className="px-2 py-1 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-[11px] flex items-center gap-1 shadow-xs transition-all"
                         title="Create a new template"
                       >
                         <Plus className="w-3 h-3" />
@@ -1441,7 +1553,7 @@ ${(resumeData.skills || []).join(', ')}
                       <button
                         type="button"
                         onClick={() => setIsSaveCurrentModalOpen(true)}
-                        className="px-2 py-1 rounded-lg bg-primary/10 hover:bg-primary/15 text-slate-200 hover:text-primary text-[11px] flex items-center gap-1 transition-all border border-primary/10"
+                        className="px-2 py-1 rounded-lg bg-muted hover:bg-muted/80 text-foreground text-[11px] flex items-center gap-1 transition-all border border-border"
                         title="Save current resume design as a new template"
                       >
                         <Save className="w-3 h-3 text-amber-400" />
@@ -1451,13 +1563,13 @@ ${(resumeData.skills || []).join(', ')}
                   </div>
 
                   {/* Sub-tab Switcher: Presets vs Custom Templates */}
-                  <div className="flex bg-[#050816] p-1 rounded-xl border border-primary/10 mb-3">
+                  <div className="flex bg-muted/60 p-1 rounded-xl border border-border mb-3">
                     <button
                       type="button"
                       onClick={() => setTemplateTab('presets')}
                       className={`flex-1 py-1 rounded-lg text-xs font-semibold transition-all ${templateTab === 'presets'
-                          ? 'bg-primary text-primary shadow-sm'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'bg-card text-foreground shadow-xs'
+                          : 'text-muted-foreground hover:text-foreground'
                         }`}
                     >
                       Presets (5)
@@ -1466,13 +1578,13 @@ ${(resumeData.skills || []).join(', ')}
                       type="button"
                       onClick={() => setTemplateTab('custom')}
                       className={`flex-1 py-1 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${templateTab === 'custom'
-                          ? 'bg-primary text-primary shadow-sm'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'bg-card text-foreground shadow-xs'
+                          : 'text-muted-foreground hover:text-foreground'
                         }`}
                     >
                       <span>My Templates</span>
                       {customTemplates.length > 0 && (
-                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${templateTab === 'custom' ? 'bg-primary/20 text-primary' : 'bg-primary/10 text-slate-400'
+                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${templateTab === 'custom' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
                           }`}>
                           {customTemplates.length}
                         </span>
@@ -1490,8 +1602,8 @@ ${(resumeData.skills || []).join(', ')}
                             key={tpl.id}
                             onClick={() => handleApplyTemplate(tpl)}
                             className={`p-2.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between group ${isSelected
-                                ? 'bg-primary/15 border-primary text-primary'
-                                : 'bg-primary/[0.02] border-primary/[0.08] text-slate-300 hover:bg-primary/[0.05]'
+                                ? 'bg-primary/10 border-primary text-foreground'
+                                : 'bg-surface-2/40 border-border text-foreground hover:bg-muted/50'
                               }`}
                           >
                             <div className="flex items-center gap-2.5">
@@ -1502,11 +1614,11 @@ ${(resumeData.skills || []).join(', ')}
                               <div>
                                 <div className="font-bold flex items-center gap-1.5">
                                   <span>{tpl.name}</span>
-                                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-primary/10 text-slate-300 uppercase font-mono">
+                                  <span className="text-[9px] px-1.5 py-0.2 rounded bg-muted text-muted-foreground uppercase font-mono">
                                     {tpl.baseTemplate}
                                   </span>
                                 </div>
-                                <div className="text-[11px] text-slate-400">{tpl.desc}</div>
+                                <div className="text-[11px] text-muted-foreground">{tpl.desc}</div>
                               </div>
                             </div>
                             {isSelected && <Check className="w-4 h-4 text-primary shrink-0" />}
@@ -1520,14 +1632,14 @@ ${(resumeData.skills || []).join(', ')}
                   {templateTab === 'custom' && (
                     <div className="space-y-2">
                       {customTemplates.length === 0 ? (
-                        <div className="text-center py-6 px-4 bg-primary/[0.02] border border-dashed border-primary/15 rounded-xl space-y-2.5">
-                          <Paintbrush className="w-7 h-7 text-slate-500 mx-auto" />
-                          <p className="text-slate-400 text-xs">No custom templates yet.</p>
+                        <div className="text-center py-6 px-4 bg-muted/20 border border-dashed border-border rounded-xl space-y-2.5">
+                          <Paintbrush className="w-7 h-7 text-muted-foreground mx-auto" />
+                          <p className="text-muted-foreground text-xs">No custom templates yet.</p>
                           <div className="flex flex-col sm:flex-row gap-2 justify-center pt-1">
                             <button
                               type="button"
                               onClick={handleOpenNewTemplateModal}
-                              className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary font-semibold text-xs flex items-center justify-center gap-1"
+                              className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs flex items-center justify-center gap-1"
                             >
                               <Plus className="w-3.5 h-3.5" />
                               <span>Create Template</span>
@@ -1535,9 +1647,9 @@ ${(resumeData.skills || []).join(', ')}
                             <button
                               type="button"
                               onClick={() => setIsSaveCurrentModalOpen(true)}
-                              className="px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/15 text-slate-200 text-xs flex items-center justify-center gap-1"
+                              className="px-3 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-foreground text-xs flex items-center justify-center gap-1 border border-border"
                             >
-                              <Save className="w-3.5 h-3.5 text-amber-400" />
+                              <Save className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                               <span>Save Current Style</span>
                             </button>
                           </div>
@@ -1551,8 +1663,8 @@ ${(resumeData.skills || []).join(', ')}
                                 key={tpl.id}
                                 onClick={() => handleApplyTemplate(tpl)}
                                 className={`p-2.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between group ${isSelected
-                                    ? 'bg-primary/15 border-primary text-primary'
-                                    : 'bg-primary/[0.02] border-primary/[0.08] text-slate-300 hover:bg-primary/[0.05]'
+                                    ? 'bg-primary/10 border-primary text-foreground'
+                                    : 'bg-surface-2/40 border-border text-foreground hover:bg-muted/50'
                                   }`}
                               >
                                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -1567,7 +1679,7 @@ ${(resumeData.skills || []).join(', ')}
                                         {tpl.baseTemplate || 'modern'}
                                       </span>
                                     </div>
-                                    <div className="text-[11px] text-slate-400 truncate">{tpl.desc || 'Custom template'}</div>
+                                    <div className="text-[11px] text-muted-foreground truncate">{tpl.desc || 'Custom template'}</div>
                                   </div>
                                 </div>
 
@@ -1576,7 +1688,7 @@ ${(resumeData.skills || []).join(', ')}
                                   <button
                                     type="button"
                                     onClick={(e) => handleOpenEditTemplate(tpl, e)}
-                                    className="p-1 rounded text-slate-400 hover:text-primary hover:bg-primary/10 opacity-70 group-hover:opacity-100 transition-opacity"
+                                    className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted opacity-70 group-hover:opacity-100 transition-opacity"
                                     title="Edit template settings"
                                   >
                                     <Edit3 className="w-3 h-3" />
@@ -1584,7 +1696,7 @@ ${(resumeData.skills || []).join(', ')}
                                   <button
                                     type="button"
                                     onClick={(e) => handleDuplicateCustomTemplate(tpl, e)}
-                                    className="p-1 rounded text-slate-400 hover:text-primary hover:bg-primary/10 opacity-70 group-hover:opacity-100 transition-opacity"
+                                    className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted opacity-70 group-hover:opacity-100 transition-opacity"
                                     title="Duplicate template"
                                   >
                                     <Copy className="w-3 h-3" />
@@ -1592,7 +1704,7 @@ ${(resumeData.skills || []).join(', ')}
                                   <button
                                     type="button"
                                     onClick={(e) => handleDeleteCustomTemplate(tpl.id, e)}
-                                    className="p-1 rounded text-slate-400 hover:text-red-400 hover:bg-red-500/10 opacity-70 group-hover:opacity-100 transition-opacity"
+                                    className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-70 group-hover:opacity-100 transition-opacity"
                                     title="Delete template"
                                   >
                                     <Trash2 className="w-3 h-3" />
@@ -1608,10 +1720,10 @@ ${(resumeData.skills || []).join(', ')}
                 </div>
 
                 {/* Theme Accent Color */}
-                <div className="pt-3 border-t border-primary/[0.06] space-y-2">
+                <div className="pt-3 border-t border-border/80 space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-slate-300 font-bold block">Theme Accent Color</label>
-                    <span className="text-[11px] font-mono text-slate-400 font-medium">{accentColor.toUpperCase()}</span>
+                    <label className="text-foreground font-semibold block">Theme Accent Color</label>
+                    <span className="text-[11px] font-mono text-muted-foreground font-medium">{accentColor.toUpperCase()}</span>
                   </div>
 
                   <div className="flex items-center gap-2.5">
@@ -1631,7 +1743,7 @@ ${(resumeData.skills || []).join(', ')}
 
                     {/* Hex Code Input Box */}
                     <div className="relative flex-1">
-                      <span className="absolute left-3 top-2.5 text-xs text-slate-500 font-mono">#</span>
+                      <span className="absolute left-3 top-2.5 text-xs text-muted-foreground font-mono">#</span>
                       <input
                         type="text"
                         value={accentColor.replace('#', '')}
@@ -1639,9 +1751,9 @@ ${(resumeData.skills || []).join(', ')}
                           const val = e.target.value.replace(/[^0-9a-fA-F]/g, '').slice(0, 6);
                           setAccentColor(`#${val}`);
                         }}
-                        placeholder="4F8CFF"
+                        placeholder="2563EB"
                         maxLength={6}
-                        className="w-full pl-6 pr-3 py-2 bg-[#050816] border border-primary/10 rounded-xl text-primary text-xs font-mono tracking-wider uppercase focus:outline-none focus:border-primary"
+                        className="w-full pl-6 pr-3 py-2 bg-background border border-border rounded-xl text-foreground placeholder:text-muted-foreground text-xs font-mono tracking-wider uppercase focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                       />
                     </div>
                   </div>
@@ -1665,12 +1777,12 @@ ${(resumeData.skills || []).join(', ')}
                 </div>
 
                 {/* Typography Font (Backend-Driven Categorized) */}
-                <div className="pt-3 border-t border-primary/[0.06]">
-                  <label className="text-slate-300 font-bold block mb-1.5">Typography Font</label>
+                <div className="pt-3 border-t border-border/80">
+                  <label className="text-foreground font-semibold block mb-1.5">Typography Font</label>
                   <select
                     value={fontFamily}
                     onChange={(e) => setFontFamily(e.target.value)}
-                    className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2 text-slate-200 text-xs focus:outline-none focus:border-primary"
+                    className="w-full bg-background border border-border rounded-xl p-2 text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                   >
                     {['sans-serif', 'serif', 'handwriting', 'monospace'].map(cat => {
                       const catFonts = fontList.filter(f => (f.category || '').toLowerCase() === cat);
@@ -1680,9 +1792,9 @@ ${(resumeData.skills || []).join(', ')}
                           : cat === 'handwriting' ? 'Handwriting & Script'
                             : 'Monospace & Tech';
                       return (
-                        <optgroup key={cat} label={catLabel} className="bg-[#0B1228] text-primary font-bold">
+                        <optgroup key={cat} label={catLabel} className="bg-popover text-foreground font-bold">
                           {catFonts.map(f => (
-                            <option key={f.id} value={f.id} className="bg-[#050816] text-slate-200 font-normal">
+                            <option key={f.id} value={f.id} className="bg-popover text-popover-foreground font-normal">
                               {f.name}
                             </option>
                           ))}
@@ -1693,16 +1805,16 @@ ${(resumeData.skills || []).join(', ')}
                 </div>
 
                 {/* Fine-Tuning Spacing & Geometry */}
-                <div className="pt-3 border-t border-primary/[0.06] space-y-3">
-                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                <div className="pt-3 border-t border-border/80 space-y-3">
+                  <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-between">
                     <span>Layout & Spacing Metrics</span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <div className="flex justify-between text-slate-400 mb-1">
+                      <div className="flex justify-between text-muted-foreground mb-1">
                         <span>Font Size</span>
-                        <span className="font-mono text-slate-200">{fontSizeNum}pt</span>
+                        <span className="font-mono text-foreground">{fontSizeNum}pt</span>
                       </div>
                       <input
                         type="range"
@@ -1711,14 +1823,14 @@ ${(resumeData.skills || []).join(', ')}
                         step="0.5"
                         value={fontSizeNum}
                         onChange={(e) => setFontSizeNum(parseFloat(e.target.value))}
-                        className="w-full accent-primary h-1.5 bg-[#050816] rounded-lg cursor-pointer"
+                        className="w-full accent-primary h-1.5 bg-muted rounded-lg cursor-pointer"
                       />
                     </div>
 
                     <div>
-                      <div className="flex justify-between text-slate-400 mb-1">
+                      <div className="flex justify-between text-muted-foreground mb-1">
                         <span>Line Height</span>
-                        <span className="font-mono text-slate-200">{lineHeight}</span>
+                        <span className="font-mono text-foreground">{lineHeight}</span>
                       </div>
                       <input
                         type="range"
@@ -1727,14 +1839,14 @@ ${(resumeData.skills || []).join(', ')}
                         step="0.05"
                         value={lineHeight}
                         onChange={(e) => setLineHeight(parseFloat(e.target.value))}
-                        className="w-full accent-primary h-1.5 bg-[#050816] rounded-lg cursor-pointer"
+                        className="w-full accent-primary h-1.5 bg-muted rounded-lg cursor-pointer"
                       />
                     </div>
 
                     <div>
-                      <div className="flex justify-between text-slate-400 mb-1">
+                      <div className="flex justify-between text-muted-foreground mb-1">
                         <span>Page Margin</span>
-                        <span className="font-mono text-slate-200">{pagePadding}px</span>
+                        <span className="font-mono text-foreground">{pagePadding}px</span>
                       </div>
                       <input
                         type="range"
@@ -1743,14 +1855,14 @@ ${(resumeData.skills || []).join(', ')}
                         step="2"
                         value={pagePadding}
                         onChange={(e) => setPagePadding(parseInt(e.target.value))}
-                        className="w-full accent-primary h-1.5 bg-[#050816] rounded-lg cursor-pointer"
+                        className="w-full accent-primary h-1.5 bg-muted rounded-lg cursor-pointer"
                       />
                     </div>
 
                     <div>
-                      <div className="flex justify-between text-slate-400 mb-1">
+                      <div className="flex justify-between text-muted-foreground mb-1">
                         <span>Section Gap</span>
-                        <span className="font-mono text-slate-200">{sectionGap}px</span>
+                        <span className="font-mono text-foreground">{sectionGap}px</span>
                       </div>
                       <input
                         type="range"
@@ -1759,35 +1871,35 @@ ${(resumeData.skills || []).join(', ')}
                         step="2"
                         value={sectionGap}
                         onChange={(e) => setSectionGap(parseInt(e.target.value))}
-                        className="w-full accent-primary h-1.5 bg-[#050816] rounded-lg cursor-pointer"
+                        className="w-full accent-primary h-1.5 bg-muted rounded-lg cursor-pointer"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 pt-1">
                     <div>
-                      <label className="text-slate-400 block mb-1">Header Layout</label>
+                      <label className="text-muted-foreground block mb-1">Header Layout</label>
                       <select
                         value={headerLayout}
                         onChange={(e) => setHeaderLayout(e.target.value)}
-                        className="w-full bg-[#050816] border border-primary/10 rounded-lg p-1.5 text-primary text-xs focus:outline-none focus:border-primary"
+                        className="w-full bg-background border border-border rounded-lg p-1.5 text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                       >
-                        <option value="left">Left Aligned</option>
-                        <option value="center">Centered</option>
+                        <option value="left" className="bg-popover text-popover-foreground">Left Aligned</option>
+                        <option value="center" className="bg-popover text-popover-foreground">Centered</option>
                       </select>
                     </div>
 
                     <div>
-                      <label className="text-slate-400 block mb-1">Bullet Style</label>
+                      <label className="text-muted-foreground block mb-1">Bullet Style</label>
                       <select
                         value={bulletStyle}
                         onChange={(e) => setBulletStyle(e.target.value)}
-                        className="w-full bg-[#050816] border border-primary/10 rounded-lg p-1.5 text-primary text-xs focus:outline-none focus:border-primary"
+                        className="w-full bg-background border border-border rounded-lg p-1.5 text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                       >
-                        <option value="disc">Disc (•)</option>
-                        <option value="square">Square (▪)</option>
-                        <option value="dash">Dash (–)</option>
-                        <option value="none">None</option>
+                        <option value="disc" className="bg-popover text-popover-foreground">Disc (•)</option>
+                        <option value="square" className="bg-popover text-popover-foreground">Square (▪)</option>
+                        <option value="dash" className="bg-popover text-popover-foreground">Dash (–)</option>
+                        <option value="none" className="bg-popover text-popover-foreground">None</option>
                       </select>
                     </div>
                   </div>
@@ -1800,77 +1912,77 @@ ${(resumeData.skills || []).join(', ')}
             {activeSection === 'personal' && (
               <div className="space-y-3 text-xs">
                 <div>
-                  <label className="text-slate-400 block mb-1">Full Name</label>
+                  <label className="text-muted-foreground block mb-1">Full Name</label>
                   <input
                     type="text"
                     value={resumeData.personalInfo?.fullName || ''}
                     onChange={(e) => handleUpdatePersonalInfo('fullName', e.target.value)}
                     placeholder="e.g. Alex Chen"
-                    className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2.5 text-primary text-xs focus:outline-none focus:border-primary"
+                    className="w-full bg-background border border-border rounded-xl p-2.5 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                   />
                 </div>
                 <div>
-                  <label className="text-slate-400 block mb-1">Professional Headline / Role</label>
+                  <label className="text-muted-foreground block mb-1">Professional Headline / Role</label>
                   <input
                     type="text"
                     value={resumeData.personalInfo?.title || ''}
                     onChange={(e) => handleUpdatePersonalInfo('title', e.target.value)}
                     placeholder="e.g. Senior Full-Stack AI Engineer"
-                    className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2.5 text-primary text-xs focus:outline-none focus:border-primary"
+                    className="w-full bg-background border border-border rounded-xl p-2.5 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
-                    <label className="text-slate-400 block mb-1">Email</label>
+                    <label className="text-muted-foreground block mb-1">Email</label>
                     <input
                       type="email"
                       value={resumeData.personalInfo?.email || ''}
                       onChange={(e) => handleUpdatePersonalInfo('email', e.target.value)}
                       placeholder="alex@example.com"
-                      className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2.5 text-primary text-xs focus:outline-none focus:border-primary"
+                      className="w-full bg-background border border-border rounded-xl p-2.5 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                     />
                   </div>
                   <div>
-                    <label className="text-slate-400 block mb-1">Phone</label>
+                    <label className="text-muted-foreground block mb-1">Phone</label>
                     <input
                       type="text"
                       value={resumeData.personalInfo?.phone || ''}
                       onChange={(e) => handleUpdatePersonalInfo('phone', e.target.value)}
                       placeholder="+1 (555) 019-2834"
-                      className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2.5 text-primary text-xs focus:outline-none focus:border-primary"
+                      className="w-full bg-background border border-border rounded-xl p-2.5 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
-                    <label className="text-slate-400 block mb-1">Location</label>
+                    <label className="text-muted-foreground block mb-1">Location</label>
                     <input
                       type="text"
                       value={resumeData.personalInfo?.location || ''}
                       onChange={(e) => handleUpdatePersonalInfo('location', e.target.value)}
                       placeholder="San Francisco, CA"
-                      className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2.5 text-primary text-xs focus:outline-none focus:border-primary"
+                      className="w-full bg-background border border-border rounded-xl p-2.5 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                     />
                   </div>
                   <div>
-                    <label className="text-slate-400 block mb-1">LinkedIn Profile</label>
+                    <label className="text-muted-foreground block mb-1">LinkedIn Profile</label>
                     <input
                       type="text"
                       value={resumeData.personalInfo?.linkedin || ''}
                       onChange={(e) => handleUpdatePersonalInfo('linkedin', e.target.value)}
                       placeholder="linkedin.com/in/alex"
-                      className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2.5 text-primary text-xs focus:outline-none focus:border-primary"
+                      className="w-full bg-background border border-border rounded-xl p-2.5 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="text-slate-400 block mb-1">GitHub / Portfolio</label>
+                  <label className="text-muted-foreground block mb-1">GitHub / Portfolio</label>
                   <input
                     type="text"
                     value={resumeData.personalInfo?.github || ''}
                     onChange={(e) => handleUpdatePersonalInfo('github', e.target.value)}
                     placeholder="github.com/alexchen"
-                    className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2.5 text-primary text-xs focus:outline-none focus:border-primary"
+                    className="w-full bg-background border border-border rounded-xl p-2.5 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                   />
                 </div>
               </div>
@@ -1880,7 +1992,7 @@ ${(resumeData.skills || []).join(', ')}
             {activeSection === 'summary' && (
               <div className="space-y-3 text-xs">
                 <div className="flex items-center justify-between">
-                  <label className="text-slate-400">Professional Summary</label>
+                  <label className="text-muted-foreground font-medium">Professional Summary</label>
                   <button
                     type="button"
                     onClick={() => setAiModal({
@@ -1891,7 +2003,7 @@ ${(resumeData.skills || []).join(', ')}
                         'Results-driven AI Engineer experienced in fine-tuning models, scaling vector databases, and reducing cloud infrastructure costs by 30%.'
                       ]
                     })}
-                    className="text-amber-400 hover:text-amber-300 text-[11px] font-semibold flex items-center gap-1"
+                    className="text-amber-500 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300 text-[11px] font-semibold flex items-center gap-1"
                   >
                     <Sparkles className="w-3 h-3" />
                     <span>AI Polish</span>
@@ -1902,7 +2014,7 @@ ${(resumeData.skills || []).join(', ')}
                   value={resumeData.summary || ''}
                   onChange={(e) => setResumeData(prev => ({ ...prev, summary: e.target.value }))}
                   placeholder="Write a compelling 2-3 sentence overview highlighting your core strengths, achievements, and technical expertise..."
-                  className="w-full bg-[#050816] border border-primary/10 rounded-xl p-3 text-primary text-xs leading-relaxed focus:outline-none focus:border-primary"
+                  className="w-full bg-background border border-border rounded-xl p-3 text-foreground placeholder:text-muted-foreground text-xs leading-relaxed focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                 />
               </div>
             )}
@@ -1911,7 +2023,7 @@ ${(resumeData.skills || []).join(', ')}
             {activeSection === 'experience' && (
               <div className="space-y-5 text-xs">
                 {(resumeData.experience || []).length === 0 ? (
-                  <div className="text-center py-6 text-slate-500">
+                  <div className="text-center py-6 text-muted-foreground">
                     <Briefcase className="w-8 h-8 mx-auto mb-2 opacity-30" />
                     <p>No experience entries yet.</p>
                     <button
@@ -1923,13 +2035,13 @@ ${(resumeData.skills || []).join(', ')}
                   </div>
                 ) : (
                   (resumeData.experience || []).map((exp, expIdx) => (
-                    <div key={exp.id || expIdx} className="p-3.5 rounded-xl bg-primary/[0.02] border border-primary/[0.08] space-y-3">
+                    <div key={exp.id || expIdx} className="p-3.5 rounded-xl bg-surface-2/40 border border-border space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-slate-200">Role #{expIdx + 1}</span>
+                        <span className="font-semibold text-foreground">Role #{expIdx + 1}</span>
                         <button
                           type="button"
                           onClick={() => handleRemoveExperience(expIdx)}
-                          className="text-slate-500 hover:text-red-400"
+                          className="text-muted-foreground hover:text-destructive transition-colors"
                           title="Remove role"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -1942,14 +2054,14 @@ ${(resumeData.skills || []).join(', ')}
                           value={exp.position || ''}
                           onChange={(e) => handleUpdateExperience(expIdx, 'position', e.target.value)}
                           placeholder="Job Title (e.g. Senior Software Engineer)"
-                          className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
+                          className="w-full bg-background border border-border rounded-lg p-2 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                         />
                         <input
                           type="text"
                           value={exp.company || ''}
                           onChange={(e) => handleUpdateExperience(expIdx, 'company', e.target.value)}
                           placeholder="Company (e.g. Stripe)"
-                          className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
+                          className="w-full bg-background border border-border rounded-lg p-2 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                         />
                       </div>
 
@@ -1959,35 +2071,35 @@ ${(resumeData.skills || []).join(', ')}
                           value={exp.startDate || ''}
                           onChange={(e) => handleUpdateExperience(expIdx, 'startDate', e.target.value)}
                           placeholder="Start Date (e.g. 2022)"
-                          className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
+                          className="w-full bg-background border border-border rounded-lg p-2 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                         />
                         <input
                           type="text"
                           value={exp.endDate || ''}
                           onChange={(e) => handleUpdateExperience(expIdx, 'endDate', e.target.value)}
                           placeholder="End Date (or Present)"
-                          className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
+                          className="w-full bg-background border border-border rounded-lg p-2 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                         />
                       </div>
 
                       {/* Bullets List */}
                       <div className="space-y-2 pt-1">
-                        <label className="text-[11px] font-bold text-slate-400 block">Responsibility Bullets</label>
+                        <label className="text-[11px] font-bold text-muted-foreground block">Responsibility Bullets</label>
                         {(exp.bullets || []).map((bullet, bIdx) => (
                           <div key={bIdx} className="space-y-1">
                             <div className="flex items-start gap-1.5">
-                              <span className="text-slate-500 pt-2 text-xs">•</span>
+                              <span className="text-muted-foreground pt-2 text-xs">•</span>
                               <textarea
                                 rows={2}
                                 value={bullet}
                                 onChange={(e) => handleUpdateExpBullet(expIdx, bIdx, e.target.value)}
                                 placeholder="Describe impact with numbers..."
-                                className="flex-1 bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary leading-relaxed"
+                                className="flex-1 bg-background border border-border rounded-lg p-2 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary leading-relaxed"
                               />
                               <button
                                 type="button"
                                 onClick={() => handleRemoveExpBullet(expIdx, bIdx)}
-                                className="text-slate-600 hover:text-red-400 pt-2"
+                                className="text-muted-foreground hover:text-destructive pt-2 transition-colors"
                               >
                                 <X className="w-3.5 h-3.5" />
                               </button>
@@ -2033,13 +2145,13 @@ ${(resumeData.skills || []).join(', ')}
             {activeSection === 'education' && (
               <div className="space-y-4 text-xs">
                 {(resumeData.education || []).map((edu, eduIdx) => (
-                  <div key={edu.id || eduIdx} className="p-3.5 rounded-xl bg-primary/[0.02] border border-primary/[0.08] space-y-2.5">
+                  <div key={edu.id || eduIdx} className="p-3.5 rounded-xl bg-surface-2/40 border border-border space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-200">Education #{eduIdx + 1}</span>
+                      <span className="font-semibold text-foreground">Education #{eduIdx + 1}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveEducation(eduIdx)}
-                        className="text-slate-500 hover:text-red-400"
+                        className="text-muted-foreground hover:text-destructive transition-colors"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -2050,7 +2162,7 @@ ${(resumeData.skills || []).join(', ')}
                       value={edu.institution || ''}
                       onChange={(e) => handleUpdateEducation(eduIdx, 'institution', e.target.value)}
                       placeholder="University / College (e.g. Stanford University)"
-                      className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
+                      className="w-full bg-background border border-border rounded-lg p-2 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                     />
 
                     <input
@@ -2058,7 +2170,7 @@ ${(resumeData.skills || []).join(', ')}
                       value={edu.degree || ''}
                       onChange={(e) => handleUpdateEducation(eduIdx, 'degree', e.target.value)}
                       placeholder="Degree & Major (e.g. B.S. in Computer Science)"
-                      className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
+                      className="w-full bg-background border border-border rounded-lg p-2 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                     />
 
                     <div className="grid grid-cols-2 gap-2">
@@ -2067,14 +2179,14 @@ ${(resumeData.skills || []).join(', ')}
                         value={edu.startYear || ''}
                         onChange={(e) => handleUpdateEducation(eduIdx, 'startYear', e.target.value)}
                         placeholder="Start Year (2018)"
-                        className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
+                        className="w-full bg-background border border-border rounded-lg p-2 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                       />
                       <input
                         type="text"
                         value={edu.endYear || ''}
                         onChange={(e) => handleUpdateEducation(eduIdx, 'endYear', e.target.value)}
                         placeholder="Grad Year (2022)"
-                        className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
+                        className="w-full bg-background border border-border rounded-lg p-2 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                       />
                     </div>
                   </div>
@@ -2092,12 +2204,12 @@ ${(resumeData.skills || []).join(', ')}
                     onChange={(e) => setSkillInput(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddSkill(); } }}
                     placeholder="Add skill (e.g. TypeScript, PyTorch, Docker)..."
-                    className="flex-1 bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
+                    className="flex-1 bg-background border border-border rounded-lg p-2 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                   />
                   <button
                     type="button"
                     onClick={handleAddSkill}
-                    className="px-3 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary font-bold text-xs"
+                    className="px-3 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs"
                   >
                     Add
                   </button>
@@ -2107,13 +2219,13 @@ ${(resumeData.skills || []).join(', ')}
                   {(resumeData.skills || []).map((skill, sIdx) => (
                     <span
                       key={sIdx}
-                      className="px-2.5 py-1 rounded-lg bg-primary/5 border border-primary/10 text-slate-200 text-xs flex items-center gap-1.5 hover:border-primary/40 transition-colors"
+                      className="px-2.5 py-1 rounded-lg bg-surface-2/80 border border-border text-foreground text-xs flex items-center gap-1.5 hover:border-primary/40 transition-colors"
                     >
                       <span>{skill}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveSkill(skill)}
-                        className="text-slate-500 hover:text-red-400"
+                        className="text-muted-foreground hover:text-destructive transition-colors"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -2127,13 +2239,13 @@ ${(resumeData.skills || []).join(', ')}
             {activeSection === 'projects' && (
               <div className="space-y-4 text-xs">
                 {(resumeData.projects || []).map((proj, pIdx) => (
-                  <div key={proj.id || pIdx} className="p-3.5 rounded-xl bg-primary/[0.02] border border-primary/[0.08] space-y-2">
+                  <div key={proj.id || pIdx} className="p-3.5 rounded-xl bg-surface-2/40 border border-border space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-200">Project #{pIdx + 1}</span>
+                      <span className="font-semibold text-foreground">Project #{pIdx + 1}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveProject(pIdx)}
-                        className="text-slate-500 hover:text-red-400"
+                        className="text-muted-foreground hover:text-destructive transition-colors"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -2144,7 +2256,7 @@ ${(resumeData.skills || []).join(', ')}
                       value={proj.name || ''}
                       onChange={(e) => handleUpdateProject(pIdx, 'name', e.target.value)}
                       placeholder="Project Name"
-                      className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
+                      className="w-full bg-background border border-border rounded-lg p-2 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                     />
 
                     <input
@@ -2152,7 +2264,7 @@ ${(resumeData.skills || []).join(', ')}
                       value={proj.technologies || ''}
                       onChange={(e) => handleUpdateProject(pIdx, 'technologies', e.target.value)}
                       placeholder="Technologies (e.g. Next.js, FastAPI, PostgreSQL)"
-                      className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
+                      className="w-full bg-background border border-border rounded-lg p-2 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                     />
 
                     <textarea
@@ -2160,7 +2272,7 @@ ${(resumeData.skills || []).join(', ')}
                       value={proj.description || ''}
                       onChange={(e) => handleUpdateProject(pIdx, 'description', e.target.value)}
                       placeholder="Brief description of outcomes and technical highlights..."
-                      className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
+                      className="w-full bg-background border border-border rounded-lg p-2 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                     />
                   </div>
                 ))}
@@ -2173,15 +2285,15 @@ ${(resumeData.skills || []).join(', ')}
                 <button
                   type="button"
                   onClick={handleAddCertification}
-                  className="px-2.5 py-1 rounded-lg bg-primary/20 text-primary text-xs font-semibold flex items-center gap-1 mb-2"
+                  className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 text-xs font-semibold flex items-center gap-1 mb-2"
                 >
                   <Plus className="w-3 h-3" /> Add Certificate
                 </button>
                 {(resumeData.certifications || []).map((c, cIdx) => (
-                  <div key={cIdx} className="p-3 rounded-xl bg-primary/[0.02] border border-primary/[0.08] space-y-2">
+                  <div key={cIdx} className="p-3 rounded-xl bg-surface-2/40 border border-border space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="font-bold text-slate-300">Cert #{cIdx + 1}</span>
-                      <button onClick={() => handleRemoveCertification(cIdx)} className="text-slate-500 hover:text-red-400">
+                      <span className="font-semibold text-foreground">Cert #{cIdx + 1}</span>
+                      <button onClick={() => handleRemoveCertification(cIdx)} className="text-muted-foreground hover:text-destructive transition-colors">
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -2190,7 +2302,7 @@ ${(resumeData.skills || []).join(', ')}
                       value={c.name || ''}
                       onChange={(e) => handleUpdateCertification(cIdx, 'name', e.target.value)}
                       placeholder="Certificate Name (e.g. AWS Certified Solutions Architect)"
-                      className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
+                      className="w-full bg-background border border-border rounded-lg p-2 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                     />
                     <div className="grid grid-cols-2 gap-2">
                       <input
@@ -2198,14 +2310,14 @@ ${(resumeData.skills || []).join(', ')}
                         value={c.issuer || ''}
                         onChange={(e) => handleUpdateCertification(cIdx, 'issuer', e.target.value)}
                         placeholder="Issuer (e.g. Amazon)"
-                        className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
+                        className="w-full bg-background border border-border rounded-lg p-2 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                       />
                       <input
                         type="text"
                         value={c.year || ''}
                         onChange={(e) => handleUpdateCertification(cIdx, 'year', e.target.value)}
                         placeholder="Year (2023)"
-                        className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
+                        className="w-full bg-background border border-border rounded-lg p-2 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                       />
                     </div>
                   </div>
@@ -2219,7 +2331,7 @@ ${(resumeData.skills || []).join(', ')}
                 <button
                   type="button"
                   onClick={handleAddLanguage}
-                  className="px-2.5 py-1 rounded-lg bg-primary/20 text-primary text-xs font-semibold flex items-center gap-1 mb-2"
+                  className="px-2.5 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 text-xs font-semibold flex items-center gap-1 mb-2"
                 >
                   <Plus className="w-3 h-3" /> Add Language
                 </button>
@@ -2230,16 +2342,16 @@ ${(resumeData.skills || []).join(', ')}
                       value={l.language || ''}
                       onChange={(e) => handleUpdateLanguage(lIdx, 'language', e.target.value)}
                       placeholder="Language (e.g. English)"
-                      className="flex-1 bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
+                      className="flex-1 bg-background border border-border rounded-lg p-2 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                     />
                     <input
                       type="text"
                       value={l.proficiency || ''}
                       onChange={(e) => handleUpdateLanguage(lIdx, 'proficiency', e.target.value)}
                       placeholder="Proficiency (Native / Fluent)"
-                      className="w-32 bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
+                      className="w-32 bg-background border border-border rounded-lg p-2 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                     />
-                    <button onClick={() => handleRemoveLanguage(lIdx)} className="text-slate-500 hover:text-red-400">
+                    <button onClick={() => handleRemoveLanguage(lIdx)} className="text-muted-foreground hover:text-destructive transition-colors">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -2251,44 +2363,44 @@ ${(resumeData.skills || []).join(', ')}
             {activeCustomSection && (
               <div className="space-y-4 text-xs">
                 <div>
-                  <label className="text-slate-400 block mb-1">Section Title</label>
+                  <label className="text-muted-foreground block mb-1">Section Title</label>
                   <input
                     type="text"
                     value={activeCustomSection.title || ''}
                     onChange={(e) => handleUpdateCustomSection(activeCustomSection.id, 'title', e.target.value)}
                     placeholder="Section Title"
-                    className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs font-bold focus:outline-none focus:border-primary"
+                    className="w-full bg-background border border-border rounded-lg p-2 text-foreground text-xs font-bold focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                   />
                 </div>
 
                 {activeCustomSection.style === 'paragraph' ? (
                   <div>
-                    <label className="text-slate-400 block mb-1">Content</label>
+                    <label className="text-muted-foreground block mb-1">Content</label>
                     <textarea
                       rows={5}
                       value={activeCustomSection.content || ''}
                       onChange={(e) => handleUpdateCustomSection(activeCustomSection.id, 'content', e.target.value)}
                       placeholder="Write details for this section..."
-                      className="w-full bg-[#050816] border border-primary/10 rounded-lg p-2.5 text-primary text-xs leading-relaxed focus:outline-none focus:border-primary"
+                      className="w-full bg-background border border-border rounded-lg p-2.5 text-foreground placeholder:text-muted-foreground text-xs leading-relaxed focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                     />
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <label className="text-slate-400 block">Items / Bullet Points</label>
+                    <label className="text-muted-foreground block">Items / Bullet Points</label>
                     {(activeCustomSection.items || []).map((item, itIdx) => (
                       <div key={itIdx} className="flex items-start gap-1.5">
-                        <span className="text-slate-500 pt-2 text-xs">•</span>
+                        <span className="text-muted-foreground pt-2 text-xs">•</span>
                         <textarea
                           rows={2}
                           value={item}
                           onChange={(e) => handleUpdateCustomBullet(activeCustomSection.id, itIdx, e.target.value)}
                           placeholder="Add accomplishment, publication, or detail..."
-                          className="flex-1 bg-[#050816] border border-primary/10 rounded-lg p-2 text-primary text-xs focus:outline-none focus:border-primary"
+                          className="flex-1 bg-background border border-border rounded-lg p-2 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                         />
                         <button
                           type="button"
                           onClick={() => handleRemoveCustomBullet(activeCustomSection.id, itIdx)}
-                          className="text-slate-600 hover:text-red-400 pt-2"
+                          className="text-muted-foreground hover:text-destructive pt-2 transition-colors"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -2438,21 +2550,21 @@ ${(resumeData.skills || []).join(', ')}
       {/* ── LAYER 3A: ADD / RESTORE SECTION MODAL ───────────────────────── */}
       <AnimatePresence>
         {isAddSectionModalOpen && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-[#0B1228] border border-primary/10 rounded-2xl p-5 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
+              className="bg-card border border-border text-card-foreground rounded-2xl p-5 max-w-md w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
             >
-              <div className="flex items-center justify-between border-b border-primary/10 pb-3">
-                <div className="flex items-center gap-2 text-primary font-bold text-sm">
+              <div className="flex items-center justify-between border-b border-border/80 pb-3">
+                <div className="flex items-center gap-2 text-foreground font-bold text-sm">
                   <Plus className="w-4 h-4 text-primary" />
                   <span>Add or Restore Section</span>
                 </div>
                 <button
                   onClick={() => setIsAddSectionModalOpen(false)}
-                  className="text-slate-400 hover:text-primary"
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -2461,7 +2573,7 @@ ${(resumeData.skills || []).join(', ')}
               {/* 1. Restore Hidden Standard Sections (if any) */}
               {hiddenStandardList.length > 0 && (
                 <div className="space-y-2">
-                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                     Hidden Standard Sections
                   </div>
                   <div className="grid grid-cols-1 gap-1.5">
@@ -2470,16 +2582,16 @@ ${(resumeData.skills || []).join(', ')}
                       return (
                         <div
                           key={sec.id}
-                          className="p-2.5 rounded-xl bg-primary/[0.03] border border-primary/10 flex items-center justify-between"
+                          className="p-2.5 rounded-xl bg-surface-2/50 border border-border flex items-center justify-between"
                         >
-                          <div className="flex items-center gap-2 text-xs text-primary">
+                          <div className="flex items-center gap-2 text-xs text-foreground">
                             <Icon className="w-3.5 h-3.5 text-primary" />
                             <span>{sec.label}</span>
                           </div>
                           <button
                             type="button"
                             onClick={() => handleToggleHideSection(sec.id)}
-                            className="px-2.5 py-1 rounded-lg bg-primary text-primary text-[11px] font-semibold hover:bg-primary/90 transition-all flex items-center gap-1"
+                            className="px-2.5 py-1 rounded-lg bg-primary text-primary-foreground text-[11px] font-semibold hover:bg-primary/90 transition-all flex items-center gap-1"
                           >
                             <Plus className="w-3 h-3" />
                             <span>Restore</span>
@@ -2492,8 +2604,8 @@ ${(resumeData.skills || []).join(', ')}
               )}
 
               {/* 2. Quick Preset Additions */}
-              <div className="space-y-2 pt-2 border-t border-primary/[0.06]">
-                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <div className="space-y-2 pt-2 border-t border-border/80">
+                <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   Popular Sections
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -2504,13 +2616,13 @@ ${(resumeData.skills || []).join(', ')}
                         key={pIdx}
                         type="button"
                         onClick={() => handleAddCustomSection(preset.title, preset.style)}
-                        className="p-2.5 rounded-xl bg-primary/[0.03] hover:bg-primary/15 border border-primary/10 hover:border-primary/40 text-left transition-all group"
+                        className="p-2.5 rounded-xl bg-surface-2/40 hover:bg-muted border border-border hover:border-primary/40 text-left transition-all group"
                       >
-                        <div className="flex items-center gap-2 text-xs font-bold text-slate-200 group-hover:text-primary">
-                          <Icon className="w-3.5 h-3.5 text-slate-400 group-hover:text-primary" />
+                        <div className="flex items-center gap-2 text-xs font-bold text-foreground group-hover:text-primary">
+                          <Icon className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary" />
                           <span>{preset.title}</span>
                         </div>
-                        <p className="text-[10px] text-slate-400 mt-1 capitalize">{preset.style} format</p>
+                        <p className="text-[10px] text-muted-foreground mt-1 capitalize">{preset.style} format</p>
                       </button>
                     );
                   })}
@@ -2518,8 +2630,8 @@ ${(resumeData.skills || []).join(', ')}
               </div>
 
               {/* 3. Create Custom Section */}
-              <div className="space-y-2.5 pt-2 border-t border-primary/[0.06]">
-                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <div className="space-y-2.5 pt-2 border-t border-border/80">
+                <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   Create Custom Section
                 </div>
                 <input
@@ -2527,7 +2639,7 @@ ${(resumeData.skills || []).join(', ')}
                   value={newCustomTitle}
                   onChange={(e) => setNewCustomTitle(e.target.value)}
                   placeholder="e.g. Leadership, Patents, Hackathons..."
-                  className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2.5 text-primary text-xs focus:outline-none focus:border-primary"
+                  className="w-full bg-background border border-border rounded-xl p-2.5 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                 />
 
                 <div className="flex gap-2">
@@ -2535,8 +2647,8 @@ ${(resumeData.skills || []).join(', ')}
                     type="button"
                     onClick={() => setNewCustomStyle('bullets')}
                     className={`flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all ${newCustomStyle === 'bullets'
-                        ? 'bg-primary/20 border-primary text-primary'
-                        : 'bg-primary/[0.02] border-primary/10 text-slate-400'
+                        ? 'bg-primary/10 border-primary text-primary'
+                        : 'bg-muted/40 border-border text-muted-foreground'
                       }`}
                   >
                     Bullet List
@@ -2545,8 +2657,8 @@ ${(resumeData.skills || []).join(', ')}
                     type="button"
                     onClick={() => setNewCustomStyle('paragraph')}
                     className={`flex-1 py-1.5 rounded-lg text-xs font-medium border transition-all ${newCustomStyle === 'paragraph'
-                        ? 'bg-primary/20 border-primary text-primary'
-                        : 'bg-primary/[0.02] border-primary/10 text-slate-400'
+                        ? 'bg-primary/10 border-primary text-primary'
+                        : 'bg-muted/40 border-border text-muted-foreground'
                       }`}
                   >
                     Paragraph Text
@@ -2557,7 +2669,7 @@ ${(resumeData.skills || []).join(', ')}
                   type="button"
                   onClick={() => handleAddCustomSection(newCustomTitle, newCustomStyle)}
                   disabled={!newCustomTitle.trim()}
-                  className="w-full py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary font-bold text-xs shadow-md disabled:opacity-40 transition-all flex items-center justify-center gap-1.5"
+                  className="w-full py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs shadow-md disabled:opacity-40 transition-all flex items-center justify-center gap-1.5"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Create Section</span>
@@ -2572,64 +2684,64 @@ ${(resumeData.skills || []).join(', ')}
       {/* ── LAYER 3A-2: SAVE CURRENT STYLE AS TEMPLATE MODAL ─────────────── */}
       <AnimatePresence>
         {isSaveCurrentModalOpen && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-[#0B1228] border border-primary/10 rounded-2xl p-5 max-w-md w-full shadow-2xl space-y-4"
+              className="bg-card border border-border text-card-foreground rounded-2xl p-5 max-w-md w-full shadow-2xl space-y-4"
             >
-              <div className="flex items-center justify-between border-b border-primary/10 pb-3">
-                <div className="flex items-center gap-2 text-primary font-bold text-sm">
-                  <Save className="w-4 h-4 text-amber-400" />
+              <div className="flex items-center justify-between border-b border-border/80 pb-3">
+                <div className="flex items-center gap-2 text-foreground font-bold text-sm">
+                  <Save className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                   <span>Save Style as New Template</span>
                 </div>
                 <button
                   onClick={() => setIsSaveCurrentModalOpen(false)}
-                  className="text-slate-400 hover:text-primary"
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="p-3 rounded-xl bg-primary/[0.02] border border-primary/10 space-y-2 text-xs">
+              <div className="p-3 rounded-xl bg-surface-2/50 border border-border space-y-2 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Current Base Layout:</span>
+                  <span className="text-muted-foreground">Current Base Layout:</span>
                   <span className="font-bold text-primary uppercase font-mono">{selectedTemplate}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Accent Color:</span>
+                  <span className="text-muted-foreground">Accent Color:</span>
                   <div className="flex items-center gap-1.5">
                     <span className="w-3 h-3 rounded-full" style={{ backgroundColor: accentColor }}></span>
-                    <span className="font-mono text-slate-200">{accentColor}</span>
+                    <span className="font-mono text-foreground">{accentColor}</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Typography Font:</span>
-                  <span className="text-slate-200 capitalize">{fontFamily}</span>
+                  <span className="text-muted-foreground">Typography Font:</span>
+                  <span className="text-foreground capitalize">{fontFamily}</span>
                 </div>
               </div>
 
               <div className="space-y-3 text-xs">
                 <div>
-                  <label className="text-slate-300 font-bold block mb-1">Template Name</label>
+                  <label className="text-foreground font-semibold block mb-1">Template Name</label>
                   <input
                     type="text"
                     value={saveCurrentTemplateName}
                     onChange={(e) => setSaveCurrentTemplateName(e.target.value)}
                     placeholder="e.g. Google Principal Minimal, Fintech Dark"
-                    className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2.5 text-primary text-xs focus:outline-none focus:border-primary"
+                    className="w-full bg-background border border-border rounded-xl p-2.5 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                   />
                 </div>
 
                 <div>
-                  <label className="text-slate-400 block mb-1">Description (Optional)</label>
+                  <label className="text-muted-foreground block mb-1">Description (Optional)</label>
                   <input
                     type="text"
                     value={saveCurrentTemplateDesc}
                     onChange={(e) => setSaveCurrentTemplateDesc(e.target.value)}
                     placeholder="e.g. Optimized for FAANG engineering management"
-                    className="w-full bg-[#050816] border border-primary/10 rounded-xl p-2.5 text-primary text-xs focus:outline-none focus:border-primary"
+                    className="w-full bg-background border border-border rounded-xl p-2.5 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                   />
                 </div>
 
@@ -2637,7 +2749,7 @@ ${(resumeData.skills || []).join(', ')}
                   type="button"
                   onClick={handleSaveCurrentAsTemplate}
                   disabled={!saveCurrentTemplateName.trim()}
-                  className="w-full py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary font-bold text-xs shadow-md disabled:opacity-40 transition-all flex items-center justify-center gap-1.5"
+                  className="w-full py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs shadow-md disabled:opacity-40 transition-all flex items-center justify-center gap-1.5"
                 >
                   <Save className="w-3.5 h-3.5" />
                   <span>Save & Add to Templates</span>
@@ -2661,16 +2773,16 @@ ${(resumeData.skills || []).join(', ')}
       {/* ── LAYER 3B: CONTEXTUAL AI MODAL / DRAWER ──────────────────────── */}
       <AnimatePresence>
         {aiModal.isOpen && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="bg-[#0B1228] border border-primary/10 rounded-2xl p-5 max-w-lg w-full shadow-2xl space-y-4"
+              className="bg-card border border-border text-card-foreground rounded-2xl p-5 max-w-lg w-full shadow-2xl space-y-4"
             >
-              <div className="flex items-center justify-between border-b border-primary/10 pb-3">
-                <div className="flex items-center gap-2 text-primary font-bold text-sm">
-                  <Sparkles className="w-4 h-4 text-amber-400" />
+              <div className="flex items-center justify-between border-b border-border/80 pb-3">
+                <div className="flex items-center gap-2 text-foreground font-bold text-sm">
+                  <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                   <span>
                     {aiModal.type === 'bullet' && 'AI Bullet Enhancer'}
                     {aiModal.type === 'improve-all' && 'AI Resume Polish'}
@@ -2680,7 +2792,7 @@ ${(resumeData.skills || []).join(', ')}
                 </div>
                 <button
                   onClick={() => setAiModal(prev => ({ ...prev, isOpen: false }))}
-                  className="text-slate-400 hover:text-primary"
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -2688,13 +2800,13 @@ ${(resumeData.skills || []).join(', ')}
 
               {aiModal.type === 'match-jd' ? (
                 <div className="space-y-3 text-xs">
-                  <p className="text-slate-400">Paste the target Job Description to compare against your resume:</p>
+                  <p className="text-muted-foreground">Paste the target Job Description to compare against your resume:</p>
                   <textarea
                     rows={5}
                     value={aiModal.jdText}
                     onChange={(e) => setAiModal(prev => ({ ...prev, jdText: e.target.value }))}
                     placeholder="Paste job requirements here..."
-                    className="w-full bg-[#050816] border border-primary/10 rounded-xl p-3 text-primary text-xs focus:outline-none focus:border-primary"
+                    className="w-full bg-background border border-border rounded-xl p-3 text-foreground placeholder:text-muted-foreground text-xs focus:outline-none focus:ring-1 focus:ring-ring focus:border-primary"
                   />
                   <button
                     type="button"
@@ -2709,7 +2821,7 @@ ${(resumeData.skills || []).join(', ')}
                         ]
                       }));
                     }}
-                    className="w-full py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary font-bold"
+                    className="w-full py-2 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs"
                   >
                     Analyze & Align Resume
                   </button>
@@ -2718,17 +2830,17 @@ ${(resumeData.skills || []).join(', ')}
 
               {/* AI Suggested Enhancements List */}
               <div className="space-y-2">
-                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                   AI Recommended Variations (Click to Apply)
                 </div>
                 {aiModal.suggestions.map((sug, idx) => (
                   <div
                     key={idx}
                     onClick={() => handleApplyAiSuggestion(sug)}
-                    className="p-3 rounded-xl bg-primary/[0.03] hover:bg-amber-500/10 border border-primary/10 hover:border-amber-500/30 cursor-pointer text-xs text-slate-200 transition-all flex items-start justify-between gap-3 group"
+                    className="p-3 rounded-xl bg-surface-2/60 hover:bg-amber-500/10 border border-border hover:border-amber-500/30 cursor-pointer text-xs text-foreground transition-all flex items-start justify-between gap-3 group"
                   >
                     <p className="leading-relaxed group-hover:text-primary">{sug}</p>
-                    <CheckCheck className="w-4 h-4 text-amber-400 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <CheckCheck className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                 ))}
               </div>
@@ -2774,6 +2886,27 @@ ${(resumeData.skills || []).join(', ')}
         onClose={() => setXyzModal(prev => ({ ...prev, isOpen: false }))}
         initialText={xyzModal.text}
         onApply={handleApplyXyzFormula}
+      />
+
+      {/* ── LAYER 3D: DYNAMIC TEMPLATE GALLERY MODAL (1,000+ CATALOG & PRIVATE VAULT) ── */}
+      <TemplateGalleryModal
+        isOpen={isGalleryModalOpen}
+        onClose={() => setIsGalleryModalOpen(false)}
+        onSelectTemplate={handleSelectDynamicTemplate}
+        currentTemplateId={selectedTemplate}
+        currentDesignState={{
+          selectedTemplate,
+          accentColor,
+          fontFamily,
+          fontSizeNum,
+          lineHeight,
+          pagePadding,
+          sectionGap,
+          itemGap,
+          borderRadius,
+          bulletStyle,
+          headerLayout,
+        }}
       />
 
     </div>

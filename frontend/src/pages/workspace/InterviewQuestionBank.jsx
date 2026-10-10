@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Bookmark, Library, Loader2, Plus, Search } from 'lucide-react';
+import { Bookmark, Library, Loader2, Plus, Search, Sparkles, Globe, Bot } from 'lucide-react';
 import { interviewAPI } from '../../services/api';
 import PageHeader from '../../components/workspace/PageHeader';
 import EmptyState from '../../components/workspace/EmptyState';
@@ -59,6 +59,7 @@ export default function InterviewQuestionBank() {
   const [savedOnly, setSavedOnly] = useState(false);
   const [search, setSearch] = useState('');
   const [addOpen, setAddOpen] = useState(false);
+  const [discoverOpen, setDiscoverOpen] = useState(false);
 
   const meta = useQuery({ queryKey: ['interview', 'meta'], queryFn: () => interviewAPI.meta().then((r) => r.data) });
   const questions = useQuery({
@@ -91,12 +92,21 @@ export default function InterviewQuestionBank() {
     <div className="space-y-6">
       <PageHeader
         title="Question Bank"
-        description="Curated questions across categories and difficulty levels. Save what matters, add your own."
+        description="Dynamic AI-researched interview questions grounded in live web trends and your resume."
         icon={Library}
         actions={
-          <Button onClick={() => setAddOpen(true)}>
-            <Plus className="size-4" /> Add question
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDiscoverOpen(true)}
+              className="border-primary/40 text-primary hover:bg-primary/10 shadow-sm"
+            >
+              <Sparkles className="size-4 mr-1.5" /> AI Web Discover
+            </Button>
+            <Button onClick={() => setAddOpen(true)}>
+              <Plus className="size-4 mr-1.5" /> Add question
+            </Button>
+          </div>
         }
       />
 
@@ -181,7 +191,122 @@ export default function InterviewQuestionBank() {
       )}
 
       <AddQuestionDialog open={addOpen} onOpenChange={setAddOpen} categories={categories} diffs={diffs} />
+      <AIDiscoverDialog open={discoverOpen} onOpenChange={setDiscoverOpen} categories={categories} />
     </div>
+  );
+}
+
+function AIDiscoverDialog({ open, onOpenChange, categories }) {
+  const queryClient = useQueryClient();
+  const [role, setRole] = useState('Full Stack Software Engineer');
+  const [company, setCompany] = useState('');
+  const [skills, setSkills] = useState('React, Python, Docker, PostgreSQL');
+  const [category, setCategory] = useState('All');
+  const [busy, setBusy] = useState(false);
+
+  const handleDiscover = async () => {
+    if (!role.trim()) {
+      toast.error('Please provide a target role');
+      return;
+    }
+    setBusy(true);
+    try {
+      const skillsArray = skills.split(',').map((s) => s.trim()).filter(Boolean);
+      const res = await interviewAPI.discoverQuestions({
+        role: role.trim(),
+        company: company.trim(),
+        skills: skillsArray,
+        category: category,
+        count: 6,
+      });
+
+      const count = res.data?.discovered_count || 6;
+      toast.success(`Discovered ${count} new interview questions with live web search!`);
+      queryClient.invalidateQueries({ queryKey: ['interview', 'questions'] });
+      onOpenChange(false);
+    } catch (e) {
+      toast.error(e?.response?.data?.detail || 'Failed to discover questions. Check connection.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
+            <Bot className="size-4" /> AI Web Research Agent
+          </div>
+          <DialogTitle>Discover Real-World Questions</DialogTitle>
+          <DialogDescription className="text-xs">
+            Searches live hiring trends via DuckDuckGo and generates current questions tailored to your target company and stack with Ollama (<code className="text-primary font-mono text-[11px]">llama3.2</code>).
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3.5 py-2">
+          <div>
+            <Label className="text-xs">Target Role</Label>
+            <Input
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              placeholder="e.g. Senior Backend Engineer"
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Target Company (Optional)</Label>
+            <Input
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              placeholder="e.g. Amazon, Google, Stripe (or blank for industry)"
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Skills to Focus On</Label>
+            <Input
+              value={skills}
+              onChange={(e) => setSkills(e.target.value)}
+              placeholder="e.g. Python, FastAPI, Redis, Kafka"
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Category Filter</Label>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <DialogFooter className="pt-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
+            Cancel
+          </Button>
+          <Button onClick={handleDiscover} disabled={busy || !role.trim()} className="bg-primary text-white">
+            {busy ? (
+              <>
+                <Loader2 className="size-4 mr-1.5 animate-spin" /> Researching Web...
+              </>
+            ) : (
+              <>
+                <Sparkles className="size-4 mr-1.5" /> Research & Discover
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

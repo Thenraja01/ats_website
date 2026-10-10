@@ -15,25 +15,25 @@ import { useTypewriter } from '../hooks/useAnimations';
 gsap.registerPlugin(ScrollTrigger);
 
 const stats = [
-  { label: 'Resumes Analyzed', value: 10000, suffix: '+', icon: FileText },
-  { label: 'ATS Accuracy', value: 95, suffix: '%', icon: BarChart },
-  { label: 'Active Recruiters', value: 500, suffix: '+', icon: Users },
-  { label: 'Time Saved', value: 70, suffix: '%', icon: Zap },
+  { label: 'Resumes Tailored', value: 10000, suffix: '+', icon: FileText },
+  { label: 'ATS Match Accuracy', value: 95, suffix: '%', icon: BarChart },
+  { label: 'Interview Questions', value: 500, suffix: '+', icon: Users },
+  { label: 'Prep Time Saved', value: 70, suffix: '%', icon: Zap },
 ];
 
 const steps = [
-  { step: '01', title: 'Upload Resume & JD', desc: 'Upload your resume (PDF/DOCX) and paste the job description.', gradient: 'from-primary to-blue-600' },
-  { step: '02', title: 'AI Analysis', desc: 'Our 5-agent Llama 3 pipeline analyzes, scores, and compares.', gradient: 'from-purple-500 to-pink-600' },
-  { step: '03', title: 'Get Insights', desc: 'Receive a detailed ATS report with score and suggestions.', gradient: 'from-pink-500 to-rose-600' },
+  { step: '01', title: 'Upload Resume & JD', desc: 'Upload your resume (PDF/DOCX) and paste your target job description.', gradient: 'from-primary to-blue-600' },
+  { step: '02', title: 'AI Analysis & Match', desc: 'Our AI pipeline analyzes semantic fit, missing skills, and keyword overlap.', gradient: 'from-purple-500 to-pink-600' },
+  { step: '03', title: 'Tailor & Prepare', desc: 'Optimize your bullet points in Resume Studio and practice with AI interview coaching.', gradient: 'from-pink-500 to-rose-600' },
 ];
 
 const features = [
-  { icon: Brain, title: 'Resume Parsing', desc: 'Extract skills, education, experience with 95%+ accuracy.' },
-  { icon: BarChart, title: 'ATS Scoring', desc: '0-100 compatibility score via semantic matching.' },
-  { icon: Users, title: 'Candidate Ranking', desc: 'AI-powered ranking sorts by relevance.' },
-  { icon: Shield, title: 'Role-Based Access', desc: 'Secure Candidate, Recruiter, Admin roles.' },
-  { icon: Zap, title: 'AI Suggestions', desc: 'Personalized improvements and interview questions.' },
-  { icon: Sparkles, title: 'Career Page API', desc: 'Embed AI analysis into your career page.' },
+  { icon: Brain, title: 'Resume Parsing', desc: 'Extract skills, education, and experience with 95%+ accuracy.' },
+  { icon: BarChart, title: 'ATS Scoring & Match', desc: '0-100 compatibility score via semantic matching against target JDs.' },
+  { icon: Sparkles, title: 'Resume Studio', desc: 'Tailor and version your resumes for each specific job description.' },
+  { icon: Users, title: 'Interview Coach', desc: 'AI mock interviews, question banks, and structured answer feedback.' },
+  { icon: Zap, title: 'AI Bullet Optimizer', desc: 'Action-verb enhancements and keyword suggestions to pass screening.' },
+  { icon: Shield, title: 'Career Vault', desc: 'Centralize your verified skills, experience, and certificates in one place.' },
 ];
 
 const trustedLogos = [
@@ -43,7 +43,8 @@ const trustedLogos = [
 export default function Home() {
   const heroRef = useRef(null);
   const particlesRef = useRef(null);
-  const { displayText } = useTypewriter(['analyze resumes', 'match candidates', 'optimize hiring', 'screen faster'], {});
+  const { displayText } = useTypewriter(['tailor your resume', 'pass ATS screens', 'ace interview rounds', 'prep for dream roles'], {});
+
 
   // Mouse parallax
   const mouseX = useMotionValue(0);
@@ -140,7 +141,7 @@ export default function Home() {
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-6"
           >
             <Sparkles className="w-4 h-4" />
-            AI-Powered Applicant Tracking System
+            AI-Powered Resume Tailoring & Job Preparation
           </motion.div>
 
           <motion.h1
@@ -149,11 +150,11 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 max-w-5xl mx-auto leading-tight font-heading"
           >
-            <span className="inline-block">Hire</span>{' '}
-            <span className="inline-block">Smarter.</span>
+            <span className="inline-block">Tailor</span>{' '}
+            <span className="inline-block">Resumes.</span>
             <br />
             <span className="inline-block">
-              <GradientText>Candidates Win Faster.</GradientText>
+              <GradientText>Ace Every Interview.</GradientText>
             </span>
           </motion.h1>
 
@@ -163,7 +164,7 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto mb-6 leading-relaxed"
           >
-            Leverage Llama 3 AI to <span className="text-primary font-medium">{displayText}</span>
+            Leverage AI to <span className="text-primary font-medium">{displayText}</span>
             <span className="inline-block w-0.5 h-5 bg-primary ml-1 animate-pulse" />
           </motion.p>
 
@@ -173,8 +174,9 @@ export default function Home() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="text-slate-500 text-sm mb-10 max-w-2xl mx-auto"
           >
-            Whether you&apos;re a job seeker optimizing your resume or a recruiter screening hundreds of applicants.
+            Analyze keyword gaps against job descriptions, tailor versioned resumes in Resume Studio, and master technical and behavioral questions.
           </motion.p>
+
 
           <motion.div
             initial={{ opacity: 0, y: 15 }}

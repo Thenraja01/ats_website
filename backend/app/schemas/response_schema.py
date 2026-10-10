@@ -15,3 +15,5 @@ class HealthResponse(BaseModel):
     """Health check response."""
     status: str = "ok"
     version: str = "1.0.0"
+    mongodb: Optional[str] = "connected"
+

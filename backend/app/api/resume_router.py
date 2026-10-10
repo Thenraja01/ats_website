@@ -166,14 +166,32 @@ async def upload_resume(
                 detail="Unsupported file format. Use PDF, DOCX, or TXT.",
             )
 
+        # ── Store raw file in MinIO S3 Object Storage ────────────────
+        import uuid
+        user_folder = user_id if user_id else "guest"
+        unique_key = f"resumes/{user_folder}/{uuid.uuid4().hex}_{filename}"
+        content_type = file.content_type or "application/octet-stream"
+        minio_key = None
+        try:
+            from app.services.storage_service import upload_file_bytes
+            minio_key = upload_file_bytes(contents, unique_key, content_type=content_type)
+        except Exception as storage_err:
+            logger.warning(f"MinIO storage error: {storage_err}")
+
         await UploadRecord(user_id=user_id, ip_address=ip_address).insert()
-        return {"filename": filename, "extracted_text": text}
+        return {
+            "filename": filename,
+            "extracted_text": text,
+            "storage_key": minio_key,
+            "stored_in_minio": minio_key is not None,
+        }
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Upload error: {e}")
         raise HTTPException(status_code=500, detail="An internal error occurred during resume parsing")
+
 
 
 @resume_router.post("/analyze", response_model=ATSResult)
@@ -263,3 +281,29 @@ async def get_analysis_stats(current_user: User = Depends(get_current_user)):
     """Get the current user's analysis statistics."""
     stats = await AnalysisCRUD.get_user_stats(str(current_user.id))
     return stats
+
+
+@resume_router.get("/me")
+async def get_my_resume(current_user: User = Depends(get_current_user)):
+    """Retrieve current authenticated user's active resume and metadata."""
+    from app.models.resume_version_model import ResumeVersion
+    resume = (
+        await ResumeVersion.find(ResumeVersion.user_id == str(current_user.id))
+        .sort(-ResumeVersion.created_at)
+        .first_or_none()
+    )
+    if not resume:
+        return {"status": "empty", "message": "No resumes created yet", "data": None}
+    return resume.to_api_dict()
+
+
+@resume_router.get("/download/{object_key:path}")
+async def get_resume_download_url(
+    object_key: str,
+    current_user: User = Depends(get_current_user),
+):
+    """Generate a presigned MinIO URL to download a stored resume."""
+    from app.services.storage_service import get_presigned_download_url
+    url = get_presigned_download_url(object_key)
+    return {"download_url": url, "object_key": object_key}
+

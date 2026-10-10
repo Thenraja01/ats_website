@@ -23,6 +23,7 @@ from app.api.intelligence_router import intelligence_router
 from app.api.rag_router import rag_router
 from app.api.public_router import public_router
 from app.api.ws_router import ws_router
+from app.api.template_catalog_router import template_catalog_router
 from app.schemas.response_schema import HealthResponse
 
 
@@ -109,6 +110,7 @@ app.include_router(notifications_router, prefix=settings.API_V1_STR)
 app.include_router(intelligence_router, prefix=settings.API_V1_STR)
 app.include_router(rag_router, prefix=settings.API_V1_STR)
 app.include_router(public_router, prefix=settings.API_V1_STR)
+app.include_router(template_catalog_router, prefix=settings.API_V1_STR)
 app.include_router(ws_router)
 
 

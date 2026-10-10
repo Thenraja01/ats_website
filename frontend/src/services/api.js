@@ -24,6 +24,9 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('hiremind:unauthorized'));
+      }
     }
     return Promise.reject(error);
   }
@@ -41,26 +44,33 @@ export const dashboardAPI = {
 };
 
 export const resumeAPI = {
-  upload: (formData) => api.post('/resume/upload', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }),
-  parseStructured: (formData) => api.post('/resume/parse-structured', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }),
+  upload: (data) => {
+    let formData = data;
+    if (typeof window !== 'undefined' && (data instanceof File || data instanceof Blob)) {
+      formData = new FormData();
+      formData.append('file', data);
+    }
+    return api.post('/resume/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
+  parseStructured: (data) => {
+    let formData = data;
+    if (typeof window !== 'undefined' && (data instanceof File || data instanceof Blob)) {
+      formData = new FormData();
+      formData.append('file', data);
+    }
+    return api.post('/resume/parse-structured', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
   analyze: (data) => api.post('/resume/analyze', data),
   getFonts: (params) => api.get('/resume/fonts', { params }),
   exportDocx: (data) => api.post('/resume/export-docx', data, { responseType: 'blob' }),
   getResult: (id) => api.get(`/resume/result/${id}`),
   getHistory: (skip = 0, limit = 20) => api.get(`/resume/history?skip=${skip}&limit=${limit}`),
   getHistoryStats: () => api.get('/resume/history/stats'),
-};
-
-export const applicationsAPI = {
-  list: (params) => api.get('/applications', { params }),
-  get: (id) => api.get(`/applications/${id}`),
-  create: (data) => api.post('/applications', data),
-  update: (id, data) => api.put(`/applications/${id}`, data),
-  delete: (id) => api.delete(`/applications/${id}`),
+  getMyResume: () => api.get('/resume/me'),
 };
 
 export const jdAPI = {
@@ -79,13 +89,15 @@ export const careerAPI = {
 export const studioAPI = {
   templates: () => api.get('/studio/templates'),
   listResumes: (skip = 0, limit = 50) => api.get(`/studio/resumes?skip=${skip}&limit=${limit}`),
+  getMyLatestResume: () => api.get('/studio/resumes/me'),
   getResume: (id) => api.get(`/studio/resumes/${id}`),
   createResume: (data) => api.post('/studio/resumes', data),
   updateResume: (id, data) => api.put(`/studio/resumes/${id}`, data),
   deleteResume: (id) => api.delete(`/studio/resumes/${id}`),
   duplicateResume: (id) => api.post(`/studio/resumes/${id}/duplicate`),
-  runAts: (id) => api.post(`/studio/resumes/${id}/ats`),
+  runAts: (id, payload = {}) => api.post(`/studio/resumes/${id}/ats`, payload),
   analyzeJd: ({ jdText }) => api.post('/studio/analyze-jd', { jd_text: jdText }),
+
   match: ({ resumeId, jdText, resumeText }) =>
     api.post('/studio/match', {
       resume_id: resumeId,
@@ -128,6 +140,9 @@ export const interviewAPI = {
   getSession: (id) => api.get(`/interview/sessions/${id}`),
   answer: (id, data) => api.post(`/interview/sessions/${id}/answer`, data),
   complete: (id) => api.post(`/interview/sessions/${id}/complete`),
+  generateDeepPrep: (data) => api.post('/interview/generate-deep-prep', data),
+  getTaskStatus: (taskId) => api.get(`/interview/task-status/${taskId}`),
+  discoverQuestions: (data) => api.post('/interview/questions/discover', data),
 };
 
 export const documentsAPI = {
@@ -148,6 +163,14 @@ export const notificationsAPI = {
 export const intelligenceAPI = {
   overview: () => api.get('/intelligence/overview'),
   activity: () => api.get('/intelligence/activity'),
+};
+
+export const templatesAPI = {
+  list: (params = {}) => api.get('/templates', { params }),
+  get: (slug) => api.get(`/templates/${slug}`),
+  publish: (payload) => api.post('/templates/publish', payload),
+  delete: (slug) => api.delete(`/templates/${slug}`),
+  seed: (force = false) => api.post(`/templates/seed?force=${force}`),
 };
 
 // Aliases for compatibility with any legacy helper components

@@ -72,7 +72,7 @@ export default function Login() {
   }, []);
 
   const handleRedirect = () => {
-    navigate('/resume-studio');
+    navigate('/onboarding');
   };
 
   const handleGoogleResponse = async (response) => {

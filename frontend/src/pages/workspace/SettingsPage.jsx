@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'sonner';
-import { CloudUpload, Download, Loader2, LogOut, Moon, Monitor, Palette, Sun, User } from 'lucide-react';
+import { CloudUpload, Download, Loader2, LogOut, Moon, Monitor, Palette, Sun, User, Lock, Globe, ShieldCheck, FileText, CheckCircle2 } from 'lucide-react';
 import PageHeader from '../../components/workspace/PageHeader';
 import { logout } from '../../store/slices/authSlice';
 import { useTheme } from '../../hooks/useTheme';
@@ -24,6 +24,21 @@ export default function SettingsPage() {
   const { user } = useSelector((s) => s.auth);
   const { theme, setTheme } = useTheme();
   const [syncing, setSyncing] = useState('');
+
+  // Template privacy preference state: 'private' vs 'public'
+  const [templatePrivacy, setTemplatePrivacy] = useState(() => {
+    return localStorage.getItem('hiremind_template_privacy') || 'private';
+  });
+
+  const handlePrivacyChange = (mode) => {
+    setTemplatePrivacy(mode);
+    localStorage.setItem('hiremind_template_privacy', mode);
+    if (mode === 'private') {
+      toast.success('Private Template Mode activated: Your templates and styles are strictly private to you.');
+    } else {
+      toast.info('Public Mode activated: Custom templates can be shared in the community catalog.');
+    }
+  };
 
   const syncVault = async (direction) => {
     setSyncing(direction);
@@ -49,7 +64,7 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Settings" description="Personalize your workspace and manage your account." icon={Palette} />
+      <PageHeader title="Settings" description="Personalize your workspace, privacy preferences, and account." icon={Palette} />
 
       <Card>
         <CardHeader>
@@ -64,7 +79,7 @@ export default function SettingsPage() {
                 onClick={() => setTheme(t.value)}
                 className={cn(
                   'flex items-center gap-3 rounded-xl border p-4 text-left transition-all',
-                  theme === t.value ? 'border-primary/60 bg-primary/8' : 'border-border hover:border-primary/40'
+                  theme === t.value ? 'border-primary/60 bg-primary/8 shadow-sm' : 'border-border hover:border-primary/40'
                 )}
               >
                 <t.icon className="size-4 text-primary" />
@@ -76,6 +91,97 @@ export default function SettingsPage() {
                 </span>
               </button>
             ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Resume Template Privacy & Workspace Mode */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileText className="size-4 text-primary" />
+                Resume & Template Privacy
+              </CardTitle>
+              <CardDescription>
+                Control how you work with resume templates. Choose whether your custom layouts, styles, and edits remain strictly private to you.
+              </CardDescription>
+            </div>
+            <span className={cn(
+              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold",
+              templatePrivacy === 'private'
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20"
+            )}>
+              {templatePrivacy === 'private' ? <Lock className="size-3" /> : <Globe className="size-3" />}
+              {templatePrivacy === 'private' ? 'Private Mode Active' : 'Public Catalog Mode'}
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => handlePrivacyChange('private')}
+              className={cn(
+                'relative flex flex-col justify-between p-4 rounded-xl border text-left transition-all',
+                templatePrivacy === 'private'
+                  ? 'border-emerald-500 bg-emerald-500/5 ring-1 ring-emerald-500/30'
+                  : 'border-border hover:border-muted-foreground/30'
+              )}
+            >
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-semibold text-sm">
+                    <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                      <Lock className="size-4" />
+                    </div>
+                    Work Privately (Only Me)
+                  </div>
+                  {templatePrivacy === 'private' && (
+                    <CheckCircle2 className="size-4 text-emerald-500" />
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Every template you design, clone, or customize is stored in your private vault. Only you can view, edit, or use it. Zero public exposure.
+                </p>
+              </div>
+              <div className="mt-3 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                <ShieldCheck className="size-3.5" /> Recommended for confidential job hunts
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handlePrivacyChange('public')}
+              className={cn(
+                'relative flex flex-col justify-between p-4 rounded-xl border text-left transition-all',
+                templatePrivacy === 'public'
+                  ? 'border-blue-500 bg-blue-500/5 ring-1 ring-blue-500/30'
+                  : 'border-border hover:border-muted-foreground/30'
+              )}
+            >
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-semibold text-sm">
+                    <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                      <Globe className="size-4" />
+                    </div>
+                    Public / Community Mode
+                  </div>
+                  {templatePrivacy === 'public' && (
+                    <CheckCircle2 className="size-4 text-blue-500" />
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Templates you publish or export can be contributed to the shared template marketplace for other applicants to browse and use.
+                </p>
+              </div>
+              <div className="mt-3 text-[11px] font-medium text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                <Globe className="size-3.5" /> Accessible to global users
+              </div>
+            </button>
           </div>
         </CardContent>
       </Card>

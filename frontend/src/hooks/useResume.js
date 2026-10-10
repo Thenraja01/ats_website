@@ -3,12 +3,18 @@ import { resumeAPI } from '../services/api';
 
 export const useUploadResume = () => {
   return useMutation({
-    mutationFn: (file) => resumeAPI.upload(file),
+    mutationFn: async (file) => {
+      const res = await resumeAPI.upload(file);
+      return res.data;
+    },
   });
 };
 
 export const useAnalyzeResume = () => {
   return useMutation({
-    mutationFn: ({ resumeText, jdText }) => resumeAPI.analyze({ resume_text: resumeText, jd_text: jdText }),
+    mutationFn: async ({ resumeText, jdText }) => {
+      const res = await resumeAPI.analyze({ resume_text: resumeText, jd_text: jdText });
+      return res.data;
+    },
   });
-};
+};

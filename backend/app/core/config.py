@@ -8,9 +8,22 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
 
-    # Database
+    # Database & Cache
     MONGODB_URL: str = "mongodb://localhost:27017"
     DATABASE_NAME: str = "hiremind_ai"
+    REDIS_URL: str = "redis://127.0.0.1:6379/0"
+
+    # Ollama Local AI
+    OLLAMA_URL: str = "http://127.0.0.1:11434"
+    OLLAMA_CHAT_MODEL: str = "llama3.2"
+    OLLAMA_EMBED_MODEL: str = "nomic-embed-text"
+
+    # MinIO S3 Storage
+    MINIO_ENDPOINT: str = "127.0.0.1:9000"
+    MINIO_BUCKET: str = "hiremind-documents"
+    MINIO_ACCESS_KEY: str = "minioadmin"
+    MINIO_SECRET_KEY: str = "minioadmin"
+    MINIO_SECURE: bool = False
 
     # AI Keys
     GROQ_API_KEY: str = ""
@@ -18,9 +31,9 @@ class Settings(BaseSettings):
     CHROMA_PERSIST_DIRECTORY: str = "./chroma_db"
 
     # Security
-    SECRET_KEY: str = secrets.token_urlsafe(32)
+    SECRET_KEY: str = "hiremind-ai-secret-development-key-2026-auth"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days (10080 minutes)
     MAX_UPLOAD_SIZE: int = 5 * 1024 * 1024  # 5MB
 
     # SMTP / Email

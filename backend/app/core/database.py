@@ -14,6 +14,7 @@ from app.models.resume_version_model import ResumeVersion
 from app.models.interview_model import InterviewQuestion, InterviewSession, SavedQuestion
 from app.models.document_model import DocumentRecord
 from app.models.notification_model import Notification
+from app.models.template_model import ResumeTemplate
 from app.core.config import settings
 
 
@@ -43,5 +44,6 @@ async def init_db():
             SavedQuestion,
             DocumentRecord,
             Notification,
+            ResumeTemplate,
         ],
     )

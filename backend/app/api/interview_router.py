@@ -22,30 +22,39 @@ from app.models.interview_model import (
 from app.services.interview_service import (
     CATEGORIES,
     DIFFICULTIES,
-    QUESTION_BANK,
     build_session_from_bank,
-    compute_answer_feedback,
+    discover_questions_via_web_search,
+    evaluate_answer_ai,
     generate_project_questions,
 )
+
 
 interview_router = APIRouter(prefix="/interview", tags=["Interview"])
 
 
 async def ensure_seeded():
-    """Insert the curated bank into Mongo once so questions can be saved/customized."""
+    """Ensure baseline questions exist; if empty, dynamically research and seed via AI Agent."""
     if await InterviewQuestion.find_one({"user_id": None}):
         return
+    starter_questions = await discover_questions_via_web_search(
+        role="Full Stack Software Engineer",
+        company="",
+        skills=["React", "Python", "Docker", "PostgreSQL"],
+        count=6,
+    )
     docs = [
         InterviewQuestion(
             user_id=None,
-            category=q["category"],
-            difficulty=q["difficulty"],
-            question=q["question"],
-            ideal_answer=q["ideal_answer"],
-            keywords=q["keywords"],
-            tags=[],
+            category=q.get("category", "Technical"),
+            difficulty=q.get("difficulty", "Intermediate"),
+            question=q.get("question", ""),
+            ideal_answer=q.get("ideal_answer", ""),
+            keywords=q.get("keywords", []),
+            tags=["AI-Discovered", "FullStack"],
+            is_custom=False,
+            saved=False,
         )
-        for q in QUESTION_BANK
+        for q in starter_questions
     ]
     if docs:
         await InterviewQuestion.insert_many(docs)
@@ -122,6 +131,53 @@ async def create_question(
     )
     await doc.insert()
     return doc.to_api_dict()
+
+
+@interview_router.post("/questions/discover")
+async def discover_questions_endpoint(
+    payload: dict,
+    user: User = Depends(get_current_user),
+):
+    """Dynamically search online interview patterns and synthesize new questions into the user's question bank."""
+    role = payload.get("role", "Software Engineer").strip()
+    company = payload.get("company", "").strip()
+    skills = payload.get("skills", [])
+    category = payload.get("category", "All")
+    difficulty = payload.get("difficulty", "All")
+    count = min(int(payload.get("count", 6)), 12)
+
+    generated = await discover_questions_via_web_search(
+        role=role,
+        company=company,
+        skills=skills,
+        category=category,
+        difficulty=difficulty,
+        count=count,
+    )
+
+    docs = [
+        InterviewQuestion(
+            user_id=str(user.id),
+            category=q.get("category", "Technical"),
+            difficulty=q.get("difficulty", "Intermediate"),
+            question=q.get("question", ""),
+            ideal_answer=q.get("ideal_answer", ""),
+            keywords=q.get("keywords", []),
+            tags=[company, role] if company else [role],
+            is_custom=True,
+            saved=True,
+        )
+        for q in generated
+    ]
+
+    if docs:
+        await InterviewQuestion.insert_many(docs)
+
+    return {
+        "status": "success",
+        "discovered_count": len(docs),
+        "questions": [d.to_api_dict() for d in docs],
+    }
 
 
 @interview_router.put("/questions/{question_id}/save")
@@ -262,13 +318,18 @@ async def answer_question(
 
     qref = session.questions[payload.index]
     qref.user_answer = payload.answer
-    feedback = compute_answer_feedback(qref.model_dump(by_alias=True), payload.answer)
+    feedback = await evaluate_answer_ai(
+        qref.model_dump(by_alias=True),
+        payload.answer,
+        role=session.job_title or session.title,
+    )
     qref.feedback = feedback
     session.questions[payload.index] = qref
     session.current_index = min(payload.index + 1, len(session.questions) - 1)
     session.updated_at = datetime.now(timezone.utc)
     await session.save()
     return {"feedback": feedback, "nextIndex": session.current_index}
+
 
 
 @interview_router.post("/sessions/{session_id}/complete")
@@ -326,3 +387,54 @@ async def complete_session(session_id: str, user: User = Depends(get_current_use
     ).insert()
 
     return session.to_api_dict()
+
+
+class DeepPrepRequest(BaseModel):
+    role: str
+    company: Optional[str] = ""
+    resume_text: Optional[str] = ""
+    skills: Optional[List[str]] = []
+
+
+@interview_router.post("/generate-deep-prep")
+async def trigger_deep_interview_prep(
+    payload: DeepPrepRequest,
+    user: User = Depends(get_current_user),
+):
+    """Enqueue a background Celery task to search the web and generate custom interview rounds."""
+    task_payload = {
+        "user_id": str(user.id),
+        "role": payload.role,
+        "company": payload.company,
+        "resume_text": payload.resume_text,
+        "skills": payload.skills,
+    }
+    from app.tasks.interview_tasks import generate_deep_interview_pack_task
+    task = generate_deep_interview_pack_task.delay(task_payload)
+    return {
+        "task_id": task.id,
+        "status": "QUEUED",
+        "message": f"Deep research agent started for {payload.role}. Tracking in background.",
+    }
+
+
+@interview_router.get("/task-status/{task_id}")
+async def get_task_status(task_id: str, user: User = Depends(get_current_user)):
+    """Check the real-time progress of a Celery background generation task."""
+    from celery.result import AsyncResult
+    from app.core.celery_app import celery_app
+
+    result = AsyncResult(task_id, app=celery_app)
+    response = {
+        "task_id": task_id,
+        "status": result.status,
+    }
+
+    if result.status == "PROGRESS":
+        response["progress"] = result.info
+    elif result.status == "SUCCESS":
+        response["result"] = result.result
+    elif result.status == "FAILURE":
+        response["error"] = str(result.info)
+
+    return response

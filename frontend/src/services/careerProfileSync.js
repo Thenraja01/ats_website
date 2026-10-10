@@ -309,13 +309,66 @@ export function saveMasterCareerProfile(profile) {
  * Get Resume Builder data
  */
 export function getResumeData() {
+  const emptyFallback = {
+    personalInfo: {
+      fullName: '',
+      title: '',
+      email: '',
+      phone: '',
+      location: '',
+      website: '',
+      linkedin: '',
+      github: '',
+      avatar: '',
+      customFields: [],
+    },
+    summary: '',
+    experience: [],
+    education: [],
+    projects: [],
+    skills: [],
+    certifications: [],
+    achievements: [],
+    languages: [],
+    publications: [],
+    openSource: [],
+    customSections: [],
+  };
+
   try {
     const saved = localStorage.getItem(RESUME_DATA_KEY);
-    if (saved) return JSON.parse(saved);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && typeof parsed === 'object') {
+        return {
+          ...emptyFallback,
+          ...parsed,
+          personalInfo: { ...emptyFallback.personalInfo, ...(parsed.personalInfo || {}) },
+          experience: Array.isArray(parsed.experience) ? parsed.experience : [],
+          education: Array.isArray(parsed.education) ? parsed.education : [],
+          projects: Array.isArray(parsed.projects) ? parsed.projects : [],
+          skills: Array.isArray(parsed.skills) ? parsed.skills : [],
+          certifications: Array.isArray(parsed.certifications) ? parsed.certifications : [],
+          achievements: Array.isArray(parsed.achievements) ? parsed.achievements : [],
+          languages: Array.isArray(parsed.languages) ? parsed.languages : [],
+          customSections: Array.isArray(parsed.customSections) ? parsed.customSections : [],
+        };
+      }
+    }
   } catch (e) {
     console.error('Error reading resume data', e);
   }
-  return convertMasterToResume(getMasterCareerProfile());
+
+  const converted = convertMasterToResume(getMasterCareerProfile());
+  if (converted && typeof converted === 'object') {
+    return {
+      ...emptyFallback,
+      ...converted,
+      personalInfo: { ...emptyFallback.personalInfo, ...(converted.personalInfo || {}) },
+    };
+  }
+
+  return emptyFallback;
 }
 
 /**

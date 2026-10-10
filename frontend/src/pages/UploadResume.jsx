@@ -23,13 +23,18 @@ export default function UploadResume() {
     setError(null);
     try {
       const uploadRes = await uploadResume(file);
-      const resumeText = uploadRes.extracted_text;
+      const resumeText = uploadRes?.extracted_text || uploadRes?.data?.extracted_text;
+      if (!resumeText) {
+        throw new Error('Could not extract text from the uploaded document. Please ensure it contains readable text.');
+      }
       const analysisResult = await analyzeResume({ resumeText, jdText: jd });
-      navigate(`/result/${analysisResult.id}`, {
-        state: { result: analysisResult },
+      const resData = analysisResult?.data || analysisResult;
+      const targetId = resData?.id || 'latest';
+      navigate(`/result/${targetId}`, {
+        state: { result: resData },
       });
     } catch (err) {
-      setError(getApiErrorMessage(err, 'An error occurred.'));
+      setError(getApiErrorMessage(err, 'An error occurred during resume analysis.'));
     }
   };
 

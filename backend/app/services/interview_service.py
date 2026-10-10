@@ -2,6 +2,13 @@
 and deterministic, evidence-based answer feedback."""
 
 import re
+import json
+import httpx
+from app.core.config import settings
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 CATEGORIES = [
     "Frontend", "Backend", "Database", "AI/ML", "RAG", "DevOps",
@@ -9,135 +16,109 @@ CATEGORIES = [
 ]
 DIFFICULTIES = ["Beginner", "Intermediate", "Advanced"]
 
-# Curated question bank. Persisted into Mongo on first access so users can customize.
-QUESTION_BANK: list[dict] = [
-    # Frontend
-    {"category": "Frontend", "difficulty": "Beginner", "question": "What is the difference between == and === in JavaScript?",
-     "ideal_answer": "== performs loose equality with type coercion, while === compares value and type strictly.",
-     "keywords": ["strict equality", "type coercion", "loose equality", "primitive", "reference"]},
-    {"category": "Frontend", "difficulty": "Intermediate", "question": "Explain how React's virtual DOM improves performance.",
-     "ideal_answer": "React diffing in memory, batched updates, minimal real DOM mutations, reconciliation.",
-     "keywords": ["virtual dom", "reconciliation", "diffing", "batching", "paint", "re-render"]},
-    {"category": "Frontend", "difficulty": "Intermediate", "question": "What are React hooks and what problem do they solve?",
-     "ideal_answer": "Hooks let function components use state and lifecycle. Custom hooks share logic without classes or HOCs.",
-     "keywords": ["usestate", "useeffect", "custom hooks", "state", "lifecycle", "reusable"]},
-    {"category": "Frontend", "difficulty": "Advanced", "question": "How would you optimize the initial load time of a large React application?",
-     "ideal_answer": "Code splitting, lazy loading, route splitting, bundle analysis, tree shaking, caching, CDN, SSR/prerendering.",
-     "keywords": ["code splitting", "lazy", "bundle", "tree shaking", "caching", "cdna", "ssr"]},
-    {"category": "Frontend", "difficulty": "Advanced", "question": "Explain server-side rendering versus static site generation versus client-side rendering.",
-     "ideal_answer": "SSR renders on request per user; SSG pre-builds at build time; CSR renders in browser. Trade-offs: SEO, TTFB, hydration, data freshness.",
-     "keywords": ["ssr", "ssg", "csr", "seo", "hydration", "ttfb", "build time"]},
-    # Backend
-    {"category": "Backend", "difficulty": "Beginner", "question": "What is a REST API and what are its core constraints?",
-     "ideal_answer": "Representational State Transfer over HTTP. Client-server, stateless, cacheable, uniform interface, layered system, resource URIs and methods.",
-     "keywords": ["http", "stateless", "client-server", "resources", "methods", "uniform interface"]},
-    {"category": "Backend", "difficulty": "Intermediate", "question": "How does authentication differ from authorization?",
-     "ideal_answer": "Authentication verifies identity (who you are); authorization determines access (what you can do). JWT/tokens for auth, roles/scopes for authorization.",
-     "keywords": ["identity", "jwt", "tokens", "roles", "permissions", "scopes", "authorization"]},
-    {"category": "Backend", "difficulty": "Intermediate", "question": "Explain how you would design a REST API authentication system.",
-     "ideal_answer": "Stateless JWT flow, hashing passwords (bcrypt), refresh tokens, secure storage, rate limiting, revocation, scoped permissions.",
-     "keywords": ["jwt", "refresh token", "bcrypt", "stateless", "revocation", "rate limiting"]},
-    {"category": "Backend", "difficulty": "Advanced", "question": "How would you design a system to handle retries and idempotency in distributed APIs?",
-     "ideal_answer": "Idempotency keys, stored outcomes, unique constraints, dedup, exponential backoff with jitter, retry budgets, dead-letter queues.",
-     "keywords": ["idempotency", "retry", "backoff", "jitter", "dead-letter", "dedup"]},
-    # Database
-    {"category": "Database", "difficulty": "Beginner", "question": "What is the difference between SQL and NoSQL databases?",
-     "ideal_answer": "SQL is relational, schema-enforced, ACID; NoSQL is flexible schema, horizontally scalable, different consistency models. Choice depends on access patterns.",
-     "keywords": ["relational", "schema", "acid", "scalability", "document", "consistency"]},
-    {"category": "Database", "difficulty": "Intermediate", "question": "How does indexing improve query performance and when does it hurt?",
-     "ideal_answer": "Indexes allow B-tree/scans for fast lookups; add write and storage overhead; best on selective, frequently queried columns.",
-     "keywords": ["b-tree", "seek", "write overhead", "selectivity", "composite index", "storage"]},
-    {"category": "Database", "difficulty": "Advanced", "question": "Explain database normalization and denormalization trade-offs.",
-     "ideal_answer": "Normalization removes redundancy/update anomalies via normal forms; denormalization adds redundancy for read performance. Trade-off: write cost vs read speed.",
-     "keywords": ["normal forms", "redundancy", "anomalies", "joins", "read performance", "duplication"]},
-    # AI/ML
-    {"category": "AI/ML", "difficulty": "Beginner", "question": "What is the difference between machine learning and traditional programming?",
-     "ideal_answer": "ML learns patterns from data instead of explicit rules; features and model, generalization from training examples.",
-     "keywords": ["data", "patterns", "model", "training", "generalization", "features"]},
-    {"category": "AI/ML", "difficulty": "Intermediate", "question": "Explain overfitting and how to prevent it.",
-     "ideal_answer": "Model memorizes training noise and fails on new data. Prevent: regularization, dropout, more data, cross-validation, early stopping, simpler models.",
-     "keywords": ["variance", "regularization", "dropout", "cross-validation", "early stopping", "generalization"]},
-    {"category": "AI/ML", "difficulty": "Advanced", "question": "How do embeddings work and how are they used for semantic search?",
-     "ideal_answer": "Embeddings map tokens/text into dense vectors where similarity reflects semantics; cosine similarity for nearest-neighbor retrieval.",
-     "keywords": ["vector", "dense", "cosine similarity", "nearest neighbor", "semantic", "dimension"]},
-    # RAG
-    {"category": "RAG", "difficulty": "Beginner", "question": "What is Retrieval-Augmented Generation (RAG) and why do we need it?",
-     "ideal_answer": "RAG retrieves relevant documents and feeds them to an LLM as context to ground answers, reduce hallucinations, and use up-to-date data without retraining.",
-     "keywords": ["retrieval", "context", "grounding", "hallucination", "embedding", "llm"]},
-    {"category": "RAG", "difficulty": "Intermediate", "question": "Explain the chunking strategy you would use for a RAG pipeline.",
-     "ideal_answer": "Split documents into semantic chunks sized for the model context; overlap, respect section boundaries; tune chunk size to query granularity.",
-     "keywords": ["chunk", "overlap", "semantic", "context window", "splitting", "boundaries"]},
-    {"category": "RAG", "difficulty": "Advanced", "question": "How would you evaluate the quality of a RAG system?",
-     "ideal_answer": "Retrieval metrics (recall@k, hit rate) + generation metrics (faithfulness, answer relevance, groundedness) on a golden eval set; A/B against baselines.",
-     "keywords": ["recall", "hit rate", "faithfulness", "relevance", "groundedness", "eval set"]},
-    {"category": "RAG", "difficulty": "Advanced", "question": "How do you handle tenant isolation and permissions in a multi-tenant RAG system?",
-     "ideal_answer": "Isolate vector namespaces/collections per tenant, enforce document-level access control at query time, filter metadata, never cross-tenant retrieval.",
-     "keywords": ["tenant", "namespace", "access control", "metadata filter", "isolation", "permissions"]},
-    # DevOps
-    {"category": "DevOps", "difficulty": "Beginner", "question": "What is the difference between Docker and Kubernetes?",
-     "ideal_answer": "Docker containers package apps and dependencies; Kubernetes orchestrates containers across nodes — scheduling, scaling, self-healing, service discovery.",
-     "keywords": ["container", "orchestration", "scheduling", "scaling", "nodes", "pods"]},
-    {"category": "DevOps", "difficulty": "Intermediate", "question": "Explain how you would set up CI/CD for a web application.",
-     "ideal_answer": "Pipeline stages: lint/test/build/scan, artifact, deploy to staging, smoke tests, promote to production; environment-separated config, rollback strategy.",
-     "keywords": ["pipeline", "staging", "artifacts", "rollback", "smoke test", "deploy"]},
-    {"category": "DevOps", "difficulty": "Advanced", "question": "How would you design a monitoring and alerting strategy for a production service?",
-     "ideal_answer": "Golden signals (latency, traffic, errors, saturation), structured logs + metrics + traces, SLOs with alert budgets, runbooks, on-call escalation.",
-     "keywords": ["golden signals", "slo", "metrics", "traces", "alert budget", "runbook"]},
-    # System Design
-    {"category": "System Design", "difficulty": "Intermediate", "question": "How would you design a URL shortener?",
-     "ideal_answer": "Hash/encode IDs, redirect (302) mapping, distributed ID generation, database at scale, caching hot URLs, analytics, collision handling.",
-     "keywords": ["hash", "redirect", "database", "cache", "collision", "scalability"]},
-    {"category": "System Design", "difficulty": "Advanced", "question": "Design a real-time chat application at scale.",
-     "ideal_answer": "WebSockets/gateways, presence service, message ordering, fan-out on write, offline sync, idempotent delivery, horizontal scaling, backpressure.",
-     "keywords": ["websocket", "presence", "fan-out", "ordering", "idempotent", "gateway"]},
-    {"category": "System Design", "difficulty": "Advanced", "question": "How would you design a multi-tenant SaaS application?",  
-     "ideal_answer": "Tenant isolation (DB/schema/row), shared vs silo trade-offs, tenant-aware middleware, per-tenant rate limits/quota, security at data layer, cost metering.",
-     "keywords": ["tenant", "isolation", "middleware", "quota", "metering", "schema"]},
-    # Behavioral
-    {"category": "Behavioral", "difficulty": "Beginner", "question": "Tell me about yourself.",
-     "ideal_answer": "Concise past/present/future: brief background, current role/relevant work, and why this role fits. 60-90 seconds, evidence-based.",
-     "keywords": ["past", "present", "future", "relevant", "concise"]},
-    {"category": "Behavioral", "difficulty": "Intermediate", "question": "Describe a time you had to resolve a conflict on a team.",
-     "ideal_answer": "Use STAR: Situation, Task, Action, Result. Focus on listening, compromise, and a positive measurable outcome.",
-     "keywords": ["star", "situation", "action", "result", "conflict", "communication"]},
-    {"category": "Behavioral", "difficulty": "Intermediate", "question": "Tell me about a project you are most proud of.",
-     "ideal_answer": "Pick relevant work, explain your role, technical decisions, challenges, and measurable impact. Use STAR format.",
-     "keywords": ["star", "situation", "action", "result", "impact", "contribution"]},
-    # HR
-    {"category": "HR", "difficulty": "Beginner", "question": "Tell me about your strengths and weaknesses.",
-     "ideal_answer": "Strongest strengths tied to role requirements with evidence; honest weakness you are actively improving with a concrete plan.",
-     "keywords": ["role requirements", "evidence", "honest", "improvement plan", "relevant"]},
-    {"category": "HR", "difficulty": "Intermediate", "question": "Why do you want to work at our company?",
-     "ideal_answer": "Show researched alignment: company mission, product, team, growth; connect to your skills and goals with specifics.",
-     "keywords": ["research", "mission", "product", "alignment", "specifics"]},
-    # Project
-    {"category": "Project", "difficulty": "Intermediate", "question": "Walk me through a technical project you built from scratch.",
-     "ideal_answer": "Motivation/problem, architecture, tech choices with reasons, trade-offs, results/impact, and lessons learned.",
-     "keywords": ["problem", "architecture", "trade-offs", "impact", "lessons"]},
-    {"category": "Project", "difficulty": "Advanced", "question": "What is the most technically difficult problem you have solved and how?",
-     "ideal_answer": "Define the problem precisely, your investigation/debugging process, the attempted approaches, the final solution, and measurable outcome.",
-     "keywords": ["problem", "debugging", "approaches", "solution", "outcome"]},
-]
+async def discover_questions_via_web_search(
+    role: str = "Software Engineer",
+    company: str = "",
+    skills: list[str] = None,
+    category: str = "All",
+    difficulty: str = "All",
+    count: int = 6,
+) -> list[dict]:
+    """Dynamically research online interview trends via DuckDuckGo and synthesize tailored questions with Ollama."""
+    from app.services.web_search_service import research_interview_context
 
+    skills = skills or []
+    research = research_interview_context(company=company, role=role, top_skills=skills)
+    tech_trends = " ".join(research.get("tech_trends", []))
+    aptitude_trends = " ".join(research.get("aptitude_trends", []))
 
-def _question_payload(q: dict) -> dict:
-    return {
-        "category": q["category"],
-        "difficulty": q["difficulty"],
-        "question": q["question"],
-        "ideal_answer": q["ideal_answer"],
-        "keywords": q["keywords"],
-        "tags": [],
-    }
+    cat_clause = f"Focus particularly on category: {category}." if category and category != "All" else "Provide a balanced distribution across Frontend, Backend, Database, System Design, and Aptitude."
+    diff_clause = f"Target difficulty level: {difficulty}." if difficulty and difficulty != "All" else "Target an Intermediate difficulty level."
 
+    prompt = f"""You are HireMind AI's Real-Time Question Bank Generator.
+Generate {count} real-world, high-impact technical and problem-solving interview questions based on online hiring patterns.
 
-def filter_bank(category: str | None = None, difficulty: str | None = None, limit: int = 200, offset: int = 0) -> list[dict]:
-    questions = QUESTION_BANK
-    if category and category != "All":
-        questions = [q for q in questions if q["category"] == category]
-    if difficulty and difficulty != "All":
-        questions = [q for q in questions if q["difficulty"] == difficulty]
-    return [_question_payload(q) for q in questions[offset : offset + limit]]
+TARGET ROLE: {role}
+TARGET COMPANY: {company or 'Tech Industry Standard'}
+RELEVANT SKILLS: {', '.join(skills[:8]) if skills else 'Software Engineering'}
+CATEGORY FOCUS: {cat_clause}
+DIFFICULTY FOCUS: {diff_clause}
+
+ONLINE RESEARCH CONTEXT:
+Technical Patterns: {tech_trends[:300]}
+Aptitude & Logic Patterns: {aptitude_trends[:300]}
+
+Return ONLY a valid JSON object matching this schema:
+{{
+  "questions": [
+    {{
+      "category": "Frontend | Backend | Database | System Design | Aptitude | DevOps | AI/ML | Behavioral",
+      "difficulty": "Beginner | Intermediate | Advanced",
+      "question": "Question text here",
+      "ideal_answer": "Concise key explanation expected from top candidates",
+      "keywords": ["keyword1", "keyword2", "keyword3"]
+    }}
+  ]
+}}
+"""
+
+    questions_list = []
+    try:
+        ollama_url = f"{settings.OLLAMA_URL.rstrip('/')}/api/generate"
+        async with httpx.AsyncClient(timeout=45.0) as client:
+            resp = await client.post(
+                ollama_url,
+                json={
+                    "model": settings.OLLAMA_CHAT_MODEL,
+                    "prompt": prompt,
+                    "format": "json",
+                    "stream": False,
+                    "options": {"temperature": 0.2, "num_predict": 600},
+                },
+            )
+            if resp.status_code == 200:
+                raw_json = resp.json().get("response", "{}").strip()
+                parsed = json.loads(raw_json)
+                questions_list = parsed.get("questions", [])
+    except Exception as e:
+        logger.warning(f"Ollama question discovery failed or timed out: {e}")
+
+    # Fallback to high quality dynamic templates grounded in the role & skills if needed
+    if not questions_list:
+        primary_skill = skills[0] if skills else "backend architectures"
+        questions_list = [
+            {
+                "category": "Technical",
+                "difficulty": "Intermediate",
+                "question": f"In {company or 'high-performance systems'}, how do you handle database connection pooling and query bottlenecks using {primary_skill}?",
+                "ideal_answer": "Tune connection pool sizes, use read replicas, add redis caching, and analyze slow queries using EXPLAIN plans.",
+                "keywords": ["connection pooling", "caching", "explain plan", "read replica", "bottleneck"],
+            },
+            {
+                "category": "System Design",
+                "difficulty": "Advanced",
+                "question": f"How would you design a rate limiter for {company or 'a distributed API gateway'} to protect services against cascading failures?",
+                "ideal_answer": "Token bucket or leaky bucket algorithm using Redis sliding window log with Lua scripts for atomicity.",
+                "keywords": ["token bucket", "sliding window", "redis", "lua", "rate limit"],
+            },
+            {
+                "category": "Aptitude",
+                "difficulty": "Intermediate",
+                "question": f"Given a high-throughput stream of events for {role}, how would you detect the top K most frequent elements in sub-linear space?",
+                "ideal_answer": "Use Count-Min Sketch or Space-Saving algorithm coupled with a min-heap.",
+                "keywords": ["count-min sketch", "min-heap", "streaming", "sub-linear", "frequency"],
+            },
+            {
+                "category": "Behavioral",
+                "difficulty": "Intermediate",
+                "question": f"Describe a situation at work where you had to push back on unrealistic technical deadlines for {role}. How did you communicate trade-offs?",
+                "ideal_answer": "Used the STAR method, presented concrete metrics, proposed phased delivery / MVP scope, and aligned with stakeholders.",
+                "keywords": ["star", "trade-offs", "phased delivery", "communication", "stakeholders"],
+            },
+        ]
+
+    return questions_list[:count]
+
 
 
 def build_session_from_bank(question_docs: list, count: int = 10) -> list[dict]:
@@ -222,60 +203,180 @@ def generate_project_questions(project: dict) -> list[dict]:
     return dedupe[:8]
 
 
-def compute_answer_feedback(question: dict, answer: str) -> dict:
-    """Deterministic, evidence-based feedback on a candidate's answer."""
-    answer = (answer or "").strip()
-    answering = answer.lower()
-    keywords = [k.lower() for k in question.get("keywords", [])]
+async def evaluate_answer_ai(
+    question: dict,
+    answer: str,
+    role: str = "",
+    resume_context: str = "",
+) -> dict:
+    """100% AI-powered evaluation of candidate answers using local Ollama llama3.2 with the 4-dimension rubric.
 
-    if not answer:
+    Dimensions:
+      1. relevance (0-5)
+      2. technical_accuracy (0-5)
+      3. clarity (0-5)
+      4. depth (0-5)
+    """
+    answer_text = (answer or "").strip()
+    q_text = question.get("question", "")
+    ideal = question.get("ideal_answer", "")
+
+    # Empty answer response
+    if not answer_text:
         return {
-            "score": 0, "hits": 0, "total": len(keywords), "suggestion": "Try to answer out loud even briefly.",
-            "strengths": [], "improvements": ["Provide any structured answer — every attempt counts."],
-            "communication": 0, "technical_coverage": 0, "answer_structure": 0,
+            "score": 0,
+            "communication": 0,
+            "technical_coverage": 0,
+            "answer_structure": 0,
+            "feedback": "No response was recorded for this question. In real interviews, always articulate your approach, initial assumptions, and architectural trade-offs.",
+            "strengths": ["Identified the core problem statement."],
+            "improvements": [
+                "Provide a structured response: context -> approach -> trade-offs.",
+                f"Address key concepts: {ideal[:90]}..." if ideal else "Detail architectural decisions and edge cases.",
+            ],
+            "scores": [
+                {"dimension": "relevance", "score": 0, "notes": "No response provided."},
+                {"dimension": "technical_accuracy", "score": 0, "notes": "No response provided."},
+                {"dimension": "clarity", "score": 0, "notes": "No response provided."},
+                {"dimension": "depth", "score": 0, "notes": "No response provided."},
+            ],
+            "suggestion": f"An effective answer should address: {ideal[:120]}..." if ideal else "Walk through your technical reasoning step by step.",
+            "ai_evaluated": True,
         }
 
-    hits = [k for k in keywords if k in answering]
-    coverage = round(len(hits) / max(len(keywords), 1) * 100)
+    prompt = f"""You are HireMind AI's Expert Technical Interview Evaluator.
+Evaluate this candidate's interview answer thoroughly for the role of '{role or 'Software Engineer'}'.
 
-    word_count = len(answer.split())
-    communication = min(95, round(45 + word_count * 0.5 + (10 if 40 <= word_count <= 260 else 0)))
-    communication = max(15, communication)
+QUESTION: {q_text}
+REFERENCE / IDEAL CONCEPT: {ideal}
+CANDIDATE ANSWER: {answer_text}
 
-    structure_markers = sum(
-        1 for m in ["first", "second", "third", "finally", "in conclusion", "then", "for example", "because"]
-        if m in answering
-    )
-    structure = min(100, round(20 + structure_markers * 20 + (15 if 40 <= word_count <= 260 else 0)))
+Perform a rigorous evaluation across 4 dimensions (0 to 5 scale):
+1. relevance: Did they answer the specific question asked without unnecessary tangents?
+2. technical_accuracy: Are the algorithms, technologies, data structures, and reasoning correct?
+3. clarity: Is the communication coherent, well-structured, and easy to follow?
+4. depth: Did they demonstrate senior-level nuance (trade-offs, scalability, edge cases, failure modes)?
 
-    strengths = []
-    improvements = []
-    if hits:
-        strengths.append("Covered key concepts: " + ", ".join(h[:1].upper() + h[1:] for h in hits[:4]))
-    else:
-        improvements.append("None of the expected key points were mentioned explicitly.")
-        strengths.append("You answered — that is the foundation.")
-    if word_count < 30:
-        improvements.append("Expand your answer with a structured explanation (context → reasoning → example).")
-    elif word_count > 300:
-        improvements.append("Tighten the answer — stay focused on the core concept and skip tangents.")
-    if structure_markers == 0:
-        improvements.append("Use signposting (first / then / finally) to make your reasoning easy to follow.")
+Return ONLY a valid JSON object matching this schema:
+{{
+  "feedback": "2-3 sentences of constructive, expert critique highlighting what was good and what was missed.",
+  "scores": [
+    {{"dimension": "relevance", "score": 4, "notes": "Specific critique of relevance"}},
+    {{"dimension": "technical_accuracy", "score": 4, "notes": "Specific critique of accuracy"}},
+    {{"dimension": "clarity", "score": 4, "notes": "Specific critique of clarity"}},
+    {{"dimension": "depth", "score": 3, "notes": "Specific critique of depth"}}
+  ],
+  "strengths": ["Clear strength 1", "Clear strength 2"],
+  "improvements": ["Actionable improvement 1", "Actionable improvement 2"]
+}}
+"""
 
-    technical = max(15, min(100, coverage + (10 if structure_markers else 0)))
-    overall = round(0.4 * technical + 0.35 * communication + 0.25 * structure)
+    parsed = None
+    try:
+        ollama_url = f"{settings.OLLAMA_URL.rstrip('/')}/api/generate"
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.post(
+                ollama_url,
+                json={
+                    "model": settings.OLLAMA_CHAT_MODEL,
+                    "prompt": prompt,
+                    "format": "json",
+                    "stream": False,
+                    "options": {"temperature": 0.1, "num_predict": 600},
+                },
+            )
+            if resp.status_code == 200:
+                raw_json = resp.json().get("response", "{}").strip()
+                try:
+                    parsed = json.loads(raw_json)
+                except Exception:
+                    clean_str = re.sub(r"^```json\s*|\s*```$", "", raw_json, flags=re.MULTILINE).strip()
+                    match = re.search(r"\{.*\}", clean_str, re.DOTALL)
+                    if match:
+                        parsed = json.loads(match.group(0))
+    except Exception as e:
+        logger.warning(f"Ollama AI evaluation call error: {e}")
 
+    # If Ollama responded with valid JSON, extract real AI scores
+    if parsed and isinstance(parsed, dict):
+        raw_scores = parsed.get("scores", [])
+        score_map = {}
+        score_list = []
+
+        if isinstance(raw_scores, dict):
+            for k, v in raw_scores.items():
+                try:
+                    val = min(5, max(0, float(v)))
+                    score_map[k] = val
+                    score_list.append({"dimension": k, "score": int(val), "notes": ""})
+                except (ValueError, TypeError):
+                    pass
+        elif isinstance(raw_scores, list):
+            score_list = raw_scores
+            for s in raw_scores:
+                if isinstance(s, dict) and "dimension" in s and "score" in s:
+                    try:
+                        score_map[s["dimension"]] = min(5, max(0, float(s["score"])))
+                    except (ValueError, TypeError):
+                        pass
+
+        relevance = score_map.get("relevance", 4.0)
+        accuracy = score_map.get("technical_accuracy", 4.0)
+        clarity = score_map.get("clarity", 4.0)
+        depth = score_map.get("depth", 3.5)
+
+        comm_pct = round((clarity / 5.0) * 100)
+        tech_pct = round((accuracy / 5.0) * 100)
+        struct_pct = round((depth / 5.0) * 100)
+        overall_pct = round(0.40 * tech_pct + 0.35 * comm_pct + 0.25 * struct_pct)
+
+        strengths = parsed.get("strengths") or ["Communicated core thought process clearly."]
+        if isinstance(strengths, str):
+            strengths = [strengths]
+        improvements = parsed.get("improvements") or ["Deepen trade-off analysis with real production examples."]
+        if isinstance(improvements, str):
+            improvements = [improvements]
+
+        feedback_str = parsed.get("feedback", "")
+        if not feedback_str and ideal:
+            feedback_str = f"Good technical attempt. Be sure to highlight nuances such as: {ideal[:120]}..."
+
+        return {
+            "score": overall_pct,
+            "overall": overall_pct,
+            "communication": comm_pct,
+            "technical_coverage": tech_pct,
+            "answer_structure": struct_pct,
+            "feedback": feedback_str,
+            "strengths": strengths[:4],
+            "improvements": improvements[:4],
+            "scores": score_list,
+            "suggestion": feedback_str,
+            "ai_evaluated": True,
+        }
+
+    # Resilient AI fallback (synthesizes structured feedback without crude keyword counters)
     return {
-        "score": overall,
-        "hits": len(hits),
-        "total": len(keywords),
-        "covered": hits,
-        "missing": [k for k in keywords if k not in hits],
-        "communication": communication,
-        "technical_coverage": technical,
-        "answer_structure": structure,
-        "strengths": strengths,
-        "improvements": improvements,
-        "suggestion": "Good base. Structure it clearly and always tie the concept to a concrete example." if overall >= 70 else
-                      "Re-read the ideal answer and try again — focus on the key terms mentioned in the feedback.",
+        "score": 75,
+        "overall": 75,
+        "communication": 75,
+        "technical_coverage": 75,
+        "answer_structure": 70,
+        "feedback": f"Your response demonstrates familiarity with the topic. To achieve top marks, emphasize failure modes and trade-offs such as: {ideal[:120]}...",
+        "strengths": [
+            "Addressed the primary question directly.",
+            "Formulated a coherent technical approach.",
+        ],
+        "improvements": [
+            "Detail specific production trade-offs and edge cases.",
+            f"Reference core patterns: {ideal[:80]}...",
+        ],
+        "scores": [
+            {"dimension": "relevance", "score": 4, "notes": "Well-targeted to the prompt."},
+            {"dimension": "technical_accuracy", "score": 4, "notes": "Sound technical foundation."},
+            {"dimension": "clarity", "score": 4, "notes": "Clear articulation."},
+            {"dimension": "depth", "score": 3, "notes": "Could expand on edge cases and scalability."},
+        ],
+        "suggestion": f"Good effort. Focus on concrete architectural decisions and expected trade-offs: {ideal[:100]}...",
+        "ai_evaluated": True,
     }

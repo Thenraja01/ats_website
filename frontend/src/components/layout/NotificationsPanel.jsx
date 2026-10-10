@@ -67,7 +67,7 @@ export default function NotificationsPanel({ unread, onUnread, disabled }) {
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger className="ring-0 focus:ring-0" asChild={false}>
+      <DropdownMenuTrigger className="ring-0 focus:ring-0" asChild>
         <button
           className="relative flex size-9 items-center justify-center rounded-md border border-border/60 bg-muted/40 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none"
           aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`}

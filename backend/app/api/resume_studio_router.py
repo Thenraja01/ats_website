@@ -130,6 +130,19 @@ async def create_resume(payload: ResumeCreate, user: User = Depends(get_current_
     return resume.to_api_dict()
 
 
+@studio_router.get("/resumes/me")
+async def get_my_latest_resume(user: User = Depends(get_current_user)):
+    """Retrieve current authenticated user's latest studio resume."""
+    resume = (
+        await ResumeVersion.find(ResumeVersion.user_id == str(user.id))
+        .sort(-ResumeVersion.created_at)
+        .first_or_none()
+    )
+    if not resume:
+        return {"status": "empty", "message": "No resumes created yet", "data": None}
+    return resume.to_api_dict()
+
+
 @studio_router.get("/resumes/{resume_id}")
 async def get_resume(resume_id: str, user: User = Depends(get_current_user)):
     resume = await _owned_resume(resume_id, user)
@@ -199,13 +212,21 @@ async def duplicate_resume(resume_id: str, user: User = Depends(get_current_user
 
 
 @studio_router.post("/resumes/{resume_id}/ats")
-async def analyze_resume_ats(resume_id: str, user: User = Depends(get_current_user)):
+async def analyze_resume_ats(
+    resume_id: str,
+    payload: Optional[dict] = None,
+    user: User = Depends(get_current_user),
+):
     resume = await _owned_resume(resume_id, user)
     resume_text = render_resume_to_text(resume)
     if not resume_text.strip():
         raise HTTPException(status_code=400, detail="Resume has no content to analyze yet")
 
-    jd_text = resume.jd_text or ""
+    passed_jd = payload.get("jd_text") if payload and isinstance(payload, dict) else None
+    jd_text = (passed_jd.strip() if passed_jd else None) or resume.jd_text or ""
+    if passed_jd and passed_jd.strip():
+        resume.jd_text = passed_jd.strip()
+
     result = run_ats_pipeline(resume_text, jd_text)
     resume.ats = ATSRef(
         score=result["ats_score"],
@@ -218,6 +239,7 @@ async def analyze_resume_ats(resume_id: str, user: User = Depends(get_current_us
     resume.updated_at = datetime.now(timezone.utc)
     await resume.save()
     return resume.to_api_dict()
+
 
 
 @studio_router.post("/analyze-jd")
